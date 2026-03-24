@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Modal } from "./ui/modal";
 import { Button, Textarea, Select, Badge } from "./ui/shared";
-import { Copy, MessageCircle, ExternalLink, ChevronDown, Check, Loader2 } from "lucide-react";
+import { Copy, MessageCircle, ExternalLink, ChevronDown, Check, Loader2, Globe, Flame, ThermometerSun, Snowflake } from "lucide-react";
 import { Lead, LeadStatus } from "@workspace/api-client-react";
 import { useGetLeadMessage, useUpdateLead } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
@@ -23,10 +23,13 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [status, setStatus] = useState<LeadStatus>(lead?.status || "Novo");
+  const [editedMessage, setEditedMessage] = useState("");
 
   const { data: msgData, isLoading } = useGetLeadMessage(lead?.id || 0, {
     query: { enabled: !!lead?.id && isOpen }
   });
+
+  const data = msgData as any;
 
   const updateMutation = useUpdateLead({
     mutation: {
@@ -41,7 +44,14 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
   useEffect(() => {
     if (lead) setStatus(lead.status);
     setShowPrompt(false);
+    setEditedMessage("");
   }, [lead, isOpen]);
+
+  useEffect(() => {
+    if (data?.mensagem && !editedMessage) {
+      setEditedMessage(data.mensagem);
+    }
+  }, [data?.mensagem]);
 
   const handleStatusChange = (newStatus: LeadStatus) => {
     setStatus(newStatus);
@@ -59,45 +69,88 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
       setCopiedPrompt(true);
       setTimeout(() => setCopiedPrompt(false), 2000);
     }
-    toast({ title: "Copiado para a área de transferência!" });
+    toast({ title: "Copiado!" });
+  };
+
+  const buildWhatsappUrl = () => {
+    if (!data) return null;
+    const rawPhone = lead?.telefone?.replace(/\D/g, "") ?? "";
+    if (rawPhone.length < 10) return null;
+    return `https://wa.me/55${rawPhone}?text=${encodeURIComponent(editedMessage)}`;
   };
 
   if (!lead) return null;
+
+  const TemperaturaIcon = lead.temperatura === "Quente"
+    ? Flame : lead.temperatura === "Morno"
+    ? ThermometerSun : Snowflake;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Detalhes do Lead"
+      title="Abordagem do Lead"
       className="max-w-2xl"
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Header Info */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 bg-background/50 p-4 rounded-xl border border-border">
           <div>
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2 flex-wrap">
               {lead.nomeEmpresa}
-              <Badge variant={lead.temperatura === 'Quente' ? 'danger' : lead.temperatura === 'Morno' ? 'warning' : 'info'}>
+              <Badge variant={lead.temperatura === 'Quente' ? 'danger' : lead.temperatura === 'Morno' ? 'warning' : 'info'} className="gap-1">
+                <TemperaturaIcon className="w-3 h-3" />
                 {lead.temperatura}
               </Badge>
             </h3>
             <p className="text-muted-foreground text-sm mt-1">{lead.nicho} • {lead.cidade}</p>
+            {lead.telefone && (
+              <p className="text-muted-foreground text-xs mt-1">📞 {lead.telefone}</p>
+            )}
             <div className="flex items-center gap-2 mt-3 flex-wrap">
               {!lead.temSite ? (
                 <Badge variant="danger">❌ Sem Site</Badge>
               ) : (
-                <Badge variant="success">✅ Site Encontrado</Badge>
+                <Badge variant="success">✅ Tem Site</Badge>
               )}
-              {!lead.temPixelMeta && <Badge variant="warning">❌ Sem Pixel Meta</Badge>}
-              {!lead.temPixelGoogle && <Badge variant="warning">❌ Sem Pixel Google</Badge>}
+              <Badge variant={lead.temPixelMeta ? "success" : "warning"}>
+                {lead.temPixelMeta ? "✅" : "❌"} Pixel Meta
+              </Badge>
+              <Badge variant={lead.temPixelGoogle ? "success" : "warning"}>
+                {lead.temPixelGoogle ? "✅" : "❌"} Pixel Google
+              </Badge>
             </div>
           </div>
-          
-          <div className="text-center bg-card p-3 rounded-xl border border-border min-w-[100px]">
+
+          <div className="text-center bg-card p-3 rounded-xl border border-border min-w-[90px]">
             <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Score</p>
             <p className="text-3xl font-display font-bold text-primary">{lead.score}</p>
           </div>
         </div>
+
+        {/* Demo URL Banner */}
+        {isLoading ? (
+          <div className="h-12 bg-background/50 border border-border rounded-xl animate-pulse" />
+        ) : data?.demoUrl ? (
+          <div className="flex items-center gap-3 bg-primary/10 border border-primary/30 rounded-xl px-4 py-3">
+            <Globe className="w-4 h-4 text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground mb-0.5">Demo gerada para este lead</p>
+              <p className="text-sm font-mono text-primary truncate">{data.demoUrl}</p>
+            </div>
+            <a
+              href={data.demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0"
+            >
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs border-primary/40 hover:border-primary">
+                <ExternalLink className="w-3 h-3" />
+                Abrir
+              </Button>
+            </a>
+          </div>
+        ) : null}
 
         {/* Message Section */}
         <div className="space-y-3">
@@ -106,51 +159,54 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
               <MessageCircle className="w-4 h-4 text-primary" />
               Mensagem de Abordagem
             </h4>
-            <div className="flex items-center gap-2">
-              <Select 
-                value={status} 
-                onChange={(e) => handleStatusChange(e.target.value as LeadStatus)}
-                className="h-8 py-1 px-3 text-xs w-auto min-w-[120px]"
-                disabled={updateMutation.isPending}
-              >
-                <option value="Novo">Novo</option>
-                <option value="Contatado">Contatado</option>
-                <option value="Convertido">Convertido</option>
-              </Select>
-            </div>
+            <Select
+              value={status}
+              onChange={(e) => handleStatusChange(e.target.value as LeadStatus)}
+              className="h-8 py-1 px-3 text-xs w-auto min-w-[120px]"
+              disabled={updateMutation.isPending}
+            >
+              <option value="Novo">Novo</option>
+              <option value="Contatado">Contatado</option>
+              <option value="Convertido">Convertido</option>
+            </Select>
           </div>
-          
+
+          <p className="text-xs text-muted-foreground">
+            Edite a mensagem antes de enviar se quiser personalizar:
+          </p>
+
           <div className="relative">
             {isLoading ? (
-              <div className="h-40 w-full bg-background/50 border-2 border-input rounded-xl flex flex-col items-center justify-center text-muted-foreground animate-pulse">
+              <div className="h-48 w-full bg-background/50 border-2 border-input rounded-xl flex flex-col items-center justify-center text-muted-foreground animate-pulse">
                 <Loader2 className="w-6 h-6 animate-spin mb-2" />
-                <p className="text-sm">Gerando mensagem com IA...</p>
+                <p className="text-sm">Gerando mensagem...</p>
               </div>
             ) : (
-              <Textarea 
-                readOnly
-                value={msgData?.mensagem || ""}
-                className="h-48 font-sans text-sm leading-relaxed bg-black/20"
+              <Textarea
+                value={editedMessage}
+                onChange={e => setEditedMessage(e.target.value)}
+                className="h-52 font-sans text-sm leading-relaxed bg-black/20"
               />
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Button 
-              variant="outline" 
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
               className="flex-1"
-              disabled={isLoading || !msgData}
-              onClick={() => copyToClipboard(msgData?.mensagem || "", 'msg')}
+              disabled={isLoading || !editedMessage}
+              onClick={() => copyToClipboard(editedMessage, 'msg')}
             >
               {copiedMsg ? <Check className="w-4 h-4 mr-2 text-emerald-500" /> : <Copy className="w-4 h-4 mr-2" />}
-              {copiedMsg ? "Copiado!" : "Copiar Mensagem"}
+              {copiedMsg ? "Copiado!" : "Copiar"}
             </Button>
-            <Button 
+            <Button
               className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
-              disabled={isLoading || !msgData || !msgData.whatsappUrl}
+              disabled={isLoading || !editedMessage || !buildWhatsappUrl()}
               onClick={() => {
-                if (msgData?.whatsappUrl) {
-                  window.open(msgData.whatsappUrl, '_blank');
+                const url = buildWhatsappUrl();
+                if (url) {
+                  window.open(url, '_blank');
                   if (status === "Novo") handleStatusChange("Contatado");
                 }
               }}
@@ -163,14 +219,17 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
 
         {/* Prompt Section */}
         <div className="border border-border rounded-xl overflow-hidden bg-background/30">
-          <button 
+          <button
             className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
             onClick={() => setShowPrompt(!showPrompt)}
           >
-            <span className="font-semibold text-sm">Prompt para Landing Page (Demo)</span>
-            <ChevronDown className={cn("w-4 h-4 transition-transform", showPrompt && "rotate-180")} />
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold">Lovable / v0 / Bolt</span>
+              <span className="font-semibold text-sm">Prompt para gerar a landing page de demo</span>
+            </div>
+            <ChevronDown className={cn("w-4 h-4 transition-transform shrink-0", showPrompt && "rotate-180")} />
           </button>
-          
+
           <AnimatePresence>
             {showPrompt && (
               <motion.div
@@ -179,25 +238,33 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="p-4 pt-0 border-t border-border/50">
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Copie este prompt e cole no Lovable, v0.dev ou Bolt.new para gerar uma página de demonstração para este cliente antes da reunião.
+                <div className="p-4 pt-0 border-t border-border/50 space-y-3">
+                  <p className="text-xs text-muted-foreground pt-3">
+                    Cole este prompt no <strong className="text-white">Lovable.dev</strong>, <strong className="text-white">v0.dev</strong> ou <strong className="text-white">Bolt.new</strong> para gerar a demo antes de enviar a mensagem ao cliente.
                   </p>
                   <div className="relative group">
-                    <Textarea 
+                    <Textarea
                       readOnly
-                      value={msgData?.promptDemo || ""}
-                      className="min-h-[100px] text-xs font-mono bg-black/40"
+                      value={data?.promptDemo || ""}
+                      className="min-h-[140px] text-xs font-mono bg-black/40 leading-relaxed"
                     />
-                    <Button 
-                      size="sm" 
-                      variant="glass" 
+                    <Button
+                      size="sm"
+                      variant="glass"
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => copyToClipboard(msgData?.promptDemo || "", 'prompt')}
+                      onClick={() => copyToClipboard(data?.promptDemo || "", 'prompt')}
                     >
                       {copiedPrompt ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </Button>
                   </div>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 text-sm"
+                    onClick={() => copyToClipboard(data?.promptDemo || "", 'prompt')}
+                  >
+                    {copiedPrompt ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                    {copiedPrompt ? "Prompt copiado!" : "Copiar Prompt Completo"}
+                  </Button>
                 </div>
               </motion.div>
             )}

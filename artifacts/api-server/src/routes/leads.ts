@@ -112,50 +112,112 @@ router.get("/leads/:id/message", async (req, res) => {
     const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, id));
     if (!lead) return res.status(404).json({ error: "Lead not found" });
 
+    // Generate a URL-friendly slug from company name
+    const slug = lead.nomeEmpresa
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+
+    const demoUrl = `https://${slug}.lovable.app`;
+
     let mensagem = "";
 
     if (!lead.temSite) {
-      mensagem = `Olá! Tudo bem? 😊
+      mensagem = `Oi *${lead.nomeEmpresa}*! Tudo bem? 😊
 
-Sou especialista em marketing digital e vi que a *${lead.nomeEmpresa}* ainda não tem um site próprio. Hoje em dia, ter um site profissional é essencial para atrair mais clientes no segmento de ${lead.nicho} em ${lead.cidade}.
+Pesquisei *"${lead.nicho} em ${lead.cidade}"* e a ${lead.nomeEmpresa} não aparece no Google. Isso = clientes indo pro concorrente. 😬
 
-Já ajudei vários negócios da região a conseguirem mais clientes — mais visibilidade e mais vendas.
+Criei uma demonstração de como ficaria o site de vocês:
+🔥 ${demoUrl}
 
-Posso te mostrar um exemplo de como ficaria o site da ${lead.nomeEmpresa} completamente grátis, sem compromisso. Seria interessante para você?`;
+Essa página fica pronta em *24 horas*, otimizada pro celular e pro Google.
+👍 Investimento: R$ 1.997 (ou 12x de R$ 197)
+
+Dá uma olhada no link e me diz o que achou?`;
     } else if (!lead.temPixelMeta && !lead.temPixelGoogle) {
-      mensagem = `Olá! Tudo bem? 😊
+      mensagem = `Oi *${lead.nomeEmpresa}*! Tudo bem? 😊
 
-Vi que a *${lead.nomeEmpresa}* tem um site, mas ele ainda não está configurado para acompanhar resultados de campanhas. Isso significa que você pode estar perdendo vendas sem saber exatamente de onde elas vêm.
+Vi que vocês têm site, mas ele não está rastreando os visitantes — sem Pixel da Meta nem Tag do Google. Isso = você investe em anúncio e não sabe o que tá funcionando. 😬
 
-O Pixel da Meta e o Tag do Google são ferramentas que, bem configuradas, permitem escalar campanhas de forma muito mais eficiente.
+Configuro tudo pra vocês e ainda otimizo a página pra converter mais:
+🔥 ${demoUrl}
 
-Posso fazer uma análise gratuita do site de vocês e mostrar o que está sendo perdido. Teria interesse?`;
+Entrego em *24 horas*, pronto pra rodar campanhas que vendem de verdade.
+👍 Investimento: R$ 1.497 (ou 12x de R$ 147)
+
+Dá uma olhada e me diz o que achou?`;
     } else {
-      mensagem = `Olá! Tudo bem? 😊
+      mensagem = `Oi *${lead.nomeEmpresa}*! Tudo bem? 😊
 
-Encontrei a *${lead.nomeEmpresa}* e gostaria de entender como vocês estão captando novos clientes digitalmente. Trabalho com estratégias de crescimento para ${lead.nicho} em ${lead.cidade} e tenho ajudado negócios a aumentar o faturamento.
+Analisei a presença digital de vocês e vi algumas oportunidades de melhorar a captação de clientes em ${lead.cidade}.
 
-Teria 5 minutos para uma conversa rápida?`;
+Criei uma proposta de como ficaria a nova landing page de vocês:
+🔥 ${demoUrl}
+
+Entrego em *24 horas*, otimizada pro celular e pro Google.
+👍 Investimento: R$ 1.997 (ou 12x de R$ 197)
+
+Dá uma olhada e me diz o que achou?`;
     }
 
-    const telefone = lead.telefone?.replace(/\D/g, "") ?? lead.whatsapp?.replace(/\D/g, "");
-    const encodedMsg = encodeURIComponent(mensagem);
-    const whatsappUrl = telefone ? `https://wa.me/55${telefone}?text=${encodedMsg}` : null;
+    const rawPhone = lead.telefone?.replace(/\D/g, "") ?? "";
+    const whatsappUrl = rawPhone.length >= 10
+      ? `https://wa.me/55${rawPhone}?text=${encodeURIComponent(mensagem)}`
+      : null;
 
-    const promptDemo = `Crie uma landing page profissional para a empresa "${lead.nomeEmpresa}", que atua no segmento de ${lead.nicho} em ${lead.cidade}.
+    const promptDemo = `Crie uma landing page completa e profissional para a empresa "${lead.nomeEmpresa}", no segmento de ${lead.nicho} em ${lead.cidade}. O domínio será ${slug}.lovable.app.
 
-A página deve ter:
-- Header com logo e nome da empresa
-- Hero section com chamada principal voltada para o público local de ${lead.cidade}
-- Seção de serviços oferecidos (3 a 5 cards com ícones)
-- Seção de depoimentos de clientes (3 fictícios e convincentes)
-- Seção "Por que nos escolher?" com 3 diferenciais
-- CTA final com botão do WhatsApp ou formulário de contato
-- Footer com endereço, telefone e horário de funcionamento
+## Estrutura da página (em ordem, de cima pra baixo):
 
-Design: moderno, mobile-first, profissional para o setor de ${lead.nicho}. Use Tailwind CSS e tons que transmitam confiança.`;
+### 1. Header fixo
+- Logo com nome "${lead.nomeEmpresa}" em fonte bold
+- Menu simples: Serviços | Depoimentos | Contato
+- Botão CTA no canto direito: "Falar no WhatsApp" (verde, com ícone do WhatsApp)
 
-    res.json({ mensagem, whatsappUrl, promptDemo });
+### 2. Hero Section
+- Título principal impactante com a palavra-chave "${lead.nicho} em ${lead.cidade}"
+- Subtítulo destacando o principal benefício (ex: "Atendimento rápido, resultado garantido")
+- Dois botões: "Falar no WhatsApp" e "Ver Serviços"
+- Imagem de fundo ou ilustração profissional do setor ${lead.nicho}
+
+### 3. Seção "Por que escolher a ${lead.nomeEmpresa}?"
+- 3 cards com ícone + título + descrição curta
+- Diferenciais reais do segmento ${lead.nicho} (ex: experiência, qualidade, atendimento)
+
+### 4. Serviços
+- Grid de 4 a 6 cards com: ícone, nome do serviço e descrição de 2 linhas
+- Serviços típicos e realistas para ${lead.nicho}
+
+### 5. Depoimentos
+- 3 depoimentos fictícios mas convincentes, com nome, foto placeholder e estrelas (5/5)
+- Nomes brasileiros comuns de ${lead.cidade}
+
+### 6. Seção de CTA final
+- Fundo colorido (cor de destaque do nicho)
+- Título: "Pronto para começar?"
+- Botão grande: "Falar no WhatsApp agora"
+
+### 7. Footer
+- Nome da empresa, endereço fictício em ${lead.cidade}
+- Telefone, horário de funcionamento
+- Ícones de redes sociais (Instagram, WhatsApp, Google Maps)
+
+## Requisitos técnicos:
+- React + Tailwind CSS
+- 100% responsivo (mobile-first)
+- Animações suaves com framer-motion na entrada de seções
+- Paleta de cores profissional para ${lead.nicho}
+- Meta tags de SEO: title, description, og:image com "${lead.nicho} ${lead.cidade}"
+- Link do WhatsApp no botão CTA apontando para número fictício formatado
+
+## Importante:
+- Todo o conteúdo em português brasileiro
+- Tom: profissional, confiável, próximo
+- Nenhum placeholder visível — tudo deve parecer um site real e pronto para usar`;
+
+    res.json({ mensagem, whatsappUrl, promptDemo, demoUrl });
   } catch (err) {
     req.log.error({ err }, "Failed to get lead message");
     res.status(500).json({ error: "Internal server error" });
