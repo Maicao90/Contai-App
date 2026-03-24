@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Prospecta Bot"
+version = "1.0.0"
+id = "artifacts/prospecta-bot"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18743
+
+[services.development]
+run = "pnpm --filter @workspace/prospecta-bot run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/prospecta-bot", "run", "build" ]
+publicDir = "artifacts/prospecta-bot/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18743"
+BASE_PATH = "/"

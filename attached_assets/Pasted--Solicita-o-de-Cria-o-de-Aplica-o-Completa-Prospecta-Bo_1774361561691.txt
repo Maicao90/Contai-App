@@ -1,0 +1,82 @@
+# Solicitação de Criação de Aplicação Completa: "Prospecta Bot"
+
+**Objetivo:** Criar uma aplicação web funcional no Replit para prospecção automatizada de leads (B2B), focada em identificar empresas que não têm site próprio ou têm presença digital deficiente (apenas redes sociais ou sem pixels de anúncio). A aplicação deve ter uma interface "Dark Mode" profissional, inspirada nas imagens de referência fornecidas (dashboard limpo, cards de KPI e tabela de leads com status).
+
+**Stack Tecnológica:**
+* **Backend:** Python com Flask (leve e rápido para o Replit).
+* **Banco de Dados:** SQLite (simples, persistente no Replit).
+* **Frontend:** HTML5, CSS3 (com Tailwind CSS via CDN para agilidade) e JavaScript para interatividade.
+
+---
+
+## Estrutura da Aplicação (Módulos a Criar):
+
+### 1. Backend & Banco de Dados (Python/Flask + SQLite)
+
+Crie um arquivo `app.py` que configure o servidor Flask e gerencie o banco de dados `prospecta.db`.
+
+**Tabela `leads`:**
+* `id`: INTEGER (Chave Primária, Autoincremento)
+* `nome_empresa`: TEXT (Obrigatório)
+* `nicho`: TEXT (Ex: Barbearia, Dentista)
+* `cidade`: TEXT
+* `telefone`: TEXT
+* `whatsapp`: TEXT (Link formatado wa.me)
+* `url_origem`: TEXT (Link do Google Maps ou Rede Social encontrada)
+* `tem_site`: BOOLEAN (Padrão: False)
+* `url_site`: TEXT (Se encontrado)
+* `tem_pixel_meta`: BOOLEAN (Padrão: False)
+* `score`: INTEGER (Calculado automaticamente: Sem Site = +50, Sem Pixel = +20)
+* `status`: TEXT (Padrão: 'Novo', Opções: 'Morno', 'Quente', 'Contatado', 'Convertido')
+* `data_cadastro`: DATETIME (Padrão: Agora)
+
+### 2. O "Motor" de Mineração (Lógica de Busca e Análise)
+
+Implemente uma função Python `minerar_leads(nicho, cidade)` que:
+
+1.  **Busca Automatizada:** Use a biblioteca `googlesearch-python` (adicione ao `requirements.txt`) para executar buscas com operadores avançados do Google.
+    * Exemplo de Dork: `site:instagram.com "[NICHO]" "[CIDADE]"` para achar empresas que dependem do Instagram.
+    * Exemplo de Dork: `"[NICHO]" "[CIDADE]" -inurl:http` para achar listagens sem site structured.
+2.  **Análise de Site (O Deep Prospector):** Para cada resultado que pareça um site próprio:
+    * Use a biblioteca `requests` para "baixar" o HTML da página inicial.
+    * Use Expressões Regulares (Regex) para buscar por fragmentos de código de rastreamento:
+        * Procurar por `fbevents.js` ou `fbq('init'` para identificar o Pixel do Meta.
+        * Procurar por `gtag.js` ou `adsbygoogle.js` para o Google Ads.
+3.  **Enriquecimento e Cadastro:** Tente extrair números de telefone/WhatsApp da página (usando Regex). Salve todos os dados coletados na tabela `leads` com o status 'Novo' e o Score calculado.
+
+### 3. Frontend: Dashboard Dark Mode (HTML/Tailwind CSS)
+
+Crie um arquivo `templates/index.html` que renderize a interface principal.
+
+**Visual:** Tema Dark Mode (fundo escuro `#111827`, cards ligeiramente mais claros `#1f2937`, texto claro, acentos em roxo `#a78bfa`). Baseie-se no layout das imagens de referência (`image_1.png` e `image_2.png`).
+
+**Componentes da Página Única:**
+
+1.  **Painel de Busca (Topo):**
+    * Dois campos de input (`input_nicho`, `input_cidade`) e um botão grande e roxo "Minerar Oportunidades".
+    * Este botão deve disparar a função de mineração via AJAX e recarregar a tabela.
+2.  **Cards de KPI (Como em `image_1.png`):**
+    * 4 cards grandes: "Total de Leads", "Leads 'Quentes'", "Contatados", "Receita Potencial (R$)".
+3.  **Tabela Principal de Leads (Como em `image_1.png`):**
+    * Colunas: Empresa (com nota se houver), Contato (WhatsApp), Diagnóstico (Ícones visuais: ❌ Sem Site, ❌ Sem Pixel), Score, Status, Ações.
+    * A coluna Status deve ser um dropdown (`select`) para alterar o status do lead em tempo real.
+    * A coluna Ações deve ter um botão "Ver Mensagem".
+4.  **Modal de Detalhes e Mensagem (Pop-up):**
+    * Ao clicar em "Ver Mensagem", abre um modal (baseado em `image_2.png`).
+    * Mostra o diagnóstico detalhado do lead.
+    * **Área de Mensagem Pronta:** Gera automaticamente um texto de abordagem para WhatsApp baseado no diagnóstico (ex: se não tem site, usa o template "Sem Site").
+    * Botões: "Copiar Mensagem" e "Abrir no WhatsApp Web".
+    * **Área "Gerar Demo":** Um botão que gera um prompt técnico (texto pronto) para ser usado em ferramentas como Lovable ou v0.dev para criar o visual da landing page do cliente.
+
+---
+
+## Instruções de Instalação no Replit:
+
+1.  Crie os arquivos `app.py`, `templates/index.html`, `static/style.css` (opcional, se não usar Tailwind via CDN).
+2.  Crie um arquivo `requirements.txt` com:
+    ```text
+    Flask
+    googlesearch-python
+    requests
+    ```
+3.  Execute `python app.py` no console do Replit.

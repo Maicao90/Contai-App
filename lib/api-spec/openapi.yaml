@@ -1,22 +1,24 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Prospecta Bot API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: leads
+    description: Lead management
+  - name: mining
+    description: Lead mining operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +26,177 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /leads:
+    get:
+      operationId: listLeads
+      tags: [leads]
+      summary: List all leads
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Novo, Morno, Quente, Contatado, Convertido]
+        - name: nicho
+          in: query
+          schema:
+            type: string
+        - name: cidade
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lead"
+    post:
+      operationId: createLead
+      tags: [leads]
+      summary: Create a lead manually
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLeadRequest"
+      responses:
+        "201":
+          description: Created lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
+  /leads/{id}:
+    get:
+      operationId: getLead
+      tags: [leads]
+      summary: Get a lead by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lead details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "404":
+          description: Lead not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateLead
+      tags: [leads]
+      summary: Update a lead
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLeadRequest"
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "404":
+          description: Lead not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteLead
+      tags: [leads]
+      summary: Delete a lead
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /leads/stats:
+    get:
+      operationId: getLeadStats
+      tags: [leads]
+      summary: Get KPI stats
+      responses:
+        "200":
+          description: KPI statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadStats"
+
+  /leads/{id}/message:
+    get:
+      operationId: getLeadMessage
+      tags: [leads]
+      summary: Get WhatsApp outreach message for a lead
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Outreach message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadMessage"
+        "404":
+          description: Lead not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /mine:
+    post:
+      operationId: mineLeads
+      tags: [mining]
+      summary: Mine leads for a niche and city
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MineRequest"
+      responses:
+        "200":
+          description: Mining results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MineResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +207,182 @@ components:
       required:
         - status
 
+    LeadStatus:
+      type: string
+      enum: [Novo, Morno, Quente, Contatado, Convertido]
+
+    Lead:
+      type: object
+      properties:
+        id:
+          type: integer
+        nomeEmpresa:
+          type: string
+        nicho:
+          type: string
+        cidade:
+          type: string
+        telefone:
+          type: string
+          nullable: true
+        whatsapp:
+          type: string
+          nullable: true
+        urlOrigem:
+          type: string
+          nullable: true
+        temSite:
+          type: boolean
+        urlSite:
+          type: string
+          nullable: true
+        temPixelMeta:
+          type: boolean
+        temPixelGoogle:
+          type: boolean
+        score:
+          type: integer
+        status:
+          $ref: "#/components/schemas/LeadStatus"
+        dataCadastro:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nomeEmpresa
+        - nicho
+        - cidade
+        - temSite
+        - temPixelMeta
+        - temPixelGoogle
+        - score
+        - status
+        - dataCadastro
+
+    CreateLeadRequest:
+      type: object
+      properties:
+        nomeEmpresa:
+          type: string
+        nicho:
+          type: string
+        cidade:
+          type: string
+        telefone:
+          type: string
+          nullable: true
+        whatsapp:
+          type: string
+          nullable: true
+        urlOrigem:
+          type: string
+          nullable: true
+        temSite:
+          type: boolean
+        urlSite:
+          type: string
+          nullable: true
+        temPixelMeta:
+          type: boolean
+        temPixelGoogle:
+          type: boolean
+      required:
+        - nomeEmpresa
+        - nicho
+        - cidade
+
+    UpdateLeadRequest:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/LeadStatus"
+        nomeEmpresa:
+          type: string
+        nicho:
+          type: string
+        cidade:
+          type: string
+        telefone:
+          type: string
+          nullable: true
+        whatsapp:
+          type: string
+          nullable: true
+        temSite:
+          type: boolean
+        urlSite:
+          type: string
+          nullable: true
+        temPixelMeta:
+          type: boolean
+        temPixelGoogle:
+          type: boolean
+
+    LeadStats:
+      type: object
+      properties:
+        totalLeads:
+          type: integer
+        leadsQuentes:
+          type: integer
+        contatados:
+          type: integer
+        convertidos:
+          type: integer
+        receitaPotencial:
+          type: number
+      required:
+        - totalLeads
+        - leadsQuentes
+        - contatados
+        - convertidos
+        - receitaPotencial
+
+    LeadMessage:
+      type: object
+      properties:
+        mensagem:
+          type: string
+        whatsappUrl:
+          type: string
+          nullable: true
+        promptDemo:
+          type: string
+      required:
+        - mensagem
+        - promptDemo
+
+    MineRequest:
+      type: object
+      properties:
+        nicho:
+          type: string
+        cidade:
+          type: string
+      required:
+        - nicho
+        - cidade
+
+    MineResult:
+      type: object
+      properties:
+        found:
+          type: integer
+        leads:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lead"
+        message:
+          type: string
+      required:
+        - found
+        - leads
+        - message
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
