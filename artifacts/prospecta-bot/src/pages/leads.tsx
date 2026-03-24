@@ -13,7 +13,7 @@ import {
 import { Lead, ListLeadsStatus, ListLeadsTemperatura } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Filter, Phone, ArrowRight, Activity, ThermometerSun } from "lucide-react";
+import { Search, Filter, Phone, ArrowRight, Activity, ThermometerSun, Flame, Snowflake } from "lucide-react";
 
 export default function Leads() {
   const [location] = useLocation();
