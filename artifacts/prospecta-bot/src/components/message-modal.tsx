@@ -2,13 +2,16 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Modal } from "./ui/modal";
 import { Button, Textarea, Select, Badge } from "./ui/shared";
-import { Copy, MessageCircle, ExternalLink, ChevronDown, Check, Loader2, Globe, Flame, ThermometerSun, Snowflake } from "lucide-react";
+import { Copy, MessageCircle, ExternalLink, ChevronDown, Check, Loader2, Globe, Flame, ThermometerSun, Snowflake, Code2 } from "lucide-react";
 import { Lead, LeadStatus } from "@workspace/api-client-react";
+
 import { useGetLeadMessage, useUpdateLead } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListLeadsQueryKey, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+type PromptTab = "blueprint" | "generico" | "compacto";
 
 interface MessageModalProps {
   lead: Lead | null;
@@ -22,6 +25,7 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
   const [copiedMsg, setCopiedMsg] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [promptTab, setPromptTab] = useState<PromptTab>("blueprint");
   const [status, setStatus] = useState<LeadStatus>(lead?.status || "Novo");
   const [editedMessage, setEditedMessage] = useState("");
 
@@ -249,8 +253,11 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
             onClick={() => setShowPrompt(!showPrompt)}
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold">Lovable / v0 / Bolt</span>
-              <span className="font-semibold text-sm">Prompt para gerar a landing page de demo</span>
+              <span className="inline-flex items-center gap-1 text-xs bg-[#f26207]/20 text-[#f26207] px-2 py-0.5 rounded-full font-semibold border border-[#f26207]/30">
+                <Code2 className="w-3 h-3" />
+                Replit Agent
+              </span>
+              <span className="font-semibold text-sm">Prompt para gerar a landing page</span>
             </div>
             <ChevronDown className={cn("w-4 h-4 transition-transform shrink-0", showPrompt && "rotate-180")} />
           </button>
@@ -265,31 +272,72 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
               >
                 <div className="p-4 pt-0 border-t border-border/50 space-y-3">
                   <p className="text-xs text-muted-foreground pt-3">
-                    Cole este prompt no <strong className="text-white">Lovable.dev</strong>, <strong className="text-white">v0.dev</strong> ou <strong className="text-white">Bolt.new</strong> para gerar a demo antes de enviar a mensagem ao cliente.
+                    Cole este prompt no <strong className="text-[#f26207]">Replit Agent</strong> para gerar a landing page antes de enviar a mensagem ao cliente. Escolha o nível de detalhe:
                   </p>
-                  <div className="relative group">
-                    <Textarea
-                      readOnly
-                      value={data?.promptDemo || ""}
-                      className="min-h-[140px] text-xs font-mono bg-black/40 leading-relaxed"
-                    />
-                    <Button
-                      size="sm"
-                      variant="glass"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => copyToClipboard(data?.promptDemo || "", 'prompt')}
-                    >
-                      {copiedPrompt ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    </Button>
+
+                  {/* Tab selector */}
+                  <div className="flex gap-1 bg-background/60 p-1 rounded-lg border border-border/50">
+                    {([
+                      { key: "blueprint", label: "Blueprint", desc: "Detalhado" },
+                      { key: "generico",  label: "Genérico",  desc: "Médio" },
+                      { key: "compacto",  label: "Compacto",  desc: "Rápido" },
+                    ] as const).map(tab => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setPromptTab(tab.key)}
+                        className={cn(
+                          "flex-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-all",
+                          promptTab === tab.key
+                            ? "bg-primary text-primary-foreground shadow"
+                            : "text-muted-foreground hover:text-white"
+                        )}
+                      >
+                        {tab.label}
+                        <span className={cn("block text-[10px] font-normal mt-0.5",
+                          promptTab === tab.key ? "text-primary-foreground/70" : "text-muted-foreground/60"
+                        )}>
+                          {tab.desc}
+                        </span>
+                      </button>
+                    ))}
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2 text-sm"
-                    onClick={() => copyToClipboard(data?.promptDemo || "", 'prompt')}
-                  >
-                    {copiedPrompt ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                    {copiedPrompt ? "Prompt copiado!" : "Copiar Prompt Completo"}
-                  </Button>
+
+                  {/* Prompt content */}
+                  {(() => {
+                    const prompts = (data as any)?.prompts;
+                    const currentPrompt = prompts?.[promptTab] ?? data?.promptDemo ?? "";
+                    return (
+                      <>
+                        <div className="relative group">
+                          <Textarea
+                            readOnly
+                            value={currentPrompt}
+                            className={cn(
+                              "text-xs font-mono bg-black/40 leading-relaxed",
+                              promptTab === "blueprint" ? "min-h-[220px]" :
+                              promptTab === "generico"  ? "min-h-[160px]" : "min-h-[100px]"
+                            )}
+                          />
+                          <Button
+                            size="sm"
+                            variant="glass"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => copyToClipboard(currentPrompt, 'prompt')}
+                          >
+                            {copiedPrompt ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                        <Button
+                          variant="outline"
+                          className="w-full gap-2 text-sm"
+                          onClick={() => copyToClipboard(currentPrompt, 'prompt')}
+                        >
+                          {copiedPrompt ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                          {copiedPrompt ? "Prompt copiado!" : `Copiar Prompt ${promptTab === "blueprint" ? "Blueprint" : promptTab === "generico" ? "Genérico" : "Compacto"}`}
+                        </Button>
+                      </>
+                    );
+                  })()}
                 </div>
               </motion.div>
             )}

@@ -120,7 +120,7 @@ router.get("/leads/:id/message", async (req, res) => {
       .trim()
       .replace(/\s+/g, "-");
 
-    const demoUrl = `https://${slug}.lovable.app`;
+    const demoUrl = `https://${slug}.replit.app`;
 
     let mensagem = "";
 
@@ -167,57 +167,98 @@ Dá uma olhada e me diz o que achou?`;
       ? `https://wa.me/55${rawPhone}?text=${encodeURIComponent(mensagem)}`
       : null;
 
-    const promptDemo = `Crie uma landing page completa e profissional para a empresa "${lead.nomeEmpresa}", no segmento de ${lead.nicho} em ${lead.cidade}. O domínio será ${slug}.lovable.app.
+    // ── PROMPT 1: Blueprint Completo ──────────────────────────────────────────
+    const promptBlueprint = `Crie uma landing page completa para "${lead.nomeEmpresa}" (${lead.nicho} em ${lead.cidade}).
+Hospedagem: Replit (domínio ${slug}.replit.app).
 
-## Estrutura da página (em ordem, de cima pra baixo):
+## Stack técnica
+- React + Vite + TypeScript
+- Tailwind CSS (estilização), Framer Motion (animações), Lucide React (ícones)
+- 100% responsivo, mobile-first
+
+## Seções obrigatórias (de cima pra baixo)
 
 ### 1. Header fixo
-- Logo com nome "${lead.nomeEmpresa}" em fonte bold
-- Menu simples: Serviços | Depoimentos | Contato
-- Botão CTA no canto direito: "Falar no WhatsApp" (verde, com ícone do WhatsApp)
+- Logo: "${lead.nomeEmpresa}" em fonte bold
+- Menu: Serviços | Depoimentos | FAQ | Contato
+- CTA fixo direito: "Falar no WhatsApp" (fundo #25D366, ícone WhatsApp)
+- Ao rolar, header ganha fundo sólido escuro + sombra suave
 
-### 2. Hero Section
-- Título principal impactante com a palavra-chave "${lead.nicho} em ${lead.cidade}"
-- Subtítulo destacando o principal benefício (ex: "Atendimento rápido, resultado garantido")
-- Dois botões: "Falar no WhatsApp" e "Ver Serviços"
-- Imagem de fundo ou ilustração profissional do setor ${lead.nicho}
+### 2. Hero
+- Título: palavra-chave "${lead.nicho} em ${lead.cidade}" com variação criativa e impactante
+- Subtítulo: principal benefício do segmento (curto, direto)
+- Badge: "⭐ Mais de 500 clientes satisfeitos"
+- 2 botões: "Agendar Agora" (primário) + "Ver Serviços" (âncora interna)
+- Background: gradiente sutil ou imagem cover do setor
 
-### 3. Seção "Por que escolher a ${lead.nomeEmpresa}?"
-- 3 cards com ícone + título + descrição curta
-- Diferenciais reais do segmento ${lead.nicho} (ex: experiência, qualidade, atendimento)
+### 3. Diferenciais
+- Título: "Por que escolher a ${lead.nomeEmpresa}?"
+- 3 cards horizontais: ícone Lucide + título + descrição de 2 linhas
+- Diferenciais específicos e realistas para ${lead.nicho}
 
 ### 4. Serviços
-- Grid de 4 a 6 cards com: ícone, nome do serviço e descrição de 2 linhas
-- Serviços típicos e realistas para ${lead.nicho}
+- Título: "Nossos Serviços"
+- Grid 2×3 (mobile: 1 coluna): ícone + nome + descrição breve
+- 6 serviços típicos e realistas para ${lead.nicho}
 
-### 5. Depoimentos
-- 3 depoimentos fictícios mas convincentes, com nome, foto placeholder e estrelas (5/5)
-- Nomes brasileiros comuns de ${lead.cidade}
+### 5. FAQ (accordion)
+- 6 perguntas reais que clientes de ${lead.nicho} fazem
+- Cada item expande/fecha com animação suave
+- Respostas objetivas de 2-3 linhas
+- Última pergunta: "Como agendar?" com CTA inline para WhatsApp
 
-### 6. Seção de CTA final
-- Fundo colorido (cor de destaque do nicho)
-- Título: "Pronto para começar?"
-- Botão grande: "Falar no WhatsApp agora"
+### 6. Depoimentos
+- Título: "O que nossos clientes dizem"
+- 3 cards: avatar com iniciais coloridas, nome brasileiro, cidade ${lead.cidade}, 5 estrelas, texto convincente e específico para ${lead.nicho}
 
-### 7. Footer
-- Nome da empresa, endereço fictício em ${lead.cidade}
-- Telefone, horário de funcionamento
-- Ícones de redes sociais (Instagram, WhatsApp, Google Maps)
+### 7. CTA Final
+- Fundo com cor de destaque do nicho
+- Título grande: "Pronto para começar?"
+- Parágrafo de urgência (ex: "Atendemos com hora marcada — vagas limitadas essa semana!")
+- Botão grande verde: "Falar no WhatsApp agora" (wa.me/55 + número fictício 11 dígitos)
 
-## Requisitos técnicos:
-- React + Tailwind CSS
-- 100% responsivo (mobile-first)
-- Animações suaves com framer-motion na entrada de seções
-- Paleta de cores profissional para ${lead.nicho}
-- Meta tags de SEO: title, description, og:image com "${lead.nicho} ${lead.cidade}"
-- Link do WhatsApp no botão CTA apontando para número fictício formatado
+### 8. Footer
+- Nome, endereço fictício em ${lead.cidade}, horário de funcionamento típico para ${lead.nicho}
+- Ícones: Instagram, WhatsApp, Google Maps (links para #)
+- Copyright ${new Date().getFullYear()} ${lead.nomeEmpresa}
 
-## Importante:
-- Todo o conteúdo em português brasileiro
-- Tom: profissional, confiável, próximo
-- Nenhum placeholder visível — tudo deve parecer um site real e pronto para usar`;
+## SEO
+- <title>${lead.nicho} em ${lead.cidade} | ${lead.nomeEmpresa}</title>
+- meta description: 150 chars sobre o serviço
+- og:title, og:description, og:type: website
 
-    res.json({ mensagem, whatsappUrl, promptDemo, demoUrl });
+## Regras de conteúdo
+- 100% em português brasileiro, tom profissional e próximo
+- Cores: paleta adequada ao segmento ${lead.nicho}
+- Sem placeholders — tudo deve parecer site real e entregue ao cliente`;
+
+    // ── PROMPT 2: Genérico ────────────────────────────────────────────────────
+    const promptGenerico = `Crie uma landing page profissional para "${lead.nomeEmpresa}", empresa de ${lead.nicho} em ${lead.cidade}.
+Hospedagem: Replit (${slug}.replit.app). Stack: React + Vite + Tailwind CSS + Framer Motion.
+
+Seções obrigatórias:
+1. Header fixo com logo e botão "Falar no WhatsApp" (#25D366)
+2. Hero: título com "${lead.nicho} em ${lead.cidade}", subtítulo impactante, 2 CTAs
+3. Diferenciais: 3 cards (ícone + título + descrição) para ${lead.nicho}
+4. Serviços: grid 2×3 com 6 serviços típicos de ${lead.nicho}
+5. FAQ: accordion com 5 perguntas reais de clientes do segmento
+6. Depoimentos: 3 cards com nome brasileiro, 5 estrelas e texto convincente
+7. CTA final: fundo colorido, título urgente, botão WhatsApp grande
+8. Footer: endereço em ${lead.cidade}, horário, redes sociais
+
+Mobile-first, animações suaves de entrada, paleta de cores adequada ao ${lead.nicho}.
+Conteúdo 100% em português brasileiro. Sem placeholders — tudo parece site real.`;
+
+    // ── PROMPT 3: Compacto ────────────────────────────────────────────────────
+    const promptCompacto = `Landing page para "${lead.nomeEmpresa}" — ${lead.nicho} em ${lead.cidade}.
+Replit | React + Vite + Tailwind CSS | Domínio: ${slug}.replit.app
+
+Inclua: Header com CTA WhatsApp • Hero com título "${lead.nicho} em ${lead.cidade}" • 3 diferenciais • Grade de 6 serviços • FAQ accordion (5 perguntas do segmento) • 3 depoimentos com 5 estrelas • CTA final com botão WhatsApp verde • Footer com endereço em ${lead.cidade}.
+
+Idioma: PT-BR. Mobile-first. Sem placeholders. Parece site real entregue ao cliente.
+Botão WhatsApp: fundo #25D366, wa.me/55 + número fictício de ${lead.cidade}.`;
+
+    res.json({ mensagem, whatsappUrl, promptDemo: promptBlueprint, prompts: { blueprint: promptBlueprint, generico: promptGenerico, compacto: promptCompacto }, demoUrl });
   } catch (err) {
     req.log.error({ err }, "Failed to get lead message");
     res.status(500).json({ error: "Internal server error" });
