@@ -13,7 +13,7 @@ import { ListLeadsStatus, ListLeadsTemperatura } from "@workspace/api-client-rea
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Filter, Phone, ArrowRight, Activity, ThermometerSun, Flame, Snowflake, TrendingUp } from "lucide-react";
-import { getConversao, conversaoBadgeColor } from "@/lib/nichos";
+import { getConversao, conversaoBadgeColor, NICHOS } from "@/lib/nichos";
 
 export default function Leads() {
   const [, navigate] = useLocation();
@@ -23,6 +23,7 @@ export default function Leads() {
     campanhaId: searchParams.get('campanhaId') || "",
     status: searchParams.get('status') || "",
     temperatura: searchParams.get('temperatura') || "",
+    nicho: searchParams.get('nicho') || "",
     busca: "",
   });
 
@@ -32,11 +33,10 @@ export default function Leads() {
   // Clean empty params for API call
   const apiParams: any = {};
   if (filters.campanhaId) apiParams.campanhaId = parseInt(filters.campanhaId);
-  if (filters.status) apiParams.status = filters.status;
+  if (filters.status)     apiParams.status = filters.status;
   if (filters.temperatura) apiParams.temperatura = filters.temperatura;
+  if (filters.nicho)      apiParams.nicho = filters.nicho;
   
-  // We do client-side text filtering for "busca" since API doesn't have a generic text search param
-  // (API has nicho/cidade, but a unified search is better UX)
   const { data: allLeads, isLoading } = useListLeads(apiParams);
   
   const filteredLeads = allLeads?.filter(lead => {
@@ -71,8 +71,9 @@ export default function Leads() {
           <p className="text-muted-foreground mt-1">Gerencie seu pipeline de prospecção e faça abordagens.</p>
         </div>
 
-        <Card className="p-4 flex flex-col md:flex-row gap-4 shrink-0">
-          <div className="relative flex-1">
+        <Card className="p-4 space-y-3 shrink-0">
+          {/* Search row */}
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
               placeholder="Buscar por empresa, nicho ou cidade..." 
@@ -82,39 +83,64 @@ export default function Leads() {
             />
           </div>
           
-          <div className="flex items-center gap-3 overflow-x-auto pb-2 md:pb-0">
-            <Filter className="w-4 h-4 text-muted-foreground shrink-0 hidden md:block" />
+          {/* Filter chips row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
             
             <Select 
               value={filters.campanhaId} 
               onChange={e => setFilters(f => ({ ...f, campanhaId: e.target.value }))}
-              className="min-w-[160px]"
+              className="min-w-[150px] flex-1 max-w-[200px]"
             >
               <option value="">Todas Campanhas</option>
               {campaigns?.map(c => <option key={c.id} value={c.id.toString()}>{c.nome}</option>)}
             </Select>
 
             <Select 
+              value={filters.nicho} 
+              onChange={e => setFilters(f => ({ ...f, nicho: e.target.value }))}
+              className="min-w-[170px] flex-1 max-w-[220px]"
+            >
+              <option value="">Todos os Nichos</option>
+              {NICHOS.map(n => (
+                <option key={n.nome} value={n.nome}>
+                  {n.nome} — {n.conversao}%
+                </option>
+              ))}
+            </Select>
+
+            <Select 
               value={filters.temperatura} 
               onChange={e => setFilters(f => ({ ...f, temperatura: e.target.value }))}
-              className="min-w-[140px]"
+              className="min-w-[130px] flex-1 max-w-[160px]"
             >
               <option value="">Qualquer Temp.</option>
-              <option value="Quente">Quente</option>
-              <option value="Morno">Morno</option>
-              <option value="Frio">Frio</option>
+              <option value="Quente">🔴 Quente</option>
+              <option value="Morno">🟡 Morno</option>
+              <option value="Frio">🔵 Frio</option>
             </Select>
 
             <Select 
               value={filters.status} 
               onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
-              className="min-w-[140px]"
+              className="min-w-[130px] flex-1 max-w-[160px]"
             >
               <option value="">Qualquer Status</option>
               <option value="Novo">Novo</option>
               <option value="Contatado">Contatado</option>
               <option value="Convertido">Convertido</option>
+              <option value="Perdido">Perdido</option>
+              <option value="Ignorado">Ignorado</option>
             </Select>
+
+            {(filters.nicho || filters.status || filters.temperatura || filters.campanhaId || filters.busca) && (
+              <button
+                onClick={() => setFilters({ campanhaId: "", status: "", temperatura: "", nicho: "", busca: "" })}
+                className="text-xs text-muted-foreground hover:text-white px-3 py-1.5 rounded-lg border border-border/50 hover:border-border transition-colors whitespace-nowrap"
+              >
+                Limpar filtros
+              </button>
+            )}
           </div>
         </Card>
 
