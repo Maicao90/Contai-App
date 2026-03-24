@@ -122,10 +122,35 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
             </div>
           </div>
 
-          <div className="text-center bg-card p-3 rounded-xl border border-border min-w-[90px]">
-            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Score</p>
-            <p className="text-3xl font-display font-bold text-primary">{lead.score}</p>
+          <div className="bg-card p-3 rounded-xl border border-border min-w-[110px] space-y-1.5">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider text-center">Oportunidade</p>
+            <p className={`text-3xl font-display font-bold text-center ${lead.score >= 70 ? 'text-red-400' : lead.score >= 35 ? 'text-amber-400' : 'text-blue-400'}`}>
+              {lead.score}<span className="text-sm font-normal text-muted-foreground">/100</span>
+            </p>
+            <div className="w-full bg-background/80 rounded-full h-2 overflow-hidden">
+              <div
+                className={`h-full rounded-full ${lead.score >= 70 ? 'bg-red-500' : lead.score >= 35 ? 'bg-amber-500' : 'bg-blue-500'}`}
+                style={{ width: `${lead.score}%` }}
+              />
+            </div>
           </div>
+        </div>
+
+        {/* Score Breakdown */}
+        <div className="grid grid-cols-1 gap-1.5 bg-background/30 rounded-xl p-3 border border-border/50">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Por que esse índice?</p>
+          {[
+            { label: "Sem site próprio", pontos: 70, ativo: !lead.temSite },
+            { label: "Sem Pixel Meta (anúncios)", pontos: 35, ativo: lead.temSite && !lead.temPixelMeta },
+            { label: "Sem Pixel Google (analytics)", pontos: 20, ativo: lead.temSite && !lead.temPixelGoogle },
+            { label: "Base — todo prospect tem valor", pontos: 15, ativo: true },
+          ].map(({ label, pontos, ativo }) => (
+            <div key={label} className={`flex items-center gap-2 text-xs rounded-lg px-2.5 py-1.5 ${ativo ? 'bg-primary/10 text-white' : 'text-muted-foreground/50 line-through'}`}>
+              <span className={`text-base leading-none ${ativo ? 'text-emerald-400' : 'text-muted-foreground/30'}`}>{ativo ? '✓' : '—'}</span>
+              <span className="flex-1">{label}</span>
+              <span className={`font-mono font-bold ${ativo ? 'text-primary' : ''}`}>+{pontos}pts</span>
+            </div>
+          ))}
         </div>
 
         {/* Demo URL Banner */}

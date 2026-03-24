@@ -127,7 +127,7 @@ export default function Leads() {
                 <tr>
                   <th className="px-6 py-4 font-medium">Empresa</th>
                   <th className="px-6 py-4 font-medium">Contato</th>
-                  <th className="px-6 py-4 font-medium">Score</th>
+                  <th className="px-6 py-4 font-medium">Oportunidade</th>
                   <th className="px-6 py-4 font-medium">Temperatura</th>
                   <th className="px-6 py-4 font-medium">Status</th>
                   <th className="px-6 py-4 font-medium text-right">Ação</th>
@@ -173,8 +173,19 @@ export default function Leads() {
                         )}
                       </td>
                       <td className="px-6 py-3">
-                        <div className="bg-background/80 border border-border inline-flex items-center justify-center w-10 h-10 rounded-xl font-display font-bold text-white shadow-inner">
-                          {lead.score}
+                        <div className="flex flex-col gap-1 min-w-[80px]">
+                          <div className="flex items-center justify-between">
+                            <span className={`text-sm font-bold ${lead.score >= 70 ? 'text-red-400' : lead.score >= 35 ? 'text-amber-400' : 'text-blue-400'}`}>
+                              {lead.score}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">/100</span>
+                          </div>
+                          <div className="w-full bg-background/80 rounded-full h-1.5 overflow-hidden border border-border/50">
+                            <div
+                              className={`h-full rounded-full transition-all ${lead.score >= 70 ? 'bg-red-500' : lead.score >= 35 ? 'bg-amber-500' : 'bg-blue-500'}`}
+                              style={{ width: `${lead.score}%` }}
+                            />
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-3">

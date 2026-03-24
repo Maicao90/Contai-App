@@ -40,15 +40,72 @@ export const insertCampaignSchema = createInsertSchema(campanhasTable).omit({ id
 export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
 export type Campaign = typeof campanhasTable.$inferSelect;
 
-export function calcScore(temSite: boolean, temPixelMeta: boolean, temPixelGoogle: boolean): {
-  score: number;
-  temperatura: string;
-} {
+/**
+ * Índice de Oportunidade de Venda — 0 a 100
+ *
+ * Quanto maior o score, maior a oportunidade de fechar negócio,
+ * porque o prospect tem mais lacunas digitais que podemos resolver.
+ *
+ * Critérios:
+ *   Sem site              → +70 pts  (maior gap: empresa invisível online)
+ *   Sem Pixel Meta        → +35 pts  (não consegue rastrear anúncios)
+ *   Sem Pixel Google      → +20 pts  (sem analytics nem remarketing Google)
+ *   Base                  → +15 pts  (qualquer prospect vale ser abordado)
+ *
+ * Temperatura:
+ *   Quente  → score ≥ 70  (oportunidade alta, abordagem urgente)
+ *   Morno   → score ≥ 35  (oportunidade média, bom para trabalhar)
+ *   Frio    → score < 35  (já configurado, argumento mais difícil)
+ */
+export function calcScore(
+  temSite: boolean,
+  temPixelMeta: boolean,
+  temPixelGoogle: boolean
+): { score: number; temperatura: string } {
+  let score = 15; // base
+
   if (!temSite) {
-    return { score: 45, temperatura: "Quente" };
-  } else if (!temPixelMeta && !temPixelGoogle) {
-    return { score: 25, temperatura: "Morno" };
+    score += 70; // sem site = empresa inexistente na internet
   } else {
-    return { score: 10, temperatura: "Frio" };
+    if (!temPixelMeta) score += 35;   // não consegue rodar/medir Meta Ads
+    if (!temPixelGoogle) score += 20; // sem analytics nem remarketing Google
   }
+
+  const temperatura =
+    score >= 70 ? "Quente" : score >= 35 ? "Morno" : "Frio";
+
+  return { score, temperatura };
+}
+
+/**
+ * Retorna os fatores individuais que compõem o score,
+ * para exibir breakdown no frontend.
+ */
+export function calcScoreBreakdown(
+  temSite: boolean,
+  temPixelMeta: boolean,
+  temPixelGoogle: boolean
+): Array<{ label: string; pontos: number; presente: boolean }> {
+  return [
+    {
+      label: "Sem site próprio",
+      pontos: 70,
+      presente: !temSite,
+    },
+    {
+      label: "Sem Pixel Meta (anúncios)",
+      pontos: 35,
+      presente: temSite && !temPixelMeta,
+    },
+    {
+      label: "Sem Pixel Google (analytics)",
+      pontos: 20,
+      presente: temSite && !temPixelGoogle,
+    },
+    {
+      label: "Base (todo prospect tem valor)",
+      pontos: 15,
+      presente: true,
+    },
+  ];
 }
