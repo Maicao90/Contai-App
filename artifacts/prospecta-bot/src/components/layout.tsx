@@ -54,15 +54,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         ))}
       </nav>
       
-      <div className="p-4 mt-auto">
-        <div className="bg-card/50 border border-border rounded-xl p-4 text-sm">
-          <p className="text-muted-foreground mb-2">Plano Pro</p>
-          <div className="w-full bg-background rounded-full h-2 overflow-hidden mb-1">
-            <div className="bg-primary h-full w-[45%]" />
-          </div>
-          <p className="text-xs text-muted-foreground text-right">450 / 1000 leads</p>
-        </div>
-      </div>
     </>
   );
 
