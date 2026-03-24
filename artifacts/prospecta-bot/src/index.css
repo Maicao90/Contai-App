@@ -1,9 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
-@import "tw-animate-css";
 @plugin "@tailwindcss/typography";
-
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: hsl(var(--background));
@@ -44,7 +41,6 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* FORCED DARK MODE */
 :root {
   --background: 221 39% 11%; /* #111827 */
   --foreground: 210 40% 98%;
@@ -87,8 +83,7 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
-    /* Custom background pattern for added depth */
+    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/30 selection:text-primary;
     background-image: 
       radial-gradient(at 0% 0%, hsla(255, 92%, 76%, 0.05) 0px, transparent 50%),
       radial-gradient(at 100% 0%, hsla(255, 92%, 76%, 0.03) 0px, transparent 50%);
@@ -100,7 +95,6 @@
   }
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -116,12 +110,17 @@
   background: hsl(var(--muted-foreground));
 }
 
-/* Gradient text utility */
 .text-gradient {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400;
 }
 
-/* Glassmorphism utility */
 .glass {
-  @apply bg-card/80 backdrop-blur-xl border border-white/10 shadow-xl;
+  @apply bg-card/80 backdrop-blur-xl border border-white/5 shadow-xl;
+}
+
+/* Hide number input arrows */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
 }

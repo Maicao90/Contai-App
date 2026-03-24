@@ -1,0 +1,54 @@
+# Solicitação: Criação de Aplicação SaaS Completa "ProspectaLP"
+
+**Objetivo:** Criar uma ferramenta de prospecção B2B automatizada com interface Dark Mode premium, baseada nos prints fornecidos (Dashboard, Campanhas, Leads e Gerador de Mensagens). A aplicação deve minerar leads sem site ou sem pixels de conversão e gerar abordagens de venda automáticas.
+
+---
+
+### 1. ARQUITETURA DE DADOS (SQLite + SQLAlchemy)
+Crie um banco de dados `prospecta.db` com as seguintes relações:
+* **Tabela Campanhas:** ID, Nome (Nicho), Cidade, UF, Data_Criacao, Taxa_Conversão (ex: 15.4%), Status (Concluída/Ativa).
+* **Tabela Leads:** ID, Campanha_ID (FK), Nome_Empresa, Telefone, WhatsApp, URL_Original, Score (0-100), Temperatura (Frio/Morno/Quente), Status (Novo/Contatado/Convertido), Tem_Site (Bool), Tem_Pixel (Bool).
+
+---
+
+### 2. MÓDULOS DE INTERFACE (Frontend Tailwind CSS)
+
+**Estilo Visual Global:** Fundo `#0f172a`, Cards `#1e293b`, Sidebar `#111827`, Destaques Roxo `#8b5cf6`, Texto `#f8fafc`.
+
+#### A. Dashboard (Referência: image_fe696e.png)
+* Cards de KPI: Total de Leads, Contatados, Convertidos e Receita Potencial (Leads Quentes * R$ 3.000).
+* Gráfico de Funil de Conversão e Lista de "Leads Recentes" com badges de temperatura.
+
+#### B. Gestão de Campanhas (Referência: image_fe6c4e.png & image_fe6c53.jpg)
+* Grid de cards de campanhas por nicho.
+* Modal "+ Nova Campanha" com dropdown de nichos e taxas de conversão (Salão, Psicólogo, Barbearia, etc.).
+* Ao salvar, disparar o script de mineração em background.
+
+#### C. Tabela de Leads (Referência: image_fe68ed.jpg)
+* Filtros por Campanha, Temperatura e Status.
+* Tabela com: Nome, Telefone, Nicho, Score, Temperatura e Status.
+* Botão "LP Ver →" para abrir o detalhamento.
+
+#### D. Gerador de Mensagens (Referência: image_fe692d.png)
+* Modal de detalhes com diagnóstico (Ex: "Sem site", "Sem anúncios").
+* Bloco de "Mensagens" com texto dinâmico: Trocar [Nome], [Cidade] e [Link_Demo] automaticamente.
+* Botões funcionais: "Copiar" (Clipboard API) e "WhatsApp" (wa.me link).
+* Campo "Gerar Prompt Lovable": Texto pronto para criar a Landing Page do cliente em IAs de design.
+
+---
+
+### 3. MOTOR DE INTELIGÊNCIA (Backend Python/Flask)
+Implemente as seguintes automações:
+1. **Minerador Google Dorks:** Função que executa buscas como `site:instagram.com "[NICHO]" "[CIDADE]"` e extrai resultados.
+2. **Analisador de Tech:** Robô que acessa a URL do lead e busca por `fbq('init'` (Pixel Meta) ou `gtag` (Google Ads).
+3. **Calculadora de Score:**
+   - Sem Site = 45pts (Quente)
+   - Com Site mas Sem Pixel = 25pts (Morno)
+   - Com Site e Pixel = 10pts (Frio)
+
+---
+
+### 4. INSTRUÇÕES DE EXECUÇÃO NO REPLIT
+* Use Flask para as rotas.
+* Use `googlesearch-python` e `requests` para a mineração.
+* Garanta que a Sidebar seja fixa e a navegação entre Dashboard/Campanhas/Leads seja fluida sem recarregar a página inteira (AJAX/Fetch).

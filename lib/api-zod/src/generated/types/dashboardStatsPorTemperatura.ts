@@ -6,8 +6,8 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface MineRequest {
-  nicho: string;
-  cidade: string;
-  campanhaId?: number | null;
-}
+export type DashboardStatsPorTemperatura = {
+  quente: number;
+  morno: number;
+  frio: number;
+};

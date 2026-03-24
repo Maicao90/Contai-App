@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Api
-  version: 0.1.0
-  description: Prospecta Bot API
+  version: 0.2.0
+  description: ProspectaLP API
 servers:
   - url: /api
     description: Base API path
@@ -11,6 +11,10 @@ tags:
     description: Health operations
   - name: leads
     description: Lead management
+  - name: campaigns
+    description: Campaign management
+  - name: dashboard
+    description: Dashboard stats
   - name: mining
     description: Lead mining operations
 paths:
@@ -27,17 +31,130 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard KPI and funnel stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/recent-leads:
+    get:
+      operationId: getRecentLeads
+      tags: [dashboard]
+      summary: Get recent leads for dashboard
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Recent leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lead"
+
+  /campaigns:
+    get:
+      operationId: listCampaigns
+      tags: [campaigns]
+      summary: List all campaigns
+      responses:
+        "200":
+          description: Campaigns list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Campaign"
+    post:
+      operationId: createCampaign
+      tags: [campaigns]
+      summary: Create a new campaign and start mining
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCampaignRequest"
+      responses:
+        "201":
+          description: Campaign created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  /campaigns/{id}:
+    get:
+      operationId: getCampaign
+      tags: [campaigns]
+      summary: Get a campaign by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campaign details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteCampaign
+      tags: [campaigns]
+      summary: Delete a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /leads:
     get:
       operationId: listLeads
       tags: [leads]
       summary: List all leads
       parameters:
+        - name: campanhaId
+          in: query
+          schema:
+            type: integer
         - name: status
           in: query
           schema:
             type: string
-            enum: [Novo, Morno, Quente, Contatado, Convertido]
+            enum: [Novo, Contatado, Convertido]
+        - name: temperatura
+          in: query
+          schema:
+            type: string
+            enum: [Frio, Morno, Quente]
         - name: nicho
           in: query
           schema:
@@ -92,7 +209,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Lead"
         "404":
-          description: Lead not found
+          description: Not found
           content:
             application/json:
               schema:
@@ -121,7 +238,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Lead"
         "404":
-          description: Lead not found
+          description: Not found
           content:
             application/json:
               schema:
@@ -139,19 +256,6 @@ paths:
       responses:
         "204":
           description: Deleted
-
-  /leads/stats:
-    get:
-      operationId: getLeadStats
-      tags: [leads]
-      summary: Get KPI stats
-      responses:
-        "200":
-          description: KPI statistics
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LeadStats"
 
   /leads/{id}/message:
     get:
@@ -172,7 +276,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/LeadMessage"
         "404":
-          description: Lead not found
+          description: Not found
           content:
             application/json:
               schema:
@@ -209,13 +313,74 @@ components:
 
     LeadStatus:
       type: string
-      enum: [Novo, Morno, Quente, Contatado, Convertido]
+      enum: [Novo, Contatado, Convertido]
+
+    LeadTemperatura:
+      type: string
+      enum: [Frio, Morno, Quente]
+
+    CampaignStatus:
+      type: string
+      enum: [Ativa, Concluída, Pausada]
+
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        nicho:
+          type: string
+        cidade:
+          type: string
+        uf:
+          type: string
+        status:
+          $ref: "#/components/schemas/CampaignStatus"
+        taxaConversao:
+          type: number
+          nullable: true
+        totalLeads:
+          type: integer
+        dataCriacao:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nome
+        - nicho
+        - cidade
+        - uf
+        - status
+        - totalLeads
+        - dataCriacao
+
+    CreateCampaignRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+        nicho:
+          type: string
+        cidade:
+          type: string
+        uf:
+          type: string
+      required:
+        - nome
+        - nicho
+        - cidade
+        - uf
 
     Lead:
       type: object
       properties:
         id:
           type: integer
+        campanhaId:
+          type: integer
+          nullable: true
         nomeEmpresa:
           type: string
         nicho:
@@ -242,6 +407,8 @@ components:
           type: boolean
         score:
           type: integer
+        temperatura:
+          $ref: "#/components/schemas/LeadTemperatura"
         status:
           $ref: "#/components/schemas/LeadStatus"
         dataCadastro:
@@ -256,12 +423,16 @@ components:
         - temPixelMeta
         - temPixelGoogle
         - score
+        - temperatura
         - status
         - dataCadastro
 
     CreateLeadRequest:
       type: object
       properties:
+        campanhaId:
+          type: integer
+          nullable: true
         nomeEmpresa:
           type: string
         nicho:
@@ -296,6 +467,8 @@ components:
       properties:
         status:
           $ref: "#/components/schemas/LeadStatus"
+        temperatura:
+          $ref: "#/components/schemas/LeadTemperatura"
         nomeEmpresa:
           type: string
         nicho:
@@ -317,13 +490,14 @@ components:
           type: boolean
         temPixelGoogle:
           type: boolean
+        campanhaId:
+          type: integer
+          nullable: true
 
-    LeadStats:
+    DashboardStats:
       type: object
       properties:
         totalLeads:
-          type: integer
-        leadsQuentes:
           type: integer
         contatados:
           type: integer
@@ -331,12 +505,42 @@ components:
           type: integer
         receitaPotencial:
           type: number
+        totalCampanhas:
+          type: integer
+        funil:
+          type: object
+          properties:
+            novo:
+              type: integer
+            contatado:
+              type: integer
+            convertido:
+              type: integer
+          required:
+            - novo
+            - contatado
+            - convertido
+        porTemperatura:
+          type: object
+          properties:
+            quente:
+              type: integer
+            morno:
+              type: integer
+            frio:
+              type: integer
+          required:
+            - quente
+            - morno
+            - frio
       required:
         - totalLeads
-        - leadsQuentes
         - contatados
         - convertidos
         - receitaPotencial
+        - totalCampanhas
+        - funil
+        - porTemperatura
 
     LeadMessage:
       type: object
@@ -359,6 +563,9 @@ components:
           type: string
         cidade:
           type: string
+        campanhaId:
+          type: integer
+          nullable: true
       required:
         - nicho
         - cidade

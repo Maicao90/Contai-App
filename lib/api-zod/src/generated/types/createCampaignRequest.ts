@@ -6,8 +6,9 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface MineRequest {
+export interface CreateCampaignRequest {
+  nome: string;
   nicho: string;
   cidade: string;
-  campanhaId?: number | null;
+  uf: string;
 }

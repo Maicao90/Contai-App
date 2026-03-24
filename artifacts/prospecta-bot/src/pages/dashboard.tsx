@@ -1,340 +1,179 @@
-import { useState } from "react";
 import { Layout } from "@/components/layout";
-import { 
-  useLeadsData, 
-  useLeadsStats, 
-  useLeadsMutations 
-} from "@/hooks/use-leads";
-import { Lead, LeadStatus } from "@workspace/api-client-react";
-import { StatusBadge } from "@/components/status-badge";
-import { MessageModal } from "@/components/message-modal";
-import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { 
-  Search, 
-  Target, 
-  MapPin, 
-  Globe, 
-  Database, 
-  Building2, 
-  DollarSign, 
-  Users, 
-  Flame, 
-  Loader2, 
-  MessageSquareText,
-  AlertTriangle
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, Badge } from "@/components/ui/shared";
+import { useGetDashboardStats, useGetRecentLeads } from "@workspace/api-client-react";
+import { formatCurrency } from "@/lib/utils";
+import { Users, Target, CheckCircle2, DollarSign, ArrowRight, Flame, ThermometerSun, Snowflake } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { Link } from "wouter";
 
 export default function Dashboard() {
-  const [nicho, setNicho] = useState("");
-  const [cidade, setCidade] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
+  const { data: recentLeads, isLoading: leadsLoading } = useGetRecentLeads({ limit: 5 });
 
-  const { data: leads = [], isLoading: loadingLeads } = useLeadsData(
-    statusFilter !== "all" ? { status: statusFilter as LeadStatus } : undefined
-  );
-  
-  const { data: stats } = useLeadsStats();
-  const { mineLeads, updateLead } = useLeadsMutations();
-
-  const handleMine = () => {
-    if (!nicho || !cidade) return;
-    mineLeads.mutate({ data: { nicho, cidade } });
-  };
-
-  const handleStatusChange = (leadId: number, newStatus: LeadStatus) => {
-    updateLead.mutate({ id: leadId, data: { status: newStatus } });
-  };
-
-  // KPI Configuration
   const kpis = [
-    {
-      title: "Total de Leads",
-      value: stats?.totalLeads || 0,
-      icon: Users,
-      color: "text-blue-400",
-      bg: "bg-blue-400/10"
-    },
-    {
-      title: "Leads Quentes",
-      value: stats?.leadsQuentes || 0,
-      icon: Flame,
-      color: "text-orange-400",
-      bg: "bg-orange-400/10"
-    },
-    {
-      title: "Contatados",
-      value: stats?.contatados || 0,
-      icon: MessageSquareText,
-      color: "text-primary",
-      bg: "bg-primary/10"
-    },
-    {
-      title: "Receita Potencial",
-      value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats?.receitaPotencial || 0),
-      icon: DollarSign,
-      color: "text-green-400",
-      bg: "bg-green-400/10"
-    }
+    { title: "Total de Leads", value: stats?.totalLeads || 0, icon: Users, color: "text-blue-400", bg: "bg-blue-400/10" },
+    { title: "Contatados", value: stats?.contatados || 0, icon: Target, color: "text-amber-400", bg: "bg-amber-400/10" },
+    { title: "Convertidos", value: stats?.convertidos || 0, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+    { title: "Receita Potencial", value: formatCurrency(stats?.receitaPotencial || 0), icon: DollarSign, color: "text-primary", bg: "bg-primary/10" },
   ];
+
+  const funnelData = stats ? [
+    { name: 'Novos', value: stats.funil.novo, color: '#64748b' },
+    { name: 'Contatados', value: stats.funil.contatado, color: '#3b82f6' },
+    { name: 'Convertidos', value: stats.funil.convertido, color: '#10b981' },
+  ] : [];
+
+  const maxTemp = stats ? Math.max(stats.porTemperatura.quente, stats.porTemperatura.morno, stats.porTemperatura.frio, 1) : 1;
 
   return (
     <Layout>
       <div className="space-y-8 pb-12">
-        {/* Search & Mining Section */}
-        <section>
-          <div className="relative overflow-hidden rounded-2xl glass p-6 sm:p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-50 pointer-events-none" />
-            
-            <div className="relative z-10 flex flex-col md:flex-row gap-4 items-end">
-              <div className="flex-1 w-full space-y-2">
-                <label className="text-sm font-medium text-foreground ml-1">Nicho de Mercado</label>
-                <div className="relative">
-                  <Target className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Ex: Dentistas, Clínicas de Estética" 
-                    className="pl-10 h-12 bg-background/50"
-                    value={nicho}
-                    onChange={(e) => setNicho(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="flex-1 w-full space-y-2">
-                <label className="text-sm font-medium text-foreground ml-1">Cidade / Região</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Ex: São Paulo, Campinas" 
-                    className="pl-10 h-12 bg-background/50"
-                    value={cidade}
-                    onChange={(e) => setCidade(e.target.value)}
-                  />
-                </div>
-              </div>
-              <Button 
-                onClick={handleMine} 
-                disabled={!nicho || !cidade || mineLeads.isPending}
-                className="h-12 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
-              >
-                {mineLeads.isPending ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Minerando...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-5 h-5 mr-2" />
-                    Minerar Oportunidades
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </section>
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Visão Geral</h1>
+          <p className="text-muted-foreground mt-1">Acompanhe seus resultados de prospecção e conversão.</p>
+        </div>
 
         {/* KPIs */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {kpis.map((kpi, idx) => (
-            <motion.div
-              key={kpi.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-            >
-              <Card className="glass border-border/50 hover:border-primary/30 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {kpi.title}
-                  </CardTitle>
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${kpi.bg}`}>
-                    <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-display font-bold text-foreground">
-                    {kpi.value}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {kpis.map((kpi, i) => (
+            <Card key={i} className="p-6 relative overflow-hidden group hover:border-primary/30 transition-colors">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                <kpi.icon className={`w-16 h-16 ${kpi.color}`} />
+              </div>
+              <div className="relative z-10">
+                <div className={`w-10 h-10 rounded-xl ${kpi.bg} flex items-center justify-center mb-4`}>
+                  <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">{kpi.title}</p>
+                <p className="text-3xl font-display font-bold text-white">
+                  {statsLoading ? <span className="text-transparent bg-muted animate-pulse rounded">000</span> : kpi.value}
+                </p>
+              </div>
+            </Card>
           ))}
-        </section>
+        </div>
 
-        {/* Main Table Section */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-display font-semibold flex items-center gap-2">
-              <Database className="w-5 h-5 text-primary" />
-              Pipeline de Leads
-            </h2>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px] bg-card border-border/50">
-                <SelectValue placeholder="Filtrar por Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Leads</SelectItem>
-                {Object.values(LeadStatus).map((status) => (
-                  <SelectItem key={status} value={status}>{status}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Card className="glass border-border/50 overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-secondary/30">
-                  <TableRow className="border-border/50 hover:bg-transparent">
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>Diagnóstico</TableHead>
-                    <TableHead className="text-center">Score</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <AnimatePresence>
-                    {loadingLeads ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-32 text-center">
-                          <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
-                        </TableCell>
-                      </TableRow>
-                    ) : leads.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
-                          Nenhum lead encontrado. Inicie uma mineração acima.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      leads.map((lead) => (
-                        <motion.tr
-                          key={lead.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="border-border/50 group hover:bg-secondary/10 transition-colors"
-                        >
-                          <TableCell>
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center flex-shrink-0 mt-0.5 border border-border/50">
-                                <Building2 className="w-5 h-5 text-muted-foreground" />
-                              </div>
-                              <div>
-                                <p className="font-semibold text-foreground">{lead.nomeEmpresa}</p>
-                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                  {lead.nicho} • {lead.cidade}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                                  {format(new Date(lead.dataCadastro), "dd 'de' MMM, yyyy", { locale: ptBR })}
-                                </p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          
-                          <TableCell>
-                            <div className="flex gap-2">
-                              {!lead.temSite && (
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-destructive/10 text-destructive border border-destructive/20 text-xs font-medium">
-                                      <Globe className="w-3.5 h-3.5" />
-                                      Sem Site
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Empresa não possui website detectado</TooltipContent>
-                                </Tooltip>
-                              )}
-                              {(!lead.temPixelMeta && !lead.temPixelGoogle) && lead.temSite && (
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-orange-500/10 text-orange-400 border border-orange-500/20 text-xs font-medium">
-                                      <AlertTriangle className="w-3.5 h-3.5" />
-                                      Sem Pixel
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Site existe, mas não possui rastreamento (Meta/Google)</TooltipContent>
-                                </Tooltip>
-                              )}
-                              {lead.temSite && (lead.temPixelMeta || lead.temPixelGoogle) && (
-                                <span className="text-xs text-muted-foreground italic px-2 py-1">
-                                  Presença OK
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-
-                          <TableCell className="text-center">
-                            <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary border border-border/50 font-bold text-sm text-primary">
-                              {lead.score}
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <Select 
-                              value={lead.status} 
-                              onValueChange={(v) => handleStatusChange(lead.id, v as LeadStatus)}
-                            >
-                              <SelectTrigger className="w-[140px] h-9 border-0 bg-transparent p-0 hover:bg-secondary/50 focus:ring-0">
-                                <StatusBadge status={lead.status} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.values(LeadStatus).map((status) => (
-                                  <SelectItem key={status} value={status}>
-                                    <StatusBadge status={status} />
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-primary hover:text-primary-foreground hover:bg-primary"
-                              onClick={() => setSelectedLead(lead)}
-                            >
-                              Ver Mensagem
-                            </Button>
-                          </TableCell>
-                        </motion.tr>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </TableBody>
-              </Table>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Funnel Chart */}
+          <Card className="p-6 flex flex-col">
+            <h2 className="text-lg font-bold text-white mb-6">Funil de Conversão</h2>
+            <div className="flex-1 min-h-[250px] w-full">
+              {statsLoading ? (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">Carregando...</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={funnelData} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={80} />
+                    <Tooltip 
+                      cursor={{ fill: 'transparent' }}
+                      contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
+                      itemStyle={{ color: '#fff' }}
+                    />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
+                      {funnelData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </Card>
-        </section>
-      </div>
 
-      <MessageModal 
-        lead={selectedLead} 
-        onClose={() => setSelectedLead(null)} 
-      />
+          {/* Temperature */}
+          <Card className="p-6">
+            <h2 className="text-lg font-bold text-white mb-6">Temperatura dos Leads</h2>
+            <div className="space-y-6">
+              {[
+                { label: "Quente", value: stats?.porTemperatura.quente || 0, icon: Flame, color: "bg-rose-500", text: "text-rose-400" },
+                { label: "Morno", value: stats?.porTemperatura.morno || 0, icon: ThermometerSun, color: "bg-amber-500", text: "text-amber-400" },
+                { label: "Frio", value: stats?.porTemperatura.frio || 0, icon: Snowflake, color: "bg-sky-500", text: "text-sky-400" },
+              ].map((temp, i) => (
+                <div key={i}>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className={`font-medium flex items-center gap-2 ${temp.text}`}>
+                      <temp.icon className="w-4 h-4" />
+                      {temp.label}
+                    </span>
+                    <span className="text-muted-foreground font-medium">{temp.value} leads</span>
+                  </div>
+                  <div className="w-full bg-background rounded-full h-3 border border-border/50 overflow-hidden">
+                    <div 
+                      className={`h-full ${temp.color} transition-all duration-1000 ease-out`}
+                      style={{ width: `${statsLoading ? 0 : (temp.value / maxTemp) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Recent Leads */}
+        <Card className="overflow-hidden">
+          <div className="p-6 border-b border-border flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white">Leads Recentes</h2>
+            <Link href="/leads" className="text-sm text-primary hover:text-primary-foreground hover:bg-primary px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1">
+              Ver todos <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-background/50 text-muted-foreground">
+                <tr>
+                  <th className="px-6 py-4 font-medium">Empresa</th>
+                  <th className="px-6 py-4 font-medium">Temperatura</th>
+                  <th className="px-6 py-4 font-medium">Status</th>
+                  <th className="px-6 py-4 font-medium text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {leadsLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
+                      <td className="px-6 py-4"><div className="h-5 bg-muted rounded-full w-16" /></td>
+                      <td className="px-6 py-4"><div className="h-5 bg-muted rounded-full w-20" /></td>
+                      <td className="px-6 py-4 text-right"><div className="h-8 bg-muted rounded w-16 inline-block" /></td>
+                    </tr>
+                  ))
+                ) : recentLeads?.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                      Nenhum lead encontrado ainda. Crie uma campanha!
+                    </td>
+                  </tr>
+                ) : (
+                  recentLeads?.map((lead) => (
+                    <tr key={lead.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-white">{lead.nomeEmpresa}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{lead.nicho}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant={lead.temperatura === 'Quente' ? 'danger' : lead.temperatura === 'Morno' ? 'warning' : 'info'}>
+                          {lead.temperatura}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant={lead.status === 'Convertido' ? 'success' : lead.status === 'Contatado' ? 'info' : 'default'}>
+                          {lead.status}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                         <Link href={`/leads`} className="text-primary hover:underline text-sm font-medium">
+                           Abrir →
+                         </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
     </Layout>
   );
 }
