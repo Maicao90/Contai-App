@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Dashboard from "@/pages/dashboard";
 import Campanhas from "@/pages/campanhas";
 import Leads from "@/pages/leads";
+import Mensagens from "@/pages/mensagens";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/campanhas" component={Campanhas} />
       <Route path="/leads" component={Leads} />
+      <Route path="/mensagens" component={Mensagens} />
       <Route component={NotFound} />
     </Switch>
   );
