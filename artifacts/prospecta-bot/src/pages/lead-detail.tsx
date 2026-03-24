@@ -18,7 +18,7 @@ import {
   ArrowLeft, Phone, Globe, MapPin, Building2,
   Flame, ThermometerSun, Snowflake, Check, Copy,
   ExternalLink, ChevronDown, Code2, Loader2,
-  MessageCircle, TrendingUp,
+  MessageCircle, TrendingUp, Rocket,
 } from "lucide-react";
 import { getConversao, conversaoBadgeColor } from "@/lib/nichos";
 
@@ -51,6 +51,8 @@ export default function LeadDetail() {
 
   const [status, setStatus] = useState<LeadStatus>("Novo");
   const [demoUrl, setDemoUrl] = useState("");
+  const [generatingDemo, setGeneratingDemo] = useState(false);
+  const [generatedDemoPath, setGeneratedDemoPath] = useState<string | null>(null);
   const [editedMessage, setEditedMessage] = useState("");
   const [promptTab, setPromptTab] = useState<PromptTab>("blueprint");
   const [msgTab, setMsgTab] = useState<MsgTab>("contato");
@@ -96,6 +98,24 @@ export default function LeadDetail() {
     const rawPhone = lead?.telefone?.replace(/\D/g, "") ?? "";
     if (rawPhone.length < 10) return null;
     return `https://wa.me/55${rawPhone}?text=${encodeURIComponent(editedMessage)}`;
+  };
+
+  const handleGenerateDemo = async () => {
+    if (!leadId) return;
+    setGeneratingDemo(true);
+    try {
+      const res = await fetch(`/api/leads/${leadId}/generate-demo`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json() as { slug: string; demoPath: string };
+      const fullUrl = `${window.location.origin}${data.demoPath}`;
+      setGeneratedDemoPath(data.demoPath);
+      setDemoUrl(fullUrl);
+      toast({ title: "Demo gerada com sucesso!", description: "Página disponível agora." });
+    } catch {
+      toast({ title: "Erro ao gerar demo", description: "Tente novamente.", variant: "destructive" });
+    } finally {
+      setGeneratingDemo(false);
+    }
   };
 
   const currentPrompt = msg?.prompts?.[promptTab] ?? msg?.promptDemo ?? "";
@@ -287,25 +307,74 @@ export default function LeadDetail() {
 
             {/* Landing Page */}
             <Card className="p-6 space-y-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Landing Page</h2>
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Landing Page Demo</h2>
+
+              {/* Generate Demo Button */}
+              <Button
+                className={cn(
+                  "w-full gap-2 font-bold transition-all",
+                  generatedDemoPath
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                    : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white border-0"
+                )}
+                onClick={handleGenerateDemo}
+                disabled={generatingDemo}
+              >
+                {generatingDemo ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Gerando página...</>
+                ) : generatedDemoPath ? (
+                  <><Check className="w-4 h-4" /> Demo Gerada! Gerar Novamente</>
+                ) : (
+                  <><Rocket className="w-4 h-4" /> Gerar Demo com 1 Clique</>
+                )}
+              </Button>
+
+              {/* Generated URL display */}
+              {generatedDemoPath && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 space-y-2"
+                >
+                  <p className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
+                    Página disponível agora
+                  </p>
+                  <a
+                    href={`${window.location.origin}${generatedDemoPath}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-emerald-300 hover:text-emerald-200 font-mono break-all hover:underline"
+                  >
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                    {`${window.location.origin}${generatedDemoPath}`}
+                  </a>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full gap-1.5 h-7 text-xs border-emerald-500/40 text-emerald-400 hover:text-emerald-300"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(`${window.location.origin}${generatedDemoPath}`);
+                      toast({ title: "URL copiada!" });
+                    }}
+                  >
+                    <Copy className="w-3 h-3" /> Copiar URL
+                  </Button>
+                </motion.div>
+              )}
+
+              {/* Manual URL input */}
               <div className="flex gap-2">
                 <Input
                   value={demoUrl}
                   onChange={e => setDemoUrl(e.target.value)}
                   placeholder="https://empresa.replit.app"
-                  className="text-sm font-mono"
+                  className="text-sm font-mono text-xs"
                 />
                 <Button size="sm" variant="outline" onClick={() => toast({ title: "URL salva!" })}>
                   Salvar
                 </Button>
               </div>
-              {demoUrl && (
-                <a href={demoUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs text-primary hover:underline">
-                  <ExternalLink className="w-3 h-3" />
-                  {demoUrl}
-                </a>
-              )}
 
               {/* Prompt section */}
               <div className="border border-border rounded-xl overflow-hidden bg-background/30">

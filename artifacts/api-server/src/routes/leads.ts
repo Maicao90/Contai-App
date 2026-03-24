@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, leadsTable, calcScore } from "@workspace/db";
+import { demoPagesTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import {
   ListLeadsQueryParams,
@@ -8,6 +9,7 @@ import {
   MineLeadsBody,
 } from "@workspace/api-zod";
 import { mineLeads } from "../lib/miner.js";
+import { generateDemoHtml } from "../lib/demo-generator.js";
 
 const router: IRouter = Router();
 
@@ -346,6 +348,66 @@ router.delete("/leads/:id", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to delete lead");
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /leads/:id/generate-demo
+router.post("/leads/:id/generate-demo", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
+
+    const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, id));
+    if (!lead) return res.status(404).json({ error: "Lead not found" });
+
+    const baseSlug = lead.nomeEmpresa
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+
+    const slug = `${baseSlug}-${id}`;
+    const html = generateDemoHtml({
+      nomeEmpresa: lead.nomeEmpresa,
+      nicho: lead.nicho,
+      cidade: lead.cidade,
+      telefone: lead.telefone,
+      whatsapp: lead.whatsapp,
+    });
+
+    // Upsert demo page
+    const existing = await db.select().from(demoPagesTable).where(eq(demoPagesTable.leadId, id));
+    if (existing.length > 0) {
+      await db.update(demoPagesTable)
+        .set({ html, slug, updatedAt: new Date() })
+        .where(eq(demoPagesTable.leadId, id));
+    } else {
+      await db.insert(demoPagesTable).values({ leadId: id, slug, html });
+    }
+
+    res.json({ slug, demoPath: `/api/demo/${slug}` });
+  } catch (err) {
+    req.log.error({ err }, "Failed to generate demo");
+    res.status(500).json({ error: "Failed to generate demo" });
+  }
+});
+
+// GET /demo/:slug — serve HTML demo page
+router.get("/demo/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const [page] = await db.select().from(demoPagesTable).where(eq(demoPagesTable.slug, slug));
+    if (!page) {
+      res.status(404).send(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Não encontrado</title><style>body{font-family:sans-serif;background:#0d0d1a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;gap:16px}</style></head><body><h1 style="font-size:4rem;margin:0">404</h1><p style="color:rgba(255,255,255,.6)">Demonstração não encontrada.</p><a href="/" style="color:#7c3aed">Voltar</a></body></html>`);
+      return;
+    }
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache");
+    res.send(page.html);
+  } catch (err) {
+    req.log.error({ err }, "Failed to serve demo");
+    res.status(500).send("Erro interno");
   }
 });
 

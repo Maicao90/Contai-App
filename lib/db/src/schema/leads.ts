@@ -32,6 +32,15 @@ export const leadsTable = pgTable("leads", {
   dataCadastro: timestamp("data_cadastro").notNull().defaultNow(),
 });
 
+export const demoPagesTable = pgTable("demo_pages", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+  html: text("html").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const insertLeadSchema = createInsertSchema(leadsTable).omit({ id: true, dataCadastro: true });
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leadsTable.$inferSelect;
