@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Card, Badge, Select, Button, Input } from "@/components/ui/shared";
-import { MessageModal } from "@/components/message-modal";
 import { 
   useListLeads, 
   useUpdateLead,
@@ -10,14 +9,14 @@ import {
   getListLeadsQueryKey,
   getGetDashboardStatsQueryKey
 } from "@workspace/api-client-react";
-import { Lead, ListLeadsStatus, ListLeadsTemperatura } from "@workspace/api-client-react";
+import { ListLeadsStatus, ListLeadsTemperatura } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Filter, Phone, ArrowRight, Activity, ThermometerSun, Flame, Snowflake, TrendingUp } from "lucide-react";
 import { getConversao, conversaoBadgeColor } from "@/lib/nichos";
 
 export default function Leads() {
-  const [location] = useLocation();
+  const [, navigate] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   
   const [filters, setFilters] = useState({
@@ -26,8 +25,6 @@ export default function Leads() {
     temperatura: searchParams.get('temperatura') || "",
     busca: "",
   });
-
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   // Queries
   const { data: campaigns } = useListCampaigns();
@@ -155,7 +152,11 @@ export default function Leads() {
                   </tr>
                 ) : (
                   filteredLeads?.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-white/[0.02] transition-colors group">
+                    <tr
+                      key={lead.id}
+                      className="hover:bg-white/[0.04] transition-colors group cursor-pointer"
+                      onClick={() => navigate(`/leads/${lead.id}`)}
+                    >
                       <td className="px-6 py-3">
                         <div className="font-semibold text-white group-hover:text-primary transition-colors">{lead.nomeEmpresa}</div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -205,30 +206,34 @@ export default function Leads() {
                           {lead.temperatura}
                         </Badge>
                       </td>
-                      <td className="px-6 py-3">
+                      <td className="px-6 py-3" onClick={e => e.stopPropagation()}>
                         <Select 
                           value={lead.status} 
                           onChange={(e) => handleStatusChange(lead.id, e.target.value as ListLeadsStatus)}
                           className={`h-9 py-1 px-3 text-xs w-auto min-w-[130px] font-medium border-0 ${
                             lead.status === 'Convertido' ? 'bg-emerald-500/10 text-emerald-400' :
-                            lead.status === 'Contatado' ? 'bg-blue-500/10 text-blue-400' :
+                            lead.status === 'Contatado'  ? 'bg-blue-500/10 text-blue-400' :
+                            lead.status === 'Perdido'    ? 'bg-red-500/10 text-red-400' :
+                            lead.status === 'Ignorado'   ? 'bg-zinc-500/10 text-zinc-400' :
                             'bg-slate-500/10 text-slate-300'
                           }`}
                         >
-                          <option value="Novo" className="bg-background text-foreground">Novo</option>
-                          <option value="Contatado" className="bg-background text-foreground">Contatado</option>
+                          <option value="Novo"       className="bg-background text-foreground">Novo</option>
+                          <option value="Contatado"  className="bg-background text-foreground">Contatado</option>
                           <option value="Convertido" className="bg-background text-foreground">Convertido</option>
+                          <option value="Perdido"    className="bg-background text-foreground">Perdido</option>
+                          <option value="Ignorado"   className="bg-background text-foreground">Ignorado</option>
                         </Select>
                       </td>
                       <td className="px-6 py-3 text-right">
-                         <Button 
-                           variant="outline" 
-                           size="sm" 
-                           className="group-hover:border-primary/50 group-hover:bg-primary/10"
-                           onClick={() => setSelectedLead(lead)}
-                         >
-                           Ver Detalhes <ArrowRight className="w-4 h-4 ml-1" />
-                         </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="group-hover:border-primary/50 group-hover:bg-primary/10"
+                          onClick={e => { e.stopPropagation(); navigate(`/leads/${lead.id}`); }}
+                        >
+                          Ver <ArrowRight className="w-4 h-4 ml-1" />
+                        </Button>
                       </td>
                     </tr>
                   ))
@@ -239,11 +244,6 @@ export default function Leads() {
         </Card>
       </div>
 
-      <MessageModal 
-        lead={selectedLead} 
-        isOpen={!!selectedLead} 
-        onClose={() => setSelectedLead(null)} 
-      />
     </Layout>
   );
 }

@@ -13,4 +13,6 @@ export const ListLeadsStatus = {
   Novo: "Novo",
   Contatado: "Contatado",
   Convertido: "Convertido",
+  Perdido: "Perdido",
+  Ignorado: "Ignorado",
 } as const;

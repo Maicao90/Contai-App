@@ -121,7 +121,7 @@ export const DeleteCampaignParams = zod.object({
  */
 export const ListLeadsQueryParams = zod.object({
   campanhaId: zod.coerce.number().optional(),
-  status: zod.enum(["Novo", "Contatado", "Convertido"]).optional(),
+  status: zod.enum(["Novo", "Contatado", "Convertido", "Perdido", "Ignorado"]).optional(),
   temperatura: zod.enum(["Frio", "Morno", "Quente"]).optional(),
   nicho: zod.coerce.string().optional(),
   cidade: zod.coerce.string().optional(),
@@ -198,7 +198,7 @@ export const UpdateLeadParams = zod.object({
 });
 
 export const UpdateLeadBody = zod.object({
-  status: zod.enum(["Novo", "Contatado", "Convertido"]).optional(),
+  status: zod.enum(["Novo", "Contatado", "Convertido", "Perdido", "Ignorado"]).optional(),
   temperatura: zod.enum(["Frio", "Morno", "Quente"]).optional(),
   nomeEmpresa: zod.string().optional(),
   nicho: zod.string().optional(),
