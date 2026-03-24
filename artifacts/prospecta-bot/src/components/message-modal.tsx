@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { Modal } from "./ui/modal";
 import { Button, Textarea, Select, Badge } from "./ui/shared";
 import { Copy, MessageCircle, ExternalLink, ChevronDown, Check, Loader2 } from "lucide-react";
