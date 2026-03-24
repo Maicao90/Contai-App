@@ -67,6 +67,9 @@ export interface Lead {
   urlSite?: string | null;
   temPixelMeta: boolean;
   temPixelGoogle: boolean;
+  temGoogleMeuNegocio: boolean;
+  notaGoogle?: number | null;
+  urlInstagram?: string | null;
   score: number;
   temperatura: LeadTemperatura;
   status: LeadStatus;

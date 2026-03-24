@@ -405,6 +405,15 @@ components:
           type: boolean
         temPixelGoogle:
           type: boolean
+        temGoogleMeuNegocio:
+          type: boolean
+        notaGoogle:
+          type: number
+          format: float
+          nullable: true
+        urlInstagram:
+          type: string
+          nullable: true
         score:
           type: integer
         temperatura:
@@ -422,6 +431,7 @@ components:
         - temSite
         - temPixelMeta
         - temPixelGoogle
+        - temGoogleMeuNegocio
         - score
         - temperatura
         - status

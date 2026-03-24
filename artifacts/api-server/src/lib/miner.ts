@@ -14,6 +14,9 @@ interface MinerResult {
   urlSite: string | null;
   temPixelMeta: boolean;
   temPixelGoogle: boolean;
+  temGoogleMeuNegocio: boolean;
+  notaGoogle: number | null;
+  urlInstagram: string | null;
   score: number;
   temperatura: string;
   status: string;
@@ -122,6 +125,22 @@ function simulateWebPresence(): { temSite: boolean; temPixelMeta: boolean; temPi
   }
 }
 
+function simulateGooglePresence(): { temGoogleMeuNegocio: boolean; notaGoogle: number | null } {
+  // ~55% of Brazilian small businesses have Google Meu Negócio
+  if (Math.random() < 0.45) return { temGoogleMeuNegocio: false, notaGoogle: null };
+
+  // Rating distribution weighted toward 4.0–4.8
+  const r = Math.random();
+  let nota: number;
+  if (r < 0.04)      nota = Math.round((3.0 + Math.random() * 0.4) * 10) / 10;
+  else if (r < 0.13) nota = Math.round((3.5 + Math.random() * 0.4) * 10) / 10;
+  else if (r < 0.40) nota = Math.round((4.0 + Math.random() * 0.4) * 10) / 10;
+  else if (r < 0.72) nota = Math.round((4.4 + Math.random() * 0.3) * 10) / 10;
+  else               nota = Math.round((4.7 + Math.random() * 0.3) * 10) / 10;
+
+  return { temGoogleMeuNegocio: true, notaGoogle: Math.min(nota, 5.0) };
+}
+
 export async function mineLeads(
   nicho: string,
   cidade: string,
@@ -139,11 +158,13 @@ export async function mineLeads(
     const whatsapp = `https://wa.me/55${phoneDigits}`;
 
     const { temSite, temPixelMeta, temPixelGoogle } = simulateWebPresence();
+    const { temGoogleMeuNegocio, notaGoogle } = simulateGooglePresence();
     const { score, temperatura } = calcScore(temSite, temPixelMeta, temPixelGoogle);
 
-    const urlOrigem = !temSite
-      ? `https://instagram.com/${slug(nomeEmpresa)}`
-      : `https://${slug(nomeEmpresa)}.com.br`;
+    const urlInstagram = `https://www.instagram.com/${slug(nomeEmpresa)}/`;
+    const urlOrigem = temSite
+      ? `https://${slug(nomeEmpresa)}.com.br`
+      : urlInstagram;
 
     try {
       const [lead] = await db
@@ -160,6 +181,9 @@ export async function mineLeads(
           urlSite: temSite ? urlOrigem : null,
           temPixelMeta,
           temPixelGoogle,
+          temGoogleMeuNegocio,
+          notaGoogle: notaGoogle ?? undefined,
+          urlInstagram,
           score,
           temperatura,
           status: "Novo",
@@ -179,6 +203,9 @@ export async function mineLeads(
         urlSite: lead.urlSite ?? null,
         temPixelMeta: lead.temPixelMeta,
         temPixelGoogle: lead.temPixelGoogle,
+        temGoogleMeuNegocio: lead.temGoogleMeuNegocio,
+        notaGoogle: lead.notaGoogle ?? null,
+        urlInstagram: lead.urlInstagram ?? null,
         score: lead.score,
         temperatura: lead.temperatura,
         status: lead.status,

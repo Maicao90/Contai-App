@@ -18,7 +18,7 @@ import {
   ArrowLeft, Phone, Globe, MapPin, Building2,
   Flame, ThermometerSun, Snowflake, Check, Copy,
   ExternalLink, ChevronDown, Code2, Loader2,
-  MessageCircle, TrendingUp, Rocket,
+  MessageCircle, TrendingUp, Rocket, Star, Instagram,
 } from "lucide-react";
 import { getConversao, conversaoBadgeColor } from "@/lib/nichos";
 
@@ -206,15 +206,25 @@ export default function LeadDetail() {
                 <InfoField label="Nicho" icon={<Building2 className="w-3.5 h-3.5" />}
                   value={lead.nicho}
                 />
-                {lead.urlOrigem && (
-                  <div className="col-span-2">
-                    <p className="text-xs text-muted-foreground mb-1">Origem</p>
-                    <a href={lead.urlOrigem} target="_blank" rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline truncate block">
-                      {lead.urlOrigem}
+                <div className="col-span-2">
+                  <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
+                    <Instagram className="w-3 h-3" /> Instagram
+                  </p>
+                  {lead.urlInstagram ? (
+                    <a
+                      href={lead.urlInstagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-pink-400 hover:text-pink-300 hover:underline truncate flex items-center gap-1.5 transition-colors"
+                    >
+                      <Instagram className="w-3.5 h-3.5 shrink-0" />
+                      {lead.urlInstagram}
+                      <ExternalLink className="w-3 h-3 shrink-0 opacity-60" />
                     </a>
-                  </div>
-                )}
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
+                </div>
               </div>
             </Card>
 
@@ -226,6 +236,57 @@ export default function LeadDetail() {
                 <InfoField label="Pixel Meta (Facebook)" value={lead.temPixelMeta ? "Configurado" : "Não encontrado"} highlight={!lead.temPixelMeta ? "warn" : "success"} />
                 <InfoField label="Pixel Google (Analytics)" value={lead.temPixelGoogle ? "Configurado" : "Não encontrado"} highlight={!lead.temPixelGoogle ? "warn" : "success"} />
                 <InfoField label="Score de Oportunidade" value={`${lead.score}/100`} highlight={lead.score >= 70 ? "danger" : lead.score >= 35 ? "warn" : "info"} />
+              </div>
+
+              {/* Google Meu Negócio */}
+              <div className="border border-border/40 rounded-xl p-4 mt-2 bg-background/30">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-base shrink-0">🗺️</div>
+                    <div>
+                      <p className="text-xs font-semibold text-white">Google Meu Negócio</p>
+                      <p className="text-xs text-muted-foreground">Presença no Google Maps</p>
+                    </div>
+                  </div>
+
+                  {lead.temGoogleMeuNegocio ? (
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {/* Star rating */}
+                      {lead.notaGoogle != null && (
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-0.5">
+                            {[1,2,3,4,5].map(i => {
+                              const filled = lead.notaGoogle! >= i;
+                              const half = !filled && lead.notaGoogle! >= i - 0.5;
+                              return (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${filled || half ? "fill-amber-400 text-amber-400" : "text-border"}`}
+                                />
+                              );
+                            })}
+                          </div>
+                          <span className="text-amber-400 font-bold text-sm">{lead.notaGoogle.toFixed(1)}</span>
+                        </div>
+                      )}
+                      <a
+                        href={`https://www.google.com/search?q=${encodeURIComponent(lead.nomeEmpresa + " " + lead.cidade)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-semibold border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 rounded-full transition-colors"
+                      >
+                        <Check className="w-3 h-3" /> Tem perfil
+                        <ExternalLink className="w-3 h-3 opacity-60" />
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-red-400 font-semibold border border-red-500/30 bg-red-500/10 px-2.5 py-1 rounded-full">
+                        ✕ Sem perfil — grande oportunidade!
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Score breakdown */}
