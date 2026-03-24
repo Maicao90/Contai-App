@@ -13,7 +13,8 @@ import {
 import { Lead, ListLeadsStatus, ListLeadsTemperatura } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Filter, Phone, ArrowRight, Activity, ThermometerSun, Flame, Snowflake } from "lucide-react";
+import { Search, Filter, Phone, ArrowRight, Activity, ThermometerSun, Flame, Snowflake, TrendingUp } from "lucide-react";
+import { getConversao, conversaoBadgeColor } from "@/lib/nichos";
 
 export default function Leads() {
   const [location] = useLocation();
@@ -157,10 +158,20 @@ export default function Leads() {
                     <tr key={lead.id} className="hover:bg-white/[0.02] transition-colors group">
                       <td className="px-6 py-3">
                         <div className="font-semibold text-white group-hover:text-primary transition-colors">{lead.nomeEmpresa}</div>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-xs text-muted-foreground">{lead.cidade}</span>
                           <span className="w-1 h-1 rounded-full bg-border"></span>
                           <Badge variant="outline" className="text-[10px] py-0">{lead.nicho}</Badge>
+                          {(() => {
+                            const taxa = getConversao(lead.nicho);
+                            if (!taxa) return null;
+                            return (
+                              <span className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border font-semibold ${conversaoBadgeColor(taxa)}`}>
+                                <TrendingUp className="w-2.5 h-2.5" />
+                                {taxa}% conv.
+                              </span>
+                            );
+                          })()}
                         </div>
                       </td>
                       <td className="px-6 py-3">

@@ -11,16 +11,11 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Target, Users, MapPin, Loader2, Play } from "lucide-react";
+import { Plus, Target, Users, MapPin, Loader2, Play, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-const NICHES = [
-  "Barbearia", "Salão de Beleza", "Dentista", "Psicólogo", 
-  "Academia", "Restaurante", "Advogado", "Clínica Estética", 
-  "Oficina Mecânica", "Escola de Idiomas"
-];
+import { NICHOS, getConversao, conversaoBadgeColor } from "@/lib/nichos";
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
@@ -114,8 +109,18 @@ export default function Campanhas() {
                   </Badge>
                 </div>
                 
-                <div className="mb-6">
+                <div className="mb-6 flex items-center gap-2 flex-wrap">
                   <Badge variant="outline" className="bg-background/50">{camp.nicho}</Badge>
+                  {(() => {
+                    const taxa = getConversao(camp.nicho);
+                    if (!taxa) return null;
+                    return (
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-semibold ${conversaoBadgeColor(taxa)}`}>
+                        <TrendingUp className="w-3 h-3" />
+                        {taxa}% conv.
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-6 mt-auto bg-background/30 p-3 rounded-xl border border-border/50">
@@ -152,9 +157,14 @@ export default function Campanhas() {
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Nicho de Mercado</label>
               <Select name="nicho" required disabled={isMining}>
-                <option value="">Selecione um nicho</option>
-                {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
+                <option value="">Selecione o nicho</option>
+                {NICHOS.map(n => (
+                  <option key={n.nome} value={n.nome}>
+                    {n.nome} — {n.conversao}% conversão
+                  </option>
+                ))}
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">Ordenados por maior taxa de conversão histórica.</p>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
