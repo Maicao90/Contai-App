@@ -616,28 +616,637 @@ const NICHO_MAP: Record<string, NichoConfig> = {
     ctaUrgency: "Agenda quase cheia! Garanta sua avaliação gratuita antes que esgotem as vagas.",
     footerHours: "Seg–Sex: 9h às 19h | Sáb: 9h às 15h",
   },
+
+  energiasolar: {
+    primary: "#f59e0b", primaryDark: "#d97706",
+    bg: "#0a0700", card: "#181100",
+    services: [
+      { icon: "☀️", name: "Instalação Residencial", desc: "Kit solar completo para sua casa com máxima eficiência e ROI garantido." },
+      { icon: "🏭", name: "Instalação Comercial", desc: "Soluções de grande porte para empresas, indústrias e condomínios." },
+      { icon: "📐", name: "Dimensionamento Gratuito", desc: "Projeto personalizado baseado no seu consumo real, sem custo." },
+      { icon: "📋", name: "Homologação ANEEL", desc: "Toda burocracia com a distribuidora cuidamos nós — 100% sem estresse." },
+      { icon: "🔧", name: "Manutenção Preventiva", desc: "Revisões periódicas para manter sua geração no máximo desempenho." },
+      { icon: "💳", name: "Financiamento Facilitado", desc: "Parcelas menores que sua conta de luz atual. Economia desde o 1º mês." },
+    ],
+    differentials: [
+      { icon: "⚡", title: "Economia de até 95%", desc: "Reduza sua conta de luz drasticamente e recupere o investimento em até 4 anos." },
+      { icon: "🏆", title: "Instaladores Certificados", desc: "Equipe com certificação NABCEP e treinamento contínuo pelos fabricantes." },
+      { icon: "🔒", title: "Garantia de 25 Anos", desc: "Painéis com 25 anos de garantia de performance e 10 anos no serviço." },
+    ],
+    faqs: [
+      { q: "Em quanto tempo o sistema se paga?", a: "Entre 3 e 5 anos dependendo do consumo — depois disso é pura economia, por mais 20 anos." },
+      { q: "Funciona em dias nublados?", a: "Sim! Os painéis geram energia com luz difusa. Dias nublados reduzem a geração em ~30%, não zeram." },
+      { q: "Como funciona a homologação na distribuidora?", a: "Cuidamos de todo o processo burocrático com a ANEEL e sua concessionária. Você não precisa fazer nada." },
+      { q: "Qual a vida útil do sistema?", a: "Os inversores duram em média 10–15 anos; os painéis, 25–30 anos com manutenção adequada." },
+      { q: "Posso instalar em imóvel alugado?", a: "É possível com autorização do proprietário. Muitos locatários negociam o custo como melhoria do imóvel." },
+      { q: "Como é feito o dimensionamento?", a: "Analisamos suas contas de luz dos últimos 12 meses e geramos um projeto 100% personalizado, sem custo." },
+    ],
+    testimonials: [
+      { initials: "RO", name: "Ricardo Oliveira", text: "Minha conta caiu de R$850 para R$47 por mês. Em 4 anos pago o sistema e depois é tudo lucro. Investimento certeiro!" },
+      { initials: "FM", name: "Fernanda Machado", text: "O processo foi muito mais simples do que eu imaginava. Eles cuidaram de tudo com a concessionária e em 45 dias já estava gerando." },
+      { initials: "JP", name: "João Paulo Silva", text: "Fiz na minha empresa e economizei R$4.200 por mês. Recomendo a todo empresário que ainda não tomou essa decisão." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Energia Solar em ${cidade} — Reduza Sua Conta em até 95%`,
+    heroSub: "Instalação completa com financiamento facilitado e retorno garantido. Economize desde o primeiro mês.",
+    ctaUrgency: "Vagas limitadas para visita técnica gratuita este mês. Simule sua economia agora!",
+    footerHours: "Seg–Sex: 8h às 18h | Sáb: 8h às 12h",
+  },
+
+  petshop: {
+    primary: "#14b8a6", primaryDark: "#0f766e",
+    bg: "#030f0e", card: "#071a18",
+    services: [
+      { icon: "🛁", name: "Banho & Tosa", desc: "Higienização completa com produtos premium e secagem profissional." },
+      { icon: "🏨", name: "Pet Hotel", desc: "Hospedagem com carinho, câmeras 24h e atividades recreativas diárias." },
+      { icon: "🩺", name: "Consulta Veterinária", desc: "Atendimento clínico e preventivo com médico veterinário especializado." },
+      { icon: "🥩", name: "Ração Premium", desc: "Linha completa de rações super-premium, naturais e veterinárias." },
+      { icon: "🎀", name: "Acessórios & Roupinhas", desc: "Coleiras, caminhas, brinquedos e moda pet para todas as ocasiões." },
+      { icon: "🚗", name: "Táxi Pet", desc: "Buscamos e levamos seu pet com segurança e conforto." },
+    ],
+    differentials: [
+      { icon: "📷", title: "Câmeras 24 horas", desc: "Acompanhe seu pet em tempo real pelo celular durante a estadia." },
+      { icon: "❤️", title: "Equipe Apaixonada", desc: "Todos os colaboradores são amantes de animais e treinados em bem-estar pet." },
+      { icon: "🏥", title: "Veterinário no Local", desc: "Atendimento veterinário disponível todos os dias, inclusive emergências." },
+    ],
+    faqs: [
+      { q: "Meu pet precisa estar vacinado para usar os serviços?", a: "Sim, exigimos vacinas em dia para a segurança de todos os animais. Trazemos o cartão na primeira visita." },
+      { q: "Com que frequência devo dar banho no meu pet?", a: "Para cães, geralmente a cada 15 a 30 dias. Para gatos, conforme a necessidade. Orientamos na consulta." },
+      { q: "Posso acompanhar meu pet durante o banho?", a: "Preferivelmente não, pois os pets tendem a ficar mais agitados com o dono presente. Mas usamos câmeras para você ver tudo!" },
+      { q: "Quais espécies vocês atendem?", a: "Cães e gatos em todos os serviços. Consulte-nos sobre aves, coelhos e outros pequenos animais." },
+      { q: "O Pet Hotel tem espaço para exercícios?", a: "Sim! Temos área de recreação e cada pet tem atividade física diária supervisionada." },
+      { q: "Como marco um horário?", a: "Pelo WhatsApp! É rápido e você já sai com a confirmação na hora." },
+    ],
+    testimonials: [
+      { initials: "CA", name: "Camila Andrade", text: "Meu Golden fica no Pet Hotel sempre que viajo. As câmeras são maravilhosas — fica mais fácil viajar sabendo que ele está bem!" },
+      { initials: "TR", name: "Thiago Rodrigues", text: "A tosa ficou impecável e meu Shih Tzu adorou. Equipe super cuidadosa e carinhosa com os pets. Nunca mais vou a outro lugar!" },
+      { initials: "LF", name: "Letícia Ferreira", text: "Minha gata estava com problema de saúde e o veterinário do pet shop resolveu tudo rapidamente. Atendimento excelente!" },
+    ],
+    heroTitle: (_e, _n, cidade) => `O Melhor Pet Shop de ${cidade} — Seu Pet Merece o Melhor`,
+    heroSub: "Banho, tosa, veterinário e hotel para pets. Cuidado e amor em cada serviço.",
+    ctaUrgency: "Agende o banho & tosa agora e ganhe um mimo especial para o seu pet!",
+    footerHours: "Seg–Sáb: 8h às 19h | Dom: 9h às 13h",
+  },
+
+  contabilidade: {
+    primary: "#3b82f6", primaryDark: "#1d4ed8",
+    bg: "#030810", card: "#07111e",
+    services: [
+      { icon: "🏢", name: "Abertura de Empresa", desc: "MEI, ME, LTDA, S.A. — abrimos sua empresa do jeito certo e no menor prazo." },
+      { icon: "📊", name: "Contabilidade Mensal", desc: "Escrituração, balancetes e relatórios gerenciais para tomada de decisão." },
+      { icon: "📝", name: "Imposto de Renda PF", desc: "Declaração anual do IRPF com atenção a todas as deduções legais." },
+      { icon: "👥", name: "Folha de Pagamento", desc: "eSocial, pró-labore, FGTS e férias — tudo no prazo e sem multas." },
+      { icon: "⚖️", name: "Planejamento Tributário", desc: "Redução legal de impostos com análise do melhor regime tributário." },
+      { icon: "💼", name: "BPO Financeiro", desc: "Gestão financeira terceirizada para você focar no crescimento." },
+    ],
+    differentials: [
+      { icon: "💰", title: "Economia Real em Impostos", desc: "Clientes economizam em média 22% em carga tributária com nosso planejamento." },
+      { icon: "💻", title: "100% Digital", desc: "Sem papelada. Documentos, relatórios e comunicação tudo online e organizado." },
+      { icon: "🎯", title: "Especialistas por Segmento", desc: "Contadores especializados no seu ramo de atividade para orientação precisa." },
+    ],
+    faqs: [
+      { q: "Qual o melhor regime tributário para minha empresa?", a: "Depende do faturamento, atividade e margem. Fazemos uma análise gratuita para recomendar Simples, Lucro Presumido ou Real." },
+      { q: "Vocês atendem MEI?", a: "Sim! Temos planos especiais para MEI com preço acessível e suporte para crescer até ME ou LTDA." },
+      { q: "Posso trocar de contador no meio do ano?", a: "Pode e é mais simples do que parece. Cuidamos de toda a transferência da documentação." },
+      { q: "Em quanto tempo abrem minha empresa?", a: "Em geral entre 3 e 10 dias úteis dependendo do município e da atividade." },
+      { q: "Como envio os documentos?", a: "100% digital — por aplicativo, WhatsApp ou e-mail. Sem necessidade de ir pessoalmente." },
+      { q: "Vocês dão suporte em fiscalizações?", a: "Sim. Em caso de notificações da Receita Federal ou SEFAZ, nossa equipe assume a resposta." },
+    ],
+    testimonials: [
+      { initials: "GN", name: "Gustavo Neves", text: "Economizei R$1.800/mês mudando de regime tributário com a orientação deles. Deveria ter feito isso anos atrás!" },
+      { initials: "AB", name: "Ana Beatriz Lima", text: "Abriram minha empresa em 6 dias. Processo todo digital e sem dor de cabeça. Atendimento super atencioso." },
+      { initials: "MF", name: "Marcos Figueiredo", text: "Tenho 3 CNPJs e eles cuidam de tudo. Nunca mais me preocupo com prazo de obrigações fiscais." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Contabilidade Digital em ${cidade} — Pague Menos Imposto, Legalmente`,
+    heroSub: "Especialistas em planejamento tributário, abertura de empresas e contabilidade gerencial para PMEs.",
+    ctaUrgency: "Faça uma análise tributária gratuita e descubra quanto sua empresa pode economizar por mês.",
+    footerHours: "Seg–Sex: 8h às 18h",
+  },
+
+  imobiliaria: {
+    primary: "#10b981", primaryDark: "#059669",
+    bg: "#031008", card: "#061d0f",
+    services: [
+      { icon: "🏠", name: "Compra de Imóveis", desc: "Encontramos o imóvel dos seus sonhos com curadoria personalizada." },
+      { icon: "💰", name: "Venda Rápida", desc: "Estratégia de precificação e marketing para vender no menor prazo." },
+      { icon: "🔑", name: "Locação", desc: "Administração completa: inquilinos, contratos, cobranças e manutenções." },
+      { icon: "🏗️", name: "Lançamentos", desc: "Acesso exclusivo a lançamentos de incorporadoras parceiras." },
+      { icon: "🏦", name: "Financiamento", desc: "Simulação e assessoria para aprovação de crédito no melhor banco." },
+      { icon: "⚖️", name: "Assessoria Jurídica", desc: "Contratos, distratos e documentação com total segurança jurídica." },
+    ],
+    differentials: [
+      { icon: "🗺️", title: "Especialistas na Região", desc: "Conhecimento profundo do mercado local para a melhor negociação." },
+      { icon: "📱", title: "Atendimento Ágil", desc: "Resposta rápida, visitas flexíveis e processo 100% digital e transparente." },
+      { icon: "🤝", title: "Negociação Especializada", desc: "Corretores com expertise em fechamento para você pagar menos ou vender mais." },
+    ],
+    faqs: [
+      { q: "Qual é a comissão do corretor?", a: "A comissão é de 6% sobre o valor de venda, padrão CRECI, paga somente quando o negócio fechar." },
+      { q: "Quanto tempo leva para vender um imóvel?", a: "Depende do preço e localização, mas nossa estratégia de marketing reduz o prazo médio para 45 dias." },
+      { q: "Vocês administram aluguel?", a: "Sim! Cuidamos de tudo: anúncio, seleção de inquilinos, contratos, cobranças e vistorias." },
+      { q: "Posso financiar 100% do imóvel?", a: "Geralmente até 80% do valor. Fazemos simulação gratuita para você saber exatamente as condições." },
+      { q: "Preciso de advogado para comprar um imóvel?", a: "Nossa assessoria jurídica está incluída. Analisamos toda documentação para garantir segurança total." },
+      { q: "Como avaliam o valor do meu imóvel?", a: "Fazemos um laudo baseado em comparativos de mercado e visita técnica, sem custo para o proprietário." },
+    ],
+    testimonials: [
+      { initials: "PB", name: "Paulo Braga", text: "Vendi meu apartamento em 38 dias por R$30k acima do que eu esperava. Estratégia de divulgação impecável!" },
+      { initials: "IS", name: "Isabela Santos", text: "Me ajudaram a financiar meu primeiro imóvel, processo que eu achava impossível. Toda orientação foi clarissíma." },
+      { initials: "CE", name: "Carlos Eduardo", text: "Coloquei para alugar e nunca mais me preocupei. Eles cuidam de tudo e o aluguel cai certinho todo mês." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Imobiliária em ${cidade} — Compre, Venda ou Alugue com Segurança`,
+    heroSub: "Corretores especializados no mercado local para você fechar o melhor negócio imobiliário.",
+    ctaUrgency: "Fale agora com um corretor e receba uma avaliação gratuita do seu imóvel!",
+    footerHours: "Seg–Sex: 8h às 18h | Sáb: 8h às 13h",
+  },
+
+  hamburgueria: {
+    primary: "#ef4444", primaryDark: "#dc2626",
+    bg: "#0d0200", card: "#1a0400",
+    services: [
+      { icon: "🍔", name: "Smash Burger", desc: "Blend de carnes frescos, amassados na chapa, com crosta crocante e suculência incrível." },
+      { icon: "🥓", name: "Burger Especial", desc: "Receitas exclusivas da casa com ingredientes premium e molhos artesanais." },
+      { icon: "🌱", name: "Veggie Burger", desc: "Opções vegetarianas e veganas sem abrir mão do sabor intenso." },
+      { icon: "🍟", name: "Batatas & Sides", desc: "Batatas artesanais, onion rings e sides que fazem o combo perfeito." },
+      { icon: "🎉", name: "Combos & Promos", desc: "Combos que cabem no bolso sem economizar no tamanho ou no sabor." },
+      { icon: "🛵", name: "Delivery Rápido", desc: "Pedido pelo WhatsApp ou app — entregamos quentinho até você." },
+    ],
+    differentials: [
+      { icon: "🥩", title: "Carne Fresca Todo Dia", desc: "Blend de carnes moídas diariamente, nunca congeladas. Sabor incomparável." },
+      { icon: "🧪", title: "Molhos Artesanais", desc: "Molhos exclusivos preparados na casa para elevar cada mordida." },
+      { icon: "⚡", title: "Pronto em 15 Minutos", desc: "Da ordem à entrega em até 15 minutos. Sem espera, sem desculpa." },
+    ],
+    faqs: [
+      { q: "A carne é fresca ou congelada?", a: "100% fresca! Moemos e temperamos diariamente para garantir máximo sabor e suculência." },
+      { q: "Vocês têm opção sem glúten?", a: "Sim! Temos pão sem glúten e ingredientes sem glúten disponíveis. Consulte ao pedir." },
+      { q: "Fazem delivery?", a: "Sim! Entregamos pelo WhatsApp, iFood e nosso app. Embalagem especial para o burger chegar perfeito." },
+      { q: "Posso montar meu próprio burger?", a: "Claro! Temos um monte your own com mais de 20 ingredientes para você customizar." },
+      { q: "Qual o tamanho das porções?", a: "Burgers de 150g a 300g de carne. Para quem tem muito apetite, temos o desafio XL!" },
+      { q: "Fazem festas e eventos corporativos?", a: "Sim! Montamos estrutura de burger no local para seu evento. Fale no WhatsApp para orçamento." },
+    ],
+    testimonials: [
+      { initials: "EG", name: "Eduardo Gomes", text: "O melhor smash burger que já comi na vida. Carne suculenta, molho incrível, pão macio. Virou meu lugar favorito!" },
+      { initials: "VL", name: "Vanessa Lima", text: "Fui só uma vez e já sou fã. O atendimento é ótimo e o tempo de espera é zero. Perfeito para o almoço!" },
+      { initials: "DS", name: "Diego Souza", text: "Fiz o evento da minha empresa com eles e foi um sucesso absoluto. Todo mundo pediu o contato no final." },
+    ],
+    heroTitle: (_e, _n, cidade) => `A Melhor Hamburgueria Artesanal de ${cidade}`,
+    heroSub: "Smash burgers com carne fresca, molhos artesanais e ingredientes premium. Delivery rápido.",
+    ctaUrgency: "Peça agora pelo WhatsApp e receba em até 30 minutos com desconto na primeira compra!",
+    footerHours: "Seg–Sex: 11h às 23h | Sáb–Dom: 11h às 00h",
+  },
+
+  padaria: {
+    primary: "#f59e0b", primaryDark: "#d97706",
+    bg: "#0d0800", card: "#1a1300",
+    services: [
+      { icon: "🥖", name: "Pães Artesanais", desc: "Fermentação natural, grãos integrais e receitas tradicionais feitas todo dia." },
+      { icon: "🎂", name: "Bolos Personalizados", desc: "Bolos de aniversário, casamento e datas especiais com decoração exclusiva." },
+      { icon: "🥐", name: "Café da Manhã", desc: "Croissants, brioches, pão de queijo e tudo para começar o dia bem." },
+      { icon: "🥧", name: "Salgados & Tortas", desc: "Salgados assados e fritos, coxinhas e tortas para festas e eventos." },
+      { icon: "📦", name: "Cestas & Kits", desc: "Cestas de café da manhã e kits especiais para presentear com gostinho caseiro." },
+      { icon: "🚚", name: "Entrega em Casa", desc: "Pão fresquinho na sua porta todo dia de manhã. Assine e economize." },
+    ],
+    differentials: [
+      { icon: "🌾", title: "Ingredientes Naturais", desc: "Sem conservantes artificiais. Tudo feito com ingredientes frescos e de qualidade." },
+      { icon: "⏰", title: "Forno 4h da Manhã", desc: "Pão quentinho e fresquinho disponível desde cedo, sem exceção." },
+      { icon: "❤️", title: "Receita de Família", desc: "Tradição de décadas passada de geração em geração com muito carinho." },
+    ],
+    faqs: [
+      { q: "Os pães têm conservantes?", a: "Não! Usamos apenas ingredientes naturais, sem conservantes ou aditivos artificiais." },
+      { q: "Fazem bolos para casamento?", a: "Sim! Temos linha para festas e casamentos com degustação gratuita previamente." },
+      { q: "Posso encomendar com antecedência?", a: "Claro! Recomendamos encomendas com 48h de antecedência para garantir disponibilidade." },
+      { q: "Vocês entregam em casa?", a: "Sim! Temos plano de assinatura semanal e entrega diária. Fale no WhatsApp para ativar." },
+      { q: "Qual o horário de funcionamento?", a: "Abrimos às 6h para você não perder o pão fresquinho de manhã!" },
+      { q: "Fazem pão sem glúten?", a: "Sim! Temos linha especial para celíacos e intolerantes, feita em área separada." },
+    ],
+    testimonials: [
+      { initials: "SC", name: "Sandra Costa", text: "Desde que descobri essa padaria, não consigo mais comer pão de outro lugar. Sabor incomparável!" },
+      { initials: "MH", name: "Mariana Henrique", text: "O bolo de aniversário da minha filha foi um espetáculo. Todo mundo perguntou onde eu tinha comprado!" },
+      { initials: "RC", name: "Roberto Campos", text: "Assino a entrega de pão toda manhã faz 2 anos. Nunca atrasou uma vez e o pão sempre chega quentinho." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Padaria Artesanal em ${cidade} — Pão Fresquinho Todo Dia`,
+    heroSub: "Pães de fermentação natural, bolos personalizados e café da manhã feitos com ingredientes de verdade.",
+    ctaUrgency: "Faça seu pedido agora e ganhe uma surpresa especial na primeira encomenda!",
+    footerHours: "Seg–Sáb: 6h às 20h | Dom: 6h às 14h",
+  },
+
+  lavajato: {
+    primary: "#0ea5e9", primaryDark: "#0284c7",
+    bg: "#020c14", card: "#051525",
+    services: [
+      { icon: "🚗", name: "Lavagem Simples", desc: "Lavagem externa completa com espuma ativa, enxágue e secagem." },
+      { icon: "✨", name: "Lavagem Premium", desc: "Externa + interna com aspiração, painéis e vidros impecáveis." },
+      { icon: "💎", name: "Polimento Técnico", desc: "Remoção de riscos, oxidação e marcas de chuva ácida com resultado show." },
+      { icon: "🔬", name: "Cristalização", desc: "Proteção de longa duração para a pintura com brilho espelhado." },
+      { icon: "🪑", name: "Higienização Interna", desc: "Bancos, carpetes e teto com vapor e extratora para retirar até ácaros." },
+      { icon: "🔩", name: "Polimento de Faróis", desc: "Restauração de faróis opacos para clareza e segurança total." },
+    ],
+    differentials: [
+      { icon: "⏱️", title: "Rápido e Agendado", desc: "Serviço por agendamento para você não perder tempo esperando." },
+      { icon: "🧴", title: "Produtos Premium", desc: "Usamos apenas produtos profissionais que protegem a pintura do seu carro." },
+      { icon: "📸", title: "Fotos Antes e Depois", desc: "Documentamos todo serviço com fotos para você ver a transformação." },
+    ],
+    faqs: [
+      { q: "Quanto tempo leva uma lavagem completa?", a: "Lavagem simples: 40 min. Premium: 1h30. Polimento: 4 a 6 horas. Agendamos no seu horário." },
+      { q: "O polimento risca a pintura?", a: "Não! Usamos máquinas de última geração e abrasivos específicos para cada tipo de pintura." },
+      { q: "A cristalização é a mesma coisa que vitrificação?", a: "São similares. Ambas protegem a pintura, mas a vitrificação dura mais. Explicamos a diferença na hora." },
+      { q: "Posso trazer carro com teto solar?", a: "Sim! Higienizamos com atenção especial às vedações e calhas do teto solar." },
+      { q: "Vocês fazem a domicílio?", a: "Em alguns casos sim. Consulte disponibilidade no WhatsApp." },
+      { q: "Com que frequência devo polir o carro?", a: "Polimento a cada 12–18 meses. Lavagem semanal ou quinzenal para manter a pintura protegida." },
+    ],
+    testimonials: [
+      { initials: "AR", name: "André Ribeiro", text: "Meu carro saiu como se fosse novo da concessionária. O polimento removeu riscos que eu achava permanentes!" },
+      { initials: "KS", name: "Karina Sousa", text: "Higienização interna foi impressionante. Bancos de couro ficaram perfeitos e o cheiro de novo voltou." },
+      { initials: "BM", name: "Bruno Moreira", text: "Nunca mais vou em outro lava jato. Atenção ao detalhe que não vi em lugar nenhum." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Lava Jato Premium em ${cidade} — Seu Carro Merece o Melhor`,
+    heroSub: "Lavagem, polimento e higienização com produtos profissionais e resultado de exposição.",
+    ctaUrgency: "Agende agora e ganhe 10% de desconto na primeira visita!",
+    footerHours: "Seg–Sáb: 8h às 18h | Dom: 8h às 13h",
+  },
+
+  autoescola: {
+    primary: "#f97316", primaryDark: "#ea580c",
+    bg: "#0d0500", card: "#1a0c00",
+    services: [
+      { icon: "🏍️", name: "Categoria A — Moto", desc: "Formação completa para habilitação de motocicletas com instrutores experientes." },
+      { icon: "🚗", name: "Categoria B — Carro", desc: "Curso teórico e prático para habilitação de veículos de passeio." },
+      { icon: "🚛", name: "Categorias C, D e E", desc: "Habilitação para caminhões, ônibus e veículos com reboque." },
+      { icon: "🔄", name: "Reciclagem de CNH", desc: "Curso de reciclagem para suspensão de pontos e renovação de habilitação." },
+      { icon: "📚", name: "Aulas Avulsas", desc: "Aulas práticas extras para quem quer ganhar mais confiança antes da prova." },
+      { icon: "🧠", name: "Psicotécnico", desc: "Exame psicotécnico com psicólogo credenciado DETRAN direto na unidade." },
+    ],
+    differentials: [
+      { icon: "🏆", title: "Maior Taxa de Aprovação", desc: "Acima de 95% de aprovação na primeira tentativa no exame do DETRAN." },
+      { icon: "📅", title: "Horários Flexíveis", desc: "Aulas manhã, tarde e noite. Encaixamos na sua agenda sem estresse." },
+      { icon: "🚦", title: "Instrutores Certificados", desc: "Equipe com certificação DETRAN e treinamento anual de atualização." },
+    ],
+    faqs: [
+      { q: "Qual a idade mínima para tirar habilitação?", a: "18 anos para todas as categorias. Para categoria A (moto) com restrição de cilindrada, pode ser antes." },
+      { q: "Quantas aulas práticas são necessárias?", a: "Mínimo de 20 aulas práticas exigidas pelo DETRAN. Alunos com mais dificuldade fazem aulas extras." },
+      { q: "Em quanto tempo consigo a habilitação?", a: "Em média 3 a 5 meses, dependendo da disponibilidade de horários e desempenho nas aulas." },
+      { q: "E se eu reprovar na prova?", a: "Apoiamos com revisão de conteúdo e a segunda tentativa é sem custo adicional para os pontos teóricos." },
+      { q: "Posso começar as aulas práticas antes da teórica?", a: "Não, é exigência do DETRAN: primeiro a teórica, depois a prática." },
+      { q: "Vocês fazem o psicotécnico?", a: "Sim! Temos psicólogo credenciado pelo DETRAN na própria unidade." },
+    ],
+    testimonials: [
+      { initials: "LV", name: "Lucas Vieira", text: "Passei de primeira na prova. Instrutores super pacientes e as aulas são muito bem explicadas. Recomendo muito!" },
+      { initials: "JM", name: "Juliana Martins", text: "Tinha muito medo de dirigir e depois das aulas me sinto super segura. Pessoal incrível e muito atencioso." },
+      { initials: "RF", name: "Rafael Fonseca", text: "Fiz reciclagem e foi bem mais dinâmico do que esperava. Aprendi coisas novas mesmo depois de 10 anos dirigindo." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Autoescola em ${cidade} — Habilitação Rápida com Alta Aprovação`,
+    heroSub: "Aulas teóricas e práticas com instrutores certificados e horários que cabem na sua rotina.",
+    ctaUrgency: "Comece hoje! Vagas abertas para o próximo turno. Garanta a sua no WhatsApp.",
+    footerHours: "Seg–Sex: 7h às 19h | Sáb: 7h às 13h",
+  },
+
+  manicure: {
+    primary: "#ec4899", primaryDark: "#db2777",
+    bg: "#0f0209", card: "#1e0515",
+    services: [
+      { icon: "💅", name: "Manicure Completa", desc: "Cutículas, lixamento, esmaltação impecável com acabamento profissional." },
+      { icon: "🦶", name: "Pedicure Completa", desc: "Hidratação, esfoliação e esmaltação que seus pés merecem." },
+      { icon: "💎", name: "Gel UV", desc: "Esmaltação em gel com durabilidade de até 4 semanas sem lascar." },
+      { icon: "🔮", name: "Unhas em Acrílico", desc: "Alongamento e modelagem para unhas fortes, elegantes e duradouras." },
+      { icon: "🌸", name: "Nail Art", desc: "Designs exclusivos, degradê, estampas e glitter para cada ocasião." },
+      { icon: "🌿", name: "Banho de Parafina", desc: "Hidratação profunda para mãos e pés com parafina terapêutica." },
+    ],
+    differentials: [
+      { icon: "🧼", title: "Esterilização Total", desc: "Materiais autoclavados e descartáveis para sua total segurança e saúde." },
+      { icon: "🎨", title: "Nail Art Exclusiva", desc: "Designs únicos criados especialmente para você, sempre na tendência." },
+      { icon: "⏰", title: "Horário Estendido", desc: "Atendimento de manhã a noite, inclusive finais de semana." },
+    ],
+    faqs: [
+      { q: "Quanto tempo dura o gel?", a: "Em média 3 a 4 semanas sem lascar, com cuidados básicos como hidratação diária." },
+      { q: "A acetona enfraquece as unhas?", a: "Quando usada com técnica correta e hidratação pós-remoção, não danifica. Fazemos de forma segura." },
+      { q: "Posso fazer gel em unhas curtas?", a: "Sim! Gel pode fortalecer e deixar até unhas curtas com aparência linda." },
+      { q: "O acrílico danifica a unha natural?", a: "Com aplicação e remoção corretas, não. Usamos técnicas que preservam a lamina ungueal." },
+      { q: "Como marco meu horário?", a: "Pelo WhatsApp! Temos agenda online e confirmamos na hora." },
+      { q: "Fazem domicílio?", a: "Para grupos acima de 4 pessoas realizamos atendimento a domicílio. Consulte disponibilidade." },
+    ],
+    testimonials: [
+      { initials: "BF", name: "Beatriz Freitas", text: "Minhas unhas nunca ficaram tão bonitas! O gel dura semanas e a nail art é simplesmente incrível." },
+      { initials: "TC", name: "Tânia Cardoso", text: "Fui pela primeira vez e já saí marcando o próximo. Atendimento carinhoso e resultado perfeito!" },
+      { initials: "KO", name: "Karla Oliveira", text: "Finalmente encontrei um lugar que esteriliza tudo de verdade. Segurança e beleza juntas!" },
+    ],
+    heroTitle: (_e, _n, cidade) => `Nail Designer em ${cidade} — Unhas Perfeitas Todo Dia`,
+    heroSub: "Manicure, pedicure, gel e nail art com técnicas avançadas e total segurança sanitária.",
+    ctaUrgency: "Agenda com vagas limitadas — garanta já o seu horário no WhatsApp!",
+    footerHours: "Seg–Sex: 9h às 20h | Sáb: 8h às 18h",
+  },
+
+  spa: {
+    primary: "#8b5cf6", primaryDark: "#7c3aed",
+    bg: "#060312", card: "#0d071f",
+    services: [
+      { icon: "💆", name: "Massagem Relaxante", desc: "Técnica sueca com óleos essenciais para eliminar tensão e estresse." },
+      { icon: "🎯", name: "Massagem Terapêutica", desc: "Alívio de dores musculares, postura e tensões crônicas com técnica específica." },
+      { icon: "💧", name: "Drenagem Linfática", desc: "Redução de inchaço, celulite e melhora da circulação com movimentos precisos." },
+      { icon: "🌿", name: "Aromaterapia", desc: "Óleos essenciais terapêuticos para equilíbrio corpo-mente profundo." },
+      { icon: "🔥", name: "Pedras Quentes", desc: "Basalto vulcânico para relaxamento muscular profundo e bem-estar total." },
+      { icon: "🌊", name: "Day Spa Completo", desc: "Pacote exclusivo com banho, esfoliação, massagem e ritual de hidratação." },
+    ],
+    differentials: [
+      { icon: "🕯️", title: "Ambiente Zen", desc: "Espaço projetado para total desconexão: aromaterapia, música e iluminação especial." },
+      { icon: "🌺", title: "Profissionais Certificados", desc: "Terapeutas com certificação e formação em técnicas nacionais e internacionais." },
+      { icon: "🧴", title: "Produtos Naturais", desc: "Óleos e cremes veganos, sem parabenos e sem fragrância artificial." },
+    ],
+    faqs: [
+      { q: "Posso fazer massagem se tiver pressão alta?", a: "Alguns tipos sim, outros não. Fazemos uma anamnese antes para indicar a técnica ideal e segura." },
+      { q: "Com que frequência devo fazer massagem?", a: "Para manutenção e bem-estar, quinzenal. Para fins terapêuticos, pode ser semanal conforme indicação." },
+      { q: "Preciso de roupa especial?", a: "Não! Fornecemos toalhas e roupão. Você fica à vontade na sua zona de conforto." },
+      { q: "O que é o Day Spa?", a: "Pacote de 3 a 5 horas com sequência de tratamentos: banho, esfoliação, massagem e ritual final." },
+      { q: "Posso presentear alguém com um voucher?", a: "Sim! Temos gift cards em diferentes valores. Ótima ideia de presente especial." },
+      { q: "Vocês atendem casais?", a: "Sim! Temos sala de casal com massagem simultânea. Muito procurado para datas especiais." },
+    ],
+    testimonials: [
+      { initials: "PL", name: "Patrícia Lemos", text: "Entrei estressada e saí completamente renovada. A massagem com pedras quentes foi transformadora. Vou todo mês!" },
+      { initials: "AV", name: "Alexandre Vieira", text: "Day Spa de aniversário para minha esposa foi o melhor presente. Ela não parou de falar em como foi incrível." },
+      { initials: "MC", name: "Marcia Cunha", text: "Drenagem linfática fez diferença enorme no meu inchaço. Profissional muito competente e ambiente perfeito." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Spa & Massagem em ${cidade} — Seu Momento de Total Bem-Estar`,
+    heroSub: "Massagens terapêuticas, drenagem linfática e rituais de relaxamento em ambiente exclusivo.",
+    ctaUrgency: "Agende agora sua sessão e chegue mais perto do equilíbrio que você merece!",
+    footerHours: "Seg–Sáb: 9h às 21h | Dom: 10h às 18h",
+  },
+
+  moveis: {
+    primary: "#d97706", primaryDark: "#b45309",
+    bg: "#0a0700", card: "#150f00",
+    services: [
+      { icon: "🍳", name: "Cozinha Planejada", desc: "Projeto sob medida com aproveitamento total do espaço e acabamento premium." },
+      { icon: "🛏️", name: "Dormitório Completo", desc: "Guarda-roupas, camas box e nichos personalizados para cada ambiente." },
+      { icon: "🛋️", name: "Sala de Estar & TV", desc: "Painéis de TV, estantes e racks que transformam sua sala." },
+      { icon: "💻", name: "Home Office", desc: "Escritório funcional e bonito para trabalhar em casa com produtividade." },
+      { icon: "🚿", name: "Banheiro & Lavabo", desc: "Armários de banheiro e espelheiras que otimizam cada centímetro." },
+      { icon: "🏢", name: "Corporativo", desc: "Móveis planejados para escritórios, clínicas e estabelecimentos comerciais." },
+    ],
+    differentials: [
+      { icon: "📐", title: "Projeto 3D Gratuito", desc: "Visualize seu ambiente antes de produzir com renderização em 3D sem custo." },
+      { icon: "🔧", title: "Instalação Inclusa", desc: "Nossa equipe instala tudo com perfeição. Você não precisa contratar ninguém." },
+      { icon: "🪵", title: "Materiais Certificados", desc: "MDF e MDP com certificação ABNT, resistentes e seguros para toda a família." },
+    ],
+    faqs: [
+      { q: "Como funciona o projeto?", a: "Fazemos uma visita gratuita, medimos o ambiente e entregamos o projeto 3D em até 5 dias." },
+      { q: "Quanto tempo leva para produzir?", a: "Em média 25 a 40 dias após a aprovação do projeto e pagamento do sinal." },
+      { q: "Posso escolher as cores e materiais?", a: "Sim! Temos mais de 300 opções de acabamento para personalizar cada detalhe." },
+      { q: "A instalação está incluída?", a: "Sim! Instalamos tudo com equipe própria. Não tem custo adicional." },
+      { q: "Qual a garantia dos móveis?", a: "5 anos de garantia total em ferragens e estrutura, além de suporte pós-venda." },
+      { q: "Atendem apartamentos pequenos?", a: "Especialmente! Móveis planejados são a melhor solução para otimizar espaços pequenos." },
+    ],
+    testimonials: [
+      { initials: "HN", name: "Helena Nunes", text: "Minha cozinha ficou irreconhecível! O projeto 3D foi fundamental para visualizar antes. Resultado além da expectativa." },
+      { initials: "DL", name: "Daniel Lima", text: "Home office impecável. Aproveitaram um espaço que eu nem imaginava que cabia tanta coisa. Profissionais excelentes!" },
+      { initials: "AR", name: "Amanda Rocha", text: "Apartamento de 55m² virou referência de organização e estilo. Cada centímetro aproveitado com elegância." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Móveis Planejados em ${cidade} — Seu Espaço Transformado`,
+    heroSub: "Projeto gratuito em 3D, produção sob medida e instalação inclusa. Transforme cada ambiente da sua casa.",
+    ctaUrgency: "Agende sua visita técnica gratuita agora e receba o projeto 3D do seu ambiente!",
+    footerHours: "Seg–Sex: 8h às 18h | Sáb: 8h às 13h",
+  },
+
+  clinicamedica: {
+    primary: "#06b6d4", primaryDark: "#0891b2",
+    bg: "#020d10", card: "#051a1f",
+    services: [
+      { icon: "🩺", name: "Clínica Geral", desc: "Atendimento médico completo para diagnóstico, prevenção e tratamento." },
+      { icon: "❤️", name: "Cardiologia", desc: "ECG, ecocardiograma e acompanhamento para a saúde do seu coração." },
+      { icon: "🌿", name: "Dermatologia", desc: "Tratamento de pele, mapeamento de pintas e dermatoscopia digital." },
+      { icon: "🔬", name: "Exames Laboratoriais", desc: "Coleta de sangue e resultados rápidos com laudo médico." },
+      { icon: "🏃", name: "Medicina Esportiva", desc: "Atestados, avaliações e acompanhamento para atletas e praticantes." },
+      { icon: "📋", name: "Check-up Completo", desc: "Pacote preventivo com exames, consultas e relatório de saúde geral." },
+    ],
+    differentials: [
+      { icon: "⏱️", title: "Sem Fila de Espera", desc: "Consultas com hora marcada para você não perder tempo na sala de espera." },
+      { icon: "📱", title: "Prontuário Digital", desc: "Histórico médico online e resultados de exames acessíveis pelo celular." },
+      { icon: "🩻", title: "Equipamentos Modernos", desc: "Tecnologia de diagnóstico de última geração para maior precisão." },
+    ],
+    faqs: [
+      { q: "Vocês aceitam plano de saúde?", a: "Sim! Trabalhamos com os principais convênios. Consulte a lista completa no WhatsApp." },
+      { q: "Como marcar consulta?", a: "Pelo WhatsApp, telefone ou pelo nosso sistema online. Confirmamos em menos de 2h." },
+      { q: "Fazem consultas de urgência?", a: "Sim! Reservamos vagas diárias para urgências. Ligue e informe a situação." },
+      { q: "Os resultados de exame ficam disponíveis online?", a: "Sim! No mesmo dia ou em até 24h, acessíveis pelo portal do paciente." },
+      { q: "Têm pediatra?", a: "Sim! Atendemos todas as faixas etárias. Consulte as especialidades disponíveis." },
+      { q: "É necessário encaminhamento para especialistas?", a: "Não para consulta inicial. Após avaliação, indicamos o especialista mais adequado." },
+    ],
+    testimonials: [
+      { initials: "SM", name: "Sônia Menezes", text: "Nunca fui tão bem atendida em uma clínica. Médico atencioso, sem pressa, explicou tudo claramente." },
+      { initials: "WP", name: "Waldir Pereira", text: "Fiz o check-up completo e me trouxe muita tranquilidade. Processo muito bem organizado e rápido." },
+      { initials: "NF", name: "Natasha Ferreira", text: "O prontuário digital é incrível. Acesso todo meu histórico pelo celular a qualquer hora." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Clínica Médica em ${cidade} — Saúde com Qualidade e Agilidade`,
+    heroSub: "Consultas médicas, exames laboratoriais e especialidades com agendamento fácil e sem fila.",
+    ctaUrgency: "Agende sua consulta agora — vagas limitadas por dia para garantir atendimento de qualidade!",
+    footerHours: "Seg–Sex: 7h às 20h | Sáb: 8h às 14h",
+  },
+
+  marketing: {
+    primary: "#7c3aed", primaryDark: "#5b21b6",
+    bg: "#05030f", card: "#0d081f",
+    services: [
+      { icon: "📱", name: "Gestão de Redes Sociais", desc: "Conteúdo estratégico para Instagram, TikTok, LinkedIn e Facebook." },
+      { icon: "🎯", name: "Tráfego Pago", desc: "Campanhas no Meta Ads e Google Ads com foco em ROI e leads qualificados." },
+      { icon: "🔍", name: "SEO", desc: "Posicionamento orgânico no Google para você aparecer quando o cliente procura." },
+      { icon: "💻", name: "Criação de Sites", desc: "Sites profissionais, rápidos e otimizados para converter visitantes em clientes." },
+      { icon: "📧", name: "Email Marketing", desc: "Automações e newsletters para nutrir leads e fidelizar clientes." },
+      { icon: "📊", name: "Consultoria de Marketing", desc: "Diagnóstico completo e estratégia personalizada para crescer de forma previsível." },
+    ],
+    differentials: [
+      { icon: "📈", title: "Foco em Resultado", desc: "Toda ação é rastreada e otimizada com dados reais. Sem achismo, só resultado." },
+      { icon: "🔁", title: "Relatórios Semanais", desc: "Transparência total: você recebe relatório semanal de tudo que foi feito." },
+      { icon: "🧠", title: "Estratégia Personalizada", desc: "Nenhum copy-paste de concorrente. Sua estratégia é criada 100% para o seu negócio." },
+    ],
+    faqs: [
+      { q: "Em quanto tempo vejo resultados?", a: "Tráfego pago: 15–30 dias. SEO e conteúdo orgânico: 3–6 meses para resultados consistentes." },
+      { q: "Quanto custa investir em tráfego pago?", a: "Recomendamos mínimo R$1.500/mês em verba + gestão. Fazemos simulação de resultado antes." },
+      { q: "Vocês criam o conteúdo ou apenas gerenciam?", a: "Criamos tudo: textos, artes, reels e stories. Você só aprova." },
+      { q: "Posso cancelar quando quiser?", a: "Nossos contratos são mensais com aviso de 30 dias. Sem multa e sem burocracia." },
+      { q: "Trabalham com qual segmento?", a: "Atendemos PMEs de todos os segmentos com estratégias específicas para cada nicho." },
+      { q: "Como acompanho os resultados?", a: "Dashboard de métricas em tempo real + relatório semanal detalhado por WhatsApp." },
+    ],
+    testimonials: [
+      { initials: "HS", name: "Hugo Silveira", text: "Triplicamos os leads em 60 dias com a gestão de tráfego. ROI acima de 8x nos primeiros 3 meses!" },
+      { initials: "CF", name: "Cristiane Faria", text: "O Instagram cresceu 3x e virou meu principal canal de vendas. Conteúdo de alto nível e estratégia certeira." },
+      { initials: "TO", name: "Thales Oliveira", text: "SEO entregou resultados que eu não achava possível. Hoje apareço na 1ª página para as minhas 10 palavras-chave." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Agência de Marketing Digital em ${cidade} — Resultados Reais`,
+    heroSub: "Tráfego pago, redes sociais, SEO e sites para negócios que querem crescer de forma previsível.",
+    ctaUrgency: "Agende uma consultoria gratuita e veja como podemos aumentar suas vendas ainda este mês!",
+    footerHours: "Seg–Sex: 9h às 18h",
+  },
+
+  coach: {
+    primary: "#eab308", primaryDark: "#ca8a04",
+    bg: "#090700", card: "#140f00",
+    services: [
+      { icon: "🎯", name: "Coaching de Carreira", desc: "Clareza profissional, transição de carreira e posicionamento de mercado." },
+      { icon: "💼", name: "Mentoria Empresarial", desc: "Estratégia, gestão de equipe e escalonamento para donos de negócio." },
+      { icon: "🌱", name: "Coaching de Vida", desc: "Objetivos pessoais, equilíbrio e construção do estilo de vida dos seus sonhos." },
+      { icon: "🧘", name: "Coaching de Saúde", desc: "Hábitos, rotinas e mindset para transformação física e mental duradoura." },
+      { icon: "🎓", name: "Workshops e Palestras", desc: "Conteúdo de alto impacto para times e eventos corporativos." },
+      { icon: "🔥", name: "Imersão Intensiva", desc: "Programa acelerado de 1 ou 2 dias para transformação profunda e rápida." },
+    ],
+    differentials: [
+      { icon: "🏅", title: "Metodologia Comprovada", desc: "Abordagem baseada em ICF, PNL e neurociência com resultados documentados." },
+      { icon: "📞", title: "Suporte Entre Sessões", desc: "Acesso via WhatsApp entre sessões para manter o momentum da transformação." },
+      { icon: "📊", title: "Metas e Métricas", desc: "Cada objetivo é transformado em metas mensuráveis. Você vê o progresso acontecer." },
+    ],
+    faqs: [
+      { q: "Qual a diferença entre coaching e psicologia?", a: "Coaching foca no presente e no futuro para atingir objetivos. Psicologia trata questões emocionais e do passado." },
+      { q: "Quantas sessões são necessárias?", a: "Programas de 3 a 6 meses têm os melhores resultados. Mas há sessões avulsas para objetivos específicos." },
+      { q: "As sessões são presenciais ou online?", a: "Online via Zoom ou presencial no consultório, conforme sua preferência." },
+      { q: "Você é certificado?", a: "Sim, com certificação internacional ICF e formação em PNL e Neurociência Aplicada." },
+      { q: "Em quanto tempo vejo resultados?", a: "Mudanças de comportamento e clareza já nas primeiras sessões. Resultados concretos em 60 a 90 dias." },
+      { q: "Como é a primeira sessão?", a: "É uma sessão de diagnóstico gratuita para entender seus objetivos e verificar o alinhamento." },
+    ],
+    testimonials: [
+      { initials: "FA", name: "Fabiana Alves", text: "Em 4 meses dobrei meu faturamento e recuperei equilíbrio na vida pessoal. Não imaginava que era possível tão rápido!" },
+      { initials: "LB", name: "Lucas Barros", text: "A clareza que ganhei sobre minha carreira mudou tudo. Pedi aumento, fui promovido em 2 meses. Inacreditável!" },
+      { initials: "RN", name: "Renata Neves", text: "Passei por burnout e o coaching me devolveu o prazer de trabalhar. Transformação real e duradoura." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Coach & Mentoria em ${cidade} — Transforme Sua Vida e Carreira`,
+    heroSub: "Coaching de carreira, life coaching e mentoria empresarial com metodologia comprovada e resultados reais.",
+    ctaUrgency: "Agende sua sessão de diagnóstico gratuita — vagas limitadas por mês!",
+    footerHours: "Seg–Sex: 8h às 20h | Sáb: 9h às 15h",
+  },
+
+  buffet: {
+    primary: "#f59e0b", primaryDark: "#d97706",
+    bg: "#0d0800", card: "#1a1200",
+    services: [
+      { icon: "💍", name: "Casamentos", desc: "Recepções inesquecíveis com decoração exclusiva, buffet e coordenação completa." },
+      { icon: "🎓", name: "Formaturas", desc: "Jantar de gala e festa de formatura que honram essa conquista especial." },
+      { icon: "🎉", name: "Festas Corporativas", desc: "Confraternizações, lançamentos e eventos de empresa com alto padrão." },
+      { icon: "🎈", name: "Festas Infantis", desc: "Decoração temática, buffet de salgados e diversão para os pequenos." },
+      { icon: "☕", name: "Coffee Break", desc: "Para treinamentos, workshops e reuniões com montagem e retirada inclusos." },
+      { icon: "🥂", name: "Chá de Bebê & Bodas", desc: "Eventos íntimos e elegantes para celebrar os momentos mais especiais." },
+    ],
+    differentials: [
+      { icon: "🍽️", title: "Gastronomia Premiada", desc: "Chef experiente com cardápio autoral e degustação antes do evento." },
+      { icon: "🎨", title: "Decoração Própria", desc: "Equipe de decoração interna para eventos únicos e temáticos com sua identidade." },
+      { icon: "📋", title: "Coordenação Completa", desc: "Cuidamos de cada detalhe para você aproveitar cada minuto da celebração." },
+    ],
+    faqs: [
+      { q: "Com quanto tempo de antecedência devo contratar?", a: "Casamentos recomendamos 6–12 meses. Eventos corporativos e festas, 30–60 dias." },
+      { q: "Posso fazer degustação antes de fechar?", a: "Sim! Oferecemos degustação do cardápio selecionado antes da assinatura do contrato." },
+      { q: "Quantas pessoas vocês atendem?", a: "De 20 a 500 convidados dependendo do tipo de evento e espaço." },
+      { q: "A decoração está inclusa?", a: "Temos pacotes com e sem decoração. Informamos todos os detalhes no orçamento." },
+      { q: "Vocês fazem o serviço no meu próprio espaço?", a: "Sim! Trabalhamos em qualquer espaço. Também temos parceiros de salão." },
+      { q: "Como funciona o pagamento?", a: "Sinal na assinatura do contrato, parcelas ao longo do período e quitação 7 dias antes." },
+    ],
+    testimonials: [
+      { initials: "GF", name: "Gabriele Fonseca", text: "Meu casamento foi impecável do início ao fim. Cada detalhe que pedi foi executado com perfeição. Noite dos sonhos!" },
+      { initials: "RP", name: "Ricardo Pimentel", text: "Confraternização de empresa com 200 pessoas e zero problema. Elogios de todos os convidados." },
+      { initials: "MS", name: "Mariana Siqueira", text: "A degustação me conquistou. Na festa, o cardápio ficou ainda melhor. Chef excepcional!" },
+    ],
+    heroTitle: (_e, _n, cidade) => `Buffet & Eventos em ${cidade} — Sua Celebração Inesquecível`,
+    heroSub: "Casamentos, festas corporativas e eventos especiais com gastronomia premiada e coordenação completa.",
+    ctaUrgency: "Solicite seu orçamento agora e garanta a data do seu evento antes que esgote!",
+    footerHours: "Seg–Sex: 9h às 18h | Sáb: 10h às 16h",
+  },
+
+  eletricista: {
+    primary: "#eab308", primaryDark: "#ca8a04",
+    bg: "#080800", card: "#141400",
+    services: [
+      { icon: "⚡", name: "Instalação Elétrica", desc: "Instalações novas e reformas com projeto, execução e ART do engenheiro." },
+      { icon: "🔌", name: "Quadro de Distribuição", desc: "Dimensionamento, substituição e ampliação de quadros com disjuntores." },
+      { icon: "⛈️", name: "SPDA / Para-raios", desc: "Sistema de proteção contra descargas atmosféricas com laudo técnico." },
+      { icon: "🏠", name: "Automação Residencial", desc: "Interruptores inteligentes, dimmers e controle por celular." },
+      { icon: "❄️", name: "Ar Condicionado", desc: "Instalação, manutenção e limpeza de split, cassete e central." },
+      { icon: "📄", name: "Laudo Elétrico", desc: "Inspeção e laudo técnico obrigatório para imóveis com ART registrada." },
+    ],
+    differentials: [
+      { icon: "📋", title: "ART Garantida", desc: "Toda instalação com Anotação de Responsabilidade Técnica de engenheiro." },
+      { icon: "🔒", title: "Segurança em 1º Lugar", desc: "Seguimos rigorosamente as normas ABNT NBR 5410 em cada serviço." },
+      { icon: "⏱️", title: "Atendimento Urgente", desc: "Para emergências elétricas, respondemos em até 2 horas." },
+    ],
+    faqs: [
+      { q: "Precisam de ART para instalações residenciais?", a: "Para obras acima de determinado porte, a ART é obrigatória e garante segurança e cobertura do seguro." },
+      { q: "O que é SPDA?", a: "Sistema de Proteção contra Descargas Atmosféricas (para-raios) — obrigatório em edifícios acima de 5 pavimentos." },
+      { q: "Quanto tempo leva uma instalação nova?", a: "Depende do porte. Uma residência de 100m² leva em média 5 a 10 dias úteis." },
+      { q: "Atendem emergências?", a: "Sim! Para curtos-circuitos e choque elétrico, temos atendimento de urgência em até 2 horas." },
+      { q: "Fazem manutenção preventiva?", a: "Sim! Recomendamos revisão elétrica anual para prevenir incêndios e falhas." },
+      { q: "Trabalham com condomínios e empresas?", a: "Sim, atendemos residências, condomínios, empresas e indústrias." },
+    ],
+    testimonials: [
+      { initials: "JA", name: "José Almeida", text: "Reforma elétrica completa do meu comércio. Tudo com ART e dentro do prazo. Profissionalismo exemplar!" },
+      { initials: "VR", name: "Vera Rocha", text: "Instalaram automação na minha casa e ficou simplesmente incrível. Controlo tudo pelo celular agora!" },
+      { initials: "CN", name: "Carlos Nascimento", text: "Emergência de curto-circuito às 22h e eles vieram em 1h20. Resolveram tudo e ficamos seguros." },
+    ],
+    heroTitle: (_e, _n, cidade) => `Eletricista em ${cidade} — Instalações Seguras com ART`,
+    heroSub: "Instalações elétricas, automação residencial, ar condicionado e laudos técnicos com total segurança.",
+    ctaUrgency: "Solicite seu orçamento gratuito agora. Atendimento de urgência disponível 24h!",
+    footerHours: "Seg–Sex: 7h às 18h | Sáb: 7h às 13h | Urgências: 24h",
+  },
 };
 
 function matchNicho(nicho: string): NichoConfig {
   const lower = nicho.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+  // Energia Solar — must come before generic "energia" checks
+  if (lower.includes("solar") || lower.includes("energia solar") || lower.includes("painel") || lower.includes("fotovoltaic")) return NICHO_MAP.energiasolar!;
+  // Pet Shop (before veterinário to give it priority)
+  if (lower.includes("pet shop") || lower.includes("petshop")) return NICHO_MAP.petshop!;
+  // Veterinário
+  if (lower.includes("veterinar") || lower.includes("clinica vet") || lower.includes("med vet")) return NICHO_MAP.veterinario!;
+  // Barbearia
   if (lower.includes("barbearia") || lower.includes("barber")) return NICHO_MAP.barbearia!;
-  if (lower.includes("salao") || lower.includes("salon") || lower.includes("beleza")) return NICHO_MAP.salao!;
+  // Salão / Beleza
+  if (lower.includes("salao") || lower.includes("salon") || lower.includes("cabelereiro") || lower.includes("cabelereira")) return NICHO_MAP.salao!;
+  // Dentista / Odontologia
   if (lower.includes("dent") || lower.includes("odonto")) return NICHO_MAP.dentista!;
-  if (lower.includes("psicologo") || lower.includes("psicologa") || lower.includes("psicolog") || lower.includes("terapeu")) return NICHO_MAP.psicologo!;
+  // Psicólogo / Terapeuta
+  if (lower.includes("psicolog") || lower.includes("terapeu") || lower.includes("psicanali")) return NICHO_MAP.psicologo!;
+  // Nutricionista
   if (lower.includes("nutri")) return NICHO_MAP.nutricionista!;
-  if (lower.includes("academia") || lower.includes("gym") || lower.includes("fitness")) return NICHO_MAP.academia!;
-  if (lower.includes("veterinar") || lower.includes("pet shop") || lower.includes("pet ")) return NICHO_MAP.veterinario!;
-  if (lower.includes("advogado") || lower.includes("advocacia") || lower.includes("juridic")) return NICHO_MAP.advogado!;
-  if (lower.includes("restaurante") || lower.includes("lanchonete") || lower.includes("comida") || lower.includes("gastrono")) return NICHO_MAP.restaurante!;
-  if (lower.includes("foto") || lower.includes("fotograf")) return NICHO_MAP.fotografia!;
-  if (lower.includes("oficina") || lower.includes("mecanica") || lower.includes("mecanico") || lower.includes("automovel")) return NICHO_MAP.oficina!;
-  if (lower.includes("arquite") || lower.includes("design de interior")) return NICHO_MAP.arquiteto!;
-  if (lower.includes("escola") || lower.includes("idioma") || lower.includes("ingles") || lower.includes("curso")) return NICHO_MAP.escola!;
+  // Academia / Fitness
+  if (lower.includes("academia") || lower.includes("gym") || lower.includes("fitness") || lower.includes("crossfit")) return NICHO_MAP.academia!;
+  // Personal Trainer — before academia
   if (lower.includes("personal") || lower.includes("treinador")) return NICHO_MAP.personal!;
-  if (lower.includes("cerimonia") || lower.includes("evento") || lower.includes("casamento")) return NICHO_MAP.cerimonialista!;
+  // Advogado / Jurídico
+  if (lower.includes("advogado") || lower.includes("advocacia") || lower.includes("juridic") || lower.includes("direito")) return NICHO_MAP.advogado!;
+  // Imobiliária / Corretor
+  if (lower.includes("imobiliaria") || lower.includes("imovel") || lower.includes("corretor") || lower.includes("corretora de imoveis")) return NICHO_MAP.imobiliaria!;
+  // Contabilidade / Contador
+  if (lower.includes("contabil") || lower.includes("contador") || lower.includes("contadora") || lower.includes("escritorio contabil") || lower.includes("bpo")) return NICHO_MAP.contabilidade!;
+  // Marketing Digital / Agência
+  if (lower.includes("marketing") || lower.includes("agencia") || lower.includes("trafego pago") || lower.includes("social media")) return NICHO_MAP.marketing!;
+  // Coach / Mentoria
+  if (lower.includes("coach") || lower.includes("mentori") || lower.includes("mentor")) return NICHO_MAP.coach!;
+  // Buffet / Eventos
+  if (lower.includes("buffet") || lower.includes("salao de festas") || lower.includes("espaco de eventos") || lower.includes("espaco para festas")) return NICHO_MAP.buffet!;
+  // Hamburgueria / Fast food
+  if (lower.includes("hamburguer") || lower.includes("burger") || lower.includes("hamburgueria") || lower.includes("smash")) return NICHO_MAP.hamburgueria!;
+  // Restaurante / Gastronomia (after hamburgueria)
+  if (lower.includes("restaurante") || lower.includes("lanchonete") || lower.includes("comida") || lower.includes("gastrono") || lower.includes("pizzaria") || lower.includes("churrascaria")) return NICHO_MAP.restaurante!;
+  // Padaria / Confeitaria
+  if (lower.includes("padaria") || lower.includes("confeitaria") || lower.includes("doceria") || lower.includes("pastelaria") || lower.includes("bakery")) return NICHO_MAP.padaria!;
+  // Fotógrafo / Fotografia
+  if (lower.includes("foto") || lower.includes("fotograf")) return NICHO_MAP.fotografia!;
+  // Lava Jato / Higienização
+  if (lower.includes("lava jato") || lower.includes("lavajato") || lower.includes("lavagem de carro") || lower.includes("higienizacao veicular") || lower.includes("estetica automotiva")) return NICHO_MAP.lavajato!;
+  // Oficina Mecânica
+  if (lower.includes("oficina") || lower.includes("mecanica") || lower.includes("mecanico") || lower.includes("automovel") || lower.includes("funilaria")) return NICHO_MAP.oficina!;
+  // Autoescola / CFC
+  if (lower.includes("autoescola") || lower.includes("cfc") || lower.includes("centro de formacao") || lower.includes("habilitacao")) return NICHO_MAP.autoescola!;
+  // Manicure / Nail Designer
+  if (lower.includes("manicure") || lower.includes("nail") || lower.includes("pedicure") || lower.includes("unhas")) return NICHO_MAP.manicure!;
+  // Spa / Massagem
+  if (lower.includes("spa") || lower.includes("massagem") || lower.includes("massoterapia") || lower.includes("aromaterapia") || lower.includes("drenagem linfatica")) return NICHO_MAP.spa!;
+  // Móveis Planejados / Marcenaria
+  if (lower.includes("moveis") || lower.includes("marcenaria") || lower.includes("marceneiro") || lower.includes("armario")) return NICHO_MAP.moveis!;
+  // Eletricista / Instalações Elétricas
+  if (lower.includes("eletric") || lower.includes("instalacao eletrica") || lower.includes("ar condicionado") || lower.includes("para-raios") || lower.includes("spda")) return NICHO_MAP.eletricista!;
+  // Arquiteto / Designer de Interiores
+  if (lower.includes("arquite") || lower.includes("design de interior") || lower.includes("decoracao") || lower.includes("interiores")) return NICHO_MAP.arquiteto!;
+  // Escola / Cursos
+  if (lower.includes("escola") || lower.includes("idioma") || lower.includes("ingles") || lower.includes("curso") || lower.includes("natacao") || lower.includes("musica") || lower.includes("danca")) return NICHO_MAP.escola!;
+  // Cerimonialista / Eventos
+  if (lower.includes("cerimonia") || lower.includes("cerimonialista") || lower.includes("casamento") || lower.includes("wedding") || lower.includes("debutante")) return NICHO_MAP.cerimonialista!;
+  // Fisioterapia
   if (lower.includes("fisio")) return NICHO_MAP.fisioterapia!;
-  if (lower.includes("estetic") || lower.includes("beleza") || lower.includes("clinica est")) return NICHO_MAP.estetica!;
+  // Estética / Clínica Estética
+  if (lower.includes("estetic") || lower.includes("clinica est") || lower.includes("estetica")) return NICHO_MAP.estetica!;
+  // Clínica Médica / Médico (broad medical check last)
+  if (lower.includes("medic") || lower.includes("clinica") || lower.includes("saude") || lower.includes("cardiolog") || lower.includes("dermato") || lower.includes("ginecolog")) return NICHO_MAP.clinicamedica!;
 
   // Default fallback
   return NICHO_MAP.arquiteto!;
