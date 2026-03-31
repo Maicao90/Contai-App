@@ -105,7 +105,7 @@ export default function Mensagens() {
     emptyText,
   }: {
     title: string;
-    icon: React.ElementType;
+    icon: any;
     color: string;
     leads: Lead[] | undefined;
     loading: boolean;

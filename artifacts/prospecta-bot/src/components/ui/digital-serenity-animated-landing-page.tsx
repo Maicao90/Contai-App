@@ -142,7 +142,7 @@ export function AnimatedWords<T extends ElementType = "span">({
   wordClassName,
   ...props
 }: AnimatedWordsProps<T>) {
-  const Component = (as ?? "span") as ElementType;
+  const Component = (as ?? "span") as any;
   const words = text.split(" ");
 
   return (

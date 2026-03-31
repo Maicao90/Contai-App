@@ -213,6 +213,7 @@ export function AnimatedCharactersGroup({
       return () => clearTimeout(timer);
     } else {
       setIsLookingAtEachOther(false);
+      return undefined;
     }
   }, [isTyping]);
 
@@ -234,6 +235,7 @@ export function AnimatedCharactersGroup({
       return () => clearTimeout(firstPeek);
     } else {
       setIsPrimaryPeeking(false);
+      return undefined;
     }
   }, [passwordLength, showPassword]);
 
