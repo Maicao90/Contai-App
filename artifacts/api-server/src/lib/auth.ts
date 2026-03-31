@@ -1,4 +1,4 @@
-﻿import { randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
+import { randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { NextFunction, Request, Response } from "express";
@@ -340,8 +340,8 @@ export function attachSession(req: SessionRequest, _res: Response, next: NextFun
 export function setSessionCookie(res: Response, session: SessionData) {
   res.cookie(SESSION_COOKIE, session.token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
+    sameSite: "none",
+    secure: true,
     path: "/",
     maxAge: SESSION_MAX_AGE_MS,
   });

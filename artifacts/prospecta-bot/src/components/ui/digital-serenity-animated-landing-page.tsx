@@ -17,9 +17,9 @@ const digitalSerenityStyles = `
     transition: left 70ms linear, top 70ms linear, opacity 300ms ease-out;
   }
   @keyframes word-appear {
-    0% { opacity: 0; transform: translateY(30px) scale(0.8); filter: blur(10px); }
-    50% { opacity: 0.8; transform: translateY(10px) scale(0.95); filter: blur(2px); }
-    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    0% { opacity: 0; transform: translateY(30px) scale(0.8); }
+    50% { opacity: 0.8; transform: translateY(10px) scale(0.95); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
   }
   @keyframes grid-draw {
     0% { stroke-dashoffset: 1000; opacity: 0; }

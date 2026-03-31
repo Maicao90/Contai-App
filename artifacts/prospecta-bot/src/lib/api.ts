@@ -1,5 +1,7 @@
+const BASE_URL = import.meta.env.VITE_API_URL || "";
+
 export async function getJson<T>(url: string): Promise<T> {
-  const response = await fetch(`/api${url}`, {
+  const response = await fetch(`${BASE_URL}/api${url}`, {
     credentials: "include",
   });
 
@@ -21,7 +23,7 @@ export async function postJson<T>(
   url: string,
   body: Record<string, unknown>,
 ): Promise<T> {
-  const response = await fetch(`/api${url}`, {
+  const response = await fetch(`${BASE_URL}/api${url}`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -48,7 +50,7 @@ export async function patchJson<T>(
   url: string,
   body: Record<string, unknown>,
 ): Promise<T> {
-  const response = await fetch(`/api${url}`, {
+  const response = await fetch(`${BASE_URL}/api${url}`, {
     method: "PATCH",
     credentials: "include",
     headers: {
@@ -72,7 +74,7 @@ export async function patchJson<T>(
 }
 
 export async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api${url}`, {
+  const response = await fetch(`${BASE_URL}/api${url}`, {
     credentials: "include",
     ...init,
   });
