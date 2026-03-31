@@ -1307,6 +1307,12 @@ router.post("/admin/users/:id/actions", async (req, res, next) => {
         await db.update(usersTable).set({ householdId: null }).where(eq(usersTable.id, userId));
       }
     }
+    if (action === "delete") {
+      // Remove de household_members primeiro (FK)
+      await db.delete(householdMembersTable).where(eq(householdMembersTable.userId, userId));
+      // Remove usuário de fato
+      await db.delete(usersTable).where(eq(usersTable.id, userId));
+    }
     return res.json({ ok: true, action, planName: PLAN_NAME });
   } catch (error) {
     return next(error);

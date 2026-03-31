@@ -273,6 +273,7 @@ async function dispatchNotificationEvent(eventId: number) {
 
   const config = await getSmtpConfig();
   if (!config.configured) {
+    console.warn(`[NOTIFICATIONS] Tentativa de envio de e-mail ignorada. SMTP não configurado no painel de Integrações. (Evento ID: ${eventId})`);
     return event;
   }
 

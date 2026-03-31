@@ -21,8 +21,29 @@ export function normalizeBrazilPhone(value: string | null | undefined) {
 }
 
 export function expandBrazilPhoneVariants(value: string | null | undefined) {
-  const normalized = normalizeBrazilPhone(value);
-  const local = normalized.startsWith("55") ? normalized.slice(2) : normalized;
+  const digits = normalizePhoneDigits(value);
+  if (!digits) return [];
 
-  return Array.from(new Set([normalized, local].filter(Boolean)));
+  const base = digits.startsWith("55") ? digits.slice(2) : digits;
+  if (base.length < 10 || base.length > 11) {
+    return Array.from(new Set([normalizeBrazilPhone(value), base].filter(Boolean)));
+  }
+
+  const ddd = base.slice(0, 2);
+  const rest = base.length === 11 ? base.slice(3) : base.slice(2);
+
+  // Variações: DDD + 8 dígitos, DDD + 9 dígitos, 55 + DDD + 8, 55 + DDD + 9
+  const v8 = `${ddd}${rest}`;
+  const v9 = `${ddd}9${rest}`;
+
+  return Array.from(
+    new Set([
+      `55${v8}`,
+      `55${v9}`,
+      v8,
+      v9,
+      normalizeBrazilPhone(value),
+      digits,
+    ].filter(Boolean)),
+  );
 }

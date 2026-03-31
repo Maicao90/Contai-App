@@ -77,7 +77,11 @@ export default function AdminUserDetailPage() {
         title: "Sucesso",
         description: `Acao '${action}' executada com sucesso.`,
       });
-      void refetch();
+      if (action === "delete") {
+        window.location.href = "/admin/users";
+      } else {
+        void refetch();
+      }
     },
     onError: (error: any) => {
       toast({
@@ -249,7 +253,20 @@ export default function AdminUserDetailPage() {
                   onClick={() => actionMutation.mutate("remove_from_household")}
                 >
                   <UserMinus className="h-4 w-4" />
-                  {actionMutation.isPending && actionMutation.variables === "remove_from_household" ? "Removendo..." : "Remover da conta"}
+                  {actionMutation.isPending && actionMutation.variables === "remove_from_household" ? "Removendo..." : "Remover do household"}
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  className="w-full justify-start rounded-2xl" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => {
+                    if (confirm("TEM CERTEZA? Isso apagara o registro do usuario do sistema para sempre.")) {
+                      actionMutation.mutate("delete");
+                    }
+                  }}
+                >
+                  <Power className="h-4 w-4" />
+                  {actionMutation.isPending && actionMutation.variables === "delete" ? "Excluindo..." : "Excluir usuario (DEBUG)"}
                 </Button>
                 <Button 
                   variant="outline" 

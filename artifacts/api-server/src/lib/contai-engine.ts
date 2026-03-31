@@ -517,10 +517,11 @@ async function getIdentityByPhone(phone: string) {
   const normalizedPhone = normalizeBrazilPhone(phone);
   const normalizedVariants = expandBrazilPhoneVariants(phone);
   const users = await db.select().from(usersTable);
-  const existingUser =
-    users.find((item) => normalizedVariants.includes(normalizeBrazilPhone(item.phone))) ??
-    users.find((item) => normalizedVariants.includes(item.phone.replace(/\D/g, ""))) ??
-    null;
+
+  const existingUser = users.find((item) => {
+    const itemVariants = expandBrazilPhoneVariants(item.phone);
+    return normalizedVariants.some((v) => itemVariants.includes(v));
+  }) ?? null;
 
   if (!existingUser) {
     return null;
