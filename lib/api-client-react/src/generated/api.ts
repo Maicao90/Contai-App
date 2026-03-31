@@ -361,7 +361,7 @@ export function useListCampaigns<
 }
 
 /**
- * @summary Create a new campaign and start mining
+ * @summary Create a new campaign
  */
 export const getCreateCampaignUrl = () => {
   return `/api/campaigns`;
@@ -424,7 +424,7 @@ export type CreateCampaignMutationBody = BodyType<CreateCampaignRequest>;
 export type CreateCampaignMutationError = ErrorType<unknown>;
 
 /**
- * @summary Create a new campaign and start mining
+ * @summary Create a new campaign
  */
 export const useCreateCampaign = <
   TError = ErrorType<unknown>,

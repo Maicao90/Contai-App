@@ -11,6 +11,7 @@ export interface CreateLeadRequest {
   nomeEmpresa: string;
   nicho: string;
   cidade: string;
+  uf?: string;
   telefone?: string | null;
   whatsapp?: string | null;
   urlOrigem?: string | null;

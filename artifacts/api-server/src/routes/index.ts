@@ -1,14 +1,40 @@
 import { Router, type IRouter } from "express";
+import authRouter from "./auth";
 import healthRouter from "./health";
-import leadsRouter from "./leads";
-import campaignsRouter from "./campaigns";
 import dashboardRouter from "./dashboard";
+import usersRouter from "./users";
+import householdsRouter from "./households";
+import categoriesRouter from "./categories";
+import conversationsRouter from "./conversations";
+import transactionsRouter from "./transactions";
+import commitmentsRouter from "./commitments";
+import remindersRouter from "./reminders";
+import reportsRouter from "./reports";
+import subscriptionsRouter from "./subscriptions";
+import googleCalendarRouter from "./google-calendar";
+import adminRouter from "./admin";
+import notificationsRouter from "./notifications";
+import whatsappRouter from "./whatsapp";
+import referralsRouter from "./referrals";
 
 const router: IRouter = Router();
 
+router.use(authRouter);
 router.use(healthRouter);
 router.use(dashboardRouter);
-router.use(campaignsRouter);
-router.use(leadsRouter);
+router.use(usersRouter);
+router.use(householdsRouter);
+router.use(categoriesRouter);
+router.use(conversationsRouter);
+router.use(transactionsRouter);
+router.use(commitmentsRouter);
+router.use(remindersRouter);
+router.use(reportsRouter);
+router.use(subscriptionsRouter);
+router.use(googleCalendarRouter);
+router.use(adminRouter);
+router.use(notificationsRouter);
+router.use(whatsappRouter);
+router.use(referralsRouter);
 
 export default router;

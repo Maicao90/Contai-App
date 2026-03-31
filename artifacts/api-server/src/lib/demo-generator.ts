@@ -1338,6 +1338,26 @@ export function generateDemoHtml(lead: LeadInfo): string {
   const im = IMG[nk] ?? IMG["arquiteto"]!;
   const uPhoto = (id: string, w = 1200, h = 800) =>
     `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&auto=format&fit=crop&q=80`;
+  const fallbackImage = (title: string, subtitle: string, width = 1200, height = 800) => {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="${cfg.primary}"/>
+            <stop offset="100%" stop-color="${cfg.primaryDark}"/>
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="${cfg.bg}"/>
+        <rect width="100%" height="100%" fill="url(#bg)" opacity=".34"/>
+        <circle cx="${Math.round(width * 0.82)}" cy="${Math.round(height * 0.18)}" r="${Math.round(width * 0.14)}" fill="${cfg.primary}" opacity=".18"/>
+        <circle cx="${Math.round(width * 0.12)}" cy="${Math.round(height * 0.84)}" r="${Math.round(width * 0.18)}" fill="${cfg.primaryDark}" opacity=".22"/>
+        <rect x="32" y="32" width="${width - 64}" height="${height - 64}" rx="28" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.16)"/>
+        <text x="72" y="${Math.round(height * 0.48)}" fill="#ffffff" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="${Math.round(width * 0.05)}" font-weight="800">${title}</text>
+        <text x="72" y="${Math.round(height * 0.58)}" fill="rgba(255,255,255,.82)" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="${Math.round(width * 0.024)}" font-weight="600">${subtitle}</text>
+      </svg>
+    `;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  };
 
   const heroImgUrl = uPhoto(im.hero, 1800, 1000);
   const aboutImgUrl = uPhoto(im.about, 900, 700);
@@ -1396,7 +1416,21 @@ export function generateDemoHtml(lead: LeadInfo): string {
   const empresa = lead.nomeEmpresa;
   const cidade = lead.cidade;
   const nicho = lead.nicho;
+  const aboutFallbackUrl = fallbackImage(empresa, `${nicho} em ${cidade}`, 900, 700);
+  const galleryFallbackUrl = fallbackImage(nicho, empresa, 800, 560);
   const firstWord = empresa.split(/\s+/)[0] ?? empresa;
+  const heroTitle = cfg.heroTitle(empresa, nicho, cidade);
+  const persuasionBullets = [
+    "Atendimento rapido pelo WhatsApp",
+    "Mais confianca para o cliente decidir",
+    `Estrutura focada em agendamentos em ${cidade}`,
+  ];
+  const persuasionHtml = persuasionBullets
+    .map(
+      (item) =>
+        `<span style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);font-size:.82rem;font-weight:700;color:rgba(255,255,255,.88)">✓ ${item}</span>`,
+    )
+    .join("");
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -1461,6 +1495,12 @@ img{display:block;max-width:100%}a{text-decoration:none;color:inherit}
 .hstat:last-child{border-right:none;margin-right:0;padding-right:0}
 .hstat strong{display:block;font-size:2.2rem;font-weight:900;color:${cfg.primary};line-height:1;letter-spacing:-.04em}
 .hstat span{display:block;font-size:.75rem;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-top:6px}
+.trust-strip{position:relative;z-index:4;margin-top:-34px;padding-bottom:12px}
+.trust-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;background:rgba(10,10,18,.92);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.26);backdrop-filter:blur(12px)}
+.trust-item{padding:14px 16px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06)}
+.trust-kicker{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:${cfg.primary};font-weight:800;margin-bottom:6px}
+.trust-item strong{display:block;font-size:1rem;font-weight:800;color:#fff;letter-spacing:-.02em}
+.trust-item span{display:block;font-size:.82rem;color:rgba(255,255,255,.55);line-height:1.6;margin-top:6px}
 
 /* Services */
 .srv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
@@ -1543,17 +1583,38 @@ footer{padding:56px 0 32px;border-top:1px solid rgba(255,255,255,.07)}
 
 /* Demo badge */
 .demo-badge{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.88);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:9px 22px;font-size:.73rem;color:rgba(255,255,255,.45);z-index:999;white-space:nowrap;pointer-events:none}
+.mobile-cta{display:none}
 
 /* Responsive */
 @media(max-width:900px){
   .hd-nav{display:none}
   .srv-grid,.diff-grid,.test-grid,.gal-grid,.ft-grid{grid-template-columns:1fr}
+  .trust-wrap{grid-template-columns:1fr 1fr}
   .about-in{grid-template-columns:1fr;gap:40px}
   .about-img-wrap img{height:320px}
   .about-float{display:none}
   .cta-wrap{margin:0 16px}
-  .hstat{padding:10px 0;margin:0;border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
-  .hero-stats{gap:0}
+  .hero-con{padding:118px 22px 74px}
+  .hero-btns{margin-bottom:38px}
+  .hero-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding-top:24px;border-top:1px solid rgba(255,255,255,.08)}
+  .hstat{min-width:0;padding:16px 14px;margin:0;border:none;border-radius:18px;background:rgba(255,255,255,.045)}
+  .hstat strong{font-size:2rem}
+  .hstat span{font-size:.68rem;line-height:1.35;letter-spacing:.08em}
+  .mobile-cta{display:flex;position:fixed;left:16px;right:16px;bottom:20px;z-index:1000;gap:12px;align-items:center;justify-content:center;background:#25d366;color:#fff;border-radius:18px;padding:16px 18px;font-weight:800;box-shadow:0 18px 50px rgba(37,211,102,.38)}
+  .demo-badge{bottom:88px}
+}
+@media(max-width:560px){
+  .hero-con{padding:110px 18px 70px}
+  .hero h1{font-size:clamp(2rem,10vw,2.8rem);margin-bottom:18px}
+  .hero-sub{font-size:.95rem;line-height:1.65;margin-bottom:30px}
+  .hero-btns{flex-direction:column;align-items:stretch;gap:12px}
+  .btn-wpp,.btn-ghost{width:100%;justify-content:center}
+  .hero-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .hstat{padding:14px 12px;border-radius:16px}
+  .hstat strong{font-size:1.72rem}
+  .hstat span{font-size:.62rem;letter-spacing:.06em}
+  .trust-wrap{grid-template-columns:1fr;gap:12px;padding:14px}
+  .trust-item{padding:14px}
 }
 </style>
 </head>
@@ -1602,6 +1663,33 @@ footer{padding:56px 0 32px;border-top:1px solid rgba(255,255,255,.07)}
 </section>
 
 <!-- ── Serviços ───────────────────────────────── -->
+<section class="trust-strip">
+  <div class="con">
+    <div class="trust-wrap">
+      <div class="trust-item">
+        <div class="trust-kicker">Confiança</div>
+        <strong>Presença profissional em ${cidade}</strong>
+        <span>Uma primeira impressão mais forte para quem pesquisa antes de chamar no WhatsApp.</span>
+      </div>
+      <div class="trust-item">
+        <div class="trust-kicker">Contato</div>
+        <strong>WhatsApp em destaque</strong>
+        <span>O canal principal fica visível logo de cara para acelerar o primeiro atendimento.</span>
+      </div>
+      <div class="trust-item">
+        <div class="trust-kicker">Conversão</div>
+        <strong>Página pensada para agendar</strong>
+        <span>Leitura simples, hierarquia clara e CTA forte para transformar visita em conversa.</span>
+      </div>
+      <div class="trust-item">
+        <div class="trust-kicker">Autoridade</div>
+        <strong>Visual mais premium</strong>
+        <span>Design limpo e mais seguro para valorizar a marca da ${empresa}.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="sec" id="servicos">
   <div class="con">
     <div class="sec-hd">
@@ -1732,9 +1820,56 @@ footer{padding:56px 0 32px;border-top:1px solid rgba(255,255,255,.07)}
 </footer>
 
 <!-- Demo badge -->
+<a class="mobile-cta" href="${waUrl}" target="_blank">💬 Falar com a ${empresa} no WhatsApp</a>
 <div class="demo-badge">🚀 Demonstração — ProspectaLP</div>
 
 <script>
+const heroTitleText = ${JSON.stringify(heroTitle)};
+const persuasionBadges = ${JSON.stringify(persuasionBullets)};
+const aboutFallbackUrl = ${JSON.stringify(aboutFallbackUrl)};
+const galleryFallbackUrl = ${JSON.stringify(galleryFallbackUrl)};
+
+const heroHeading = document.querySelector('.hero h1');
+if (heroHeading) {
+  heroHeading.innerHTML = heroTitleText + '<br><span class="hl">${empresa}</span>';
+}
+
+const heroButtons = document.querySelector('.hero-btns');
+if (heroButtons && persuasionBadges.length > 0) {
+  const badges = document.createElement('div');
+  badges.style.display = 'flex';
+  badges.style.flexWrap = 'wrap';
+  badges.style.gap = '10px';
+  badges.style.margin = '-18px 0 34px';
+  badges.innerHTML = persuasionBadges
+    .map((item) => '<span style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);font-size:.82rem;font-weight:700;color:rgba(255,255,255,.88)">✓ ' + item + '</span>')
+    .join('');
+  heroButtons.insertAdjacentElement('afterend', badges);
+}
+
+const aboutImage = document.querySelector('.about-img-wrap img');
+if (aboutImage) {
+  const applyAboutFallback = () => {
+    aboutImage.src = aboutFallbackUrl;
+  };
+
+  aboutImage.addEventListener('error', applyAboutFallback, { once: true });
+  if (aboutImage.complete && !aboutImage.naturalWidth) {
+    applyAboutFallback();
+  }
+}
+
+document.querySelectorAll('.gal-img').forEach((image) => {
+  const applyGalleryFallback = () => {
+    image.src = galleryFallbackUrl;
+  };
+
+  image.addEventListener('error', applyGalleryFallback, { once: true });
+  if (image.complete && !image.naturalWidth) {
+    applyGalleryFallback();
+  }
+});
+
 // Header scroll
 const hd = document.getElementById('hd');
 window.addEventListener('scroll', () => hd.classList.toggle('s', window.scrollY > 60), { passive: true });

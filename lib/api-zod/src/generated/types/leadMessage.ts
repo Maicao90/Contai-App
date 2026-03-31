@@ -5,9 +5,12 @@
  * ProspectaLP API
  * OpenAPI spec version: 0.2.0
  */
+import type { LeadMessagePrompts } from "./leadMessagePrompts";
 
 export interface LeadMessage {
   mensagem: string;
   whatsappUrl?: string | null;
   promptDemo: string;
+  demoUrl?: string | null;
+  prompts?: LeadMessagePrompts;
 }

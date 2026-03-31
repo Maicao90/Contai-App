@@ -14,8 +14,11 @@ export interface Lead {
   nomeEmpresa: string;
   nicho: string;
   cidade: string;
+  uf: string;
   telefone?: string | null;
   whatsapp?: string | null;
+  whatsappVerificado: boolean;
+  fonteBusca?: string | null;
   urlOrigem?: string | null;
   temSite: boolean;
   urlSite?: string | null;

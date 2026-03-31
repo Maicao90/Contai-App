@@ -47,3 +47,17 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Local data and runtimes
+.data/
+.codex-run/
+.codex-runtime/
+*.log
+artifacts/api-server/.data/
+artifacts/api-server/*.log
+
+# Integration secrets
+artifacts/api-server/src/lib/integration-secrets.json
+.env
+.env.*
+!.env.example

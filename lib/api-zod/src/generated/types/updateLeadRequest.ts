@@ -14,6 +14,7 @@ export interface UpdateLeadRequest {
   nomeEmpresa?: string;
   nicho?: string;
   cidade?: string;
+  uf?: string;
   telefone?: string | null;
   whatsapp?: string | null;
   temSite?: boolean;

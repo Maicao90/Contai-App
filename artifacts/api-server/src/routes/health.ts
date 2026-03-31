@@ -1,11 +1,15 @@
-import { Router, type IRouter } from "express";
-import { HealthCheckResponse } from "@workspace/api-zod";
+import { Router } from "express";
+import { databaseLocation, databaseProvider } from "@workspace/db";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.get("/healthz", (_req, res) => {
-  const data = HealthCheckResponse.parse({ status: "ok" });
-  res.json(data);
+  res.json({
+    status: "ok",
+    service: "contai-api",
+    databaseProvider,
+    databaseLocation,
+  });
 });
 
 export default router;

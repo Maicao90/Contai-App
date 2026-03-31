@@ -15,6 +15,8 @@ export const LeadStatus = {
   Novo: "Novo",
   Contatado: "Contatado",
   Convertido: "Convertido",
+  Perdido: "Perdido",
+  Ignorado: "Ignorado",
 } as const;
 
 export type LeadTemperatura =
@@ -38,7 +40,9 @@ export const CampaignStatus = {
 export interface Campaign {
   id: number;
   nome: string;
+  mercado: "Nacional" | "Internacional";
   nicho: string;
+  pais?: string | null;
   cidade: string;
   uf: string;
   status: CampaignStatus;
@@ -49,9 +53,11 @@ export interface Campaign {
 
 export interface CreateCampaignRequest {
   nome: string;
+  mercado: "Nacional" | "Internacional";
   nicho: string;
+  pais?: string | null;
   cidade: string;
-  uf: string;
+  uf?: string | null;
 }
 
 export interface Lead {
@@ -60,8 +66,12 @@ export interface Lead {
   nomeEmpresa: string;
   nicho: string;
   cidade: string;
+  uf: string;
   telefone?: string | null;
+  email?: string | null;
   whatsapp?: string | null;
+  whatsappVerificado: boolean;
+  fonteBusca?: string | null;
   urlOrigem?: string | null;
   temSite: boolean;
   urlSite?: string | null;
@@ -81,7 +91,9 @@ export interface CreateLeadRequest {
   nomeEmpresa: string;
   nicho: string;
   cidade: string;
+  uf?: string;
   telefone?: string | null;
+  email?: string | null;
   whatsapp?: string | null;
   urlOrigem?: string | null;
   temSite?: boolean;
@@ -96,7 +108,9 @@ export interface UpdateLeadRequest {
   nomeEmpresa?: string;
   nicho?: string;
   cidade?: string;
+  uf?: string;
   telefone?: string | null;
+  email?: string | null;
   whatsapp?: string | null;
   temSite?: boolean;
   urlSite?: string | null;
@@ -127,15 +141,26 @@ export interface DashboardStats {
   porTemperatura: DashboardStatsPorTemperatura;
 }
 
+export type LeadMessagePrompts = {
+  blueprint: string;
+  generico: string;
+  compacto: string;
+};
+
 export interface LeadMessage {
   mensagem: string;
   whatsappUrl?: string | null;
   promptDemo: string;
+  demoUrl?: string | null;
+  prompts?: LeadMessagePrompts;
 }
 
 export interface MineRequest {
+  mercado: "Nacional" | "Internacional";
   nicho: string;
+  pais?: string | null;
   cidade: string;
+  uf?: string | null;
   campanhaId?: number | null;
 }
 

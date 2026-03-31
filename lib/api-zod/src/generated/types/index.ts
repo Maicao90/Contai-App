@@ -18,6 +18,7 @@ export * from "./getRecentLeadsParams";
 export * from "./healthStatus";
 export * from "./lead";
 export * from "./leadMessage";
+export * from "./leadMessagePrompts";
 export * from "./leadStatus";
 export * from "./leadTemperatura";
 export * from "./listLeadsParams";

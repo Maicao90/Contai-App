@@ -82,7 +82,7 @@ paths:
     post:
       operationId: createCampaign
       tags: [campaigns]
-      summary: Create a new campaign and start mining
+      summary: Create a new campaign
       requestBody:
         required: true
         content:
@@ -313,7 +313,7 @@ components:
 
     LeadStatus:
       type: string
-      enum: [Novo, Contatado, Convertido]
+      enum: [Novo, Contatado, Convertido, Perdido, Ignorado]
 
     LeadTemperatura:
       type: string
@@ -330,8 +330,14 @@ components:
           type: integer
         nome:
           type: string
+        mercado:
+          type: string
+          enum: [Nacional, Internacional]
         nicho:
           type: string
+        pais:
+          type: string
+          nullable: true
         cidade:
           type: string
         uf:
@@ -349,6 +355,7 @@ components:
       required:
         - id
         - nome
+        - mercado
         - nicho
         - cidade
         - uf
@@ -361,17 +368,23 @@ components:
       properties:
         nome:
           type: string
+        mercado:
+          type: string
+          enum: [Nacional, Internacional]
         nicho:
           type: string
+        pais:
+          type: string
+          nullable: true
         cidade:
           type: string
         uf:
           type: string
       required:
         - nome
+        - mercado
         - nicho
         - cidade
-        - uf
 
     Lead:
       type: object
@@ -387,10 +400,20 @@ components:
           type: string
         cidade:
           type: string
+        uf:
+          type: string
         telefone:
           type: string
           nullable: true
+        email:
+          type: string
+          nullable: true
         whatsapp:
+          type: string
+          nullable: true
+        whatsappVerificado:
+          type: boolean
+        fonteBusca:
           type: string
           nullable: true
         urlOrigem:
@@ -428,7 +451,9 @@ components:
         - nomeEmpresa
         - nicho
         - cidade
+        - uf
         - temSite
+        - whatsappVerificado
         - temPixelMeta
         - temPixelGoogle
         - temGoogleMeuNegocio
@@ -449,7 +474,12 @@ components:
           type: string
         cidade:
           type: string
+        uf:
+          type: string
         telefone:
+          type: string
+          nullable: true
+        email:
           type: string
           nullable: true
         whatsapp:
@@ -485,7 +515,12 @@ components:
           type: string
         cidade:
           type: string
+        uf:
+          type: string
         telefone:
+          type: string
+          nullable: true
+        email:
           type: string
           nullable: true
         whatsapp:
@@ -562,6 +597,22 @@ components:
           nullable: true
         promptDemo:
           type: string
+        demoUrl:
+          type: string
+          nullable: true
+        prompts:
+          type: object
+          properties:
+            blueprint:
+              type: string
+            generico:
+              type: string
+            compacto:
+              type: string
+          required:
+            - blueprint
+            - generico
+            - compacto
       required:
         - mensagem
         - promptDemo
@@ -569,14 +620,23 @@ components:
     MineRequest:
       type: object
       properties:
+        mercado:
+          type: string
+          enum: [Nacional, Internacional]
         nicho:
           type: string
+        pais:
+          type: string
+          nullable: true
         cidade:
+          type: string
+        uf:
           type: string
         campanhaId:
           type: integer
           nullable: true
       required:
+        - mercado
         - nicho
         - cidade
 

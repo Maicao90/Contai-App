@@ -1,0 +1,33 @@
+<svg width="1120" height="320" viewBox="0 0 1120 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bubbleGradient" x1="60" y1="30" x2="300" y2="260" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A6F36C"/>
+      <stop offset="0.55" stop-color="#39BA6C"/>
+      <stop offset="1" stop-color="#0A7353"/>
+    </linearGradient>
+    <linearGradient id="bubbleEdge" x1="92" y1="46" x2="92" y2="224" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C3FF98"/>
+      <stop offset="1" stop-color="#49D685" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="bagGradient" x1="110" y1="78" x2="220" y2="232" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D4EEE8"/>
+    </linearGradient>
+    <filter id="softShadow" x="46" y="49" width="291" height="230" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="12" flood-color="#0B6B50" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <path d="M56 86C56 55.0721 81.0721 30 112 30H242C272.928 30 298 55.0721 298 86V184C298 214.928 272.928 240 242 240H165L119 276V240H112C81.0721 240 56 214.928 56 184V86Z" fill="url(#bubbleGradient)"/>
+  <path d="M78 86C78 67.2223 93.2223 52 112 52H242C260.778 52 276 67.2223 276 86V184C276 202.778 260.778 218 242 218H112C93.2223 218 78 202.778 78 184V86Z" fill="url(#bubbleEdge)" fill-opacity="0.55"/>
+
+  <g filter="url(#softShadow)">
+    <path d="M184.967 72.7763C180.944 67.2885 172.89 67.2886 168.867 72.7763L160.452 84.2514C157.944 87.6715 153.595 89.0992 149.571 87.8058C135.614 83.3192 122.455 93.8395 122.455 108.5V152.991C122.455 185.887 149.124 212.556 182.02 212.556C214.917 212.556 241.586 185.887 241.586 152.991V108.5C241.586 93.8395 228.426 83.3192 214.47 87.8058C210.445 89.0992 206.097 87.6715 203.588 84.2514L195.173 72.7763H184.967Z" fill="url(#bagGradient)"/>
+    <rect x="146" y="86.5" width="71" height="21" rx="10.5" fill="#F8FEFD"/>
+    <path d="M163.5 86.5C163.5 75.7304 172.23 67 183 67C193.77 67 202.5 75.7304 202.5 86.5H163.5Z" fill="#E8F6F2"/>
+    <path d="M186.308 121.445C195.235 121.445 202.472 128.682 202.472 137.609C202.472 145.599 196.678 152.237 189.049 153.556V165.282C189.049 168.57 186.384 171.235 183.096 171.235C179.809 171.235 177.143 168.57 177.143 165.282V153.839C171.63 153.198 166.527 151.03 162.299 147.683C159.722 145.643 159.287 141.894 161.328 139.318C163.368 136.741 167.117 136.306 169.694 138.346C172.932 140.909 177.046 142.293 181.307 142.293H186.308C188.657 142.293 190.562 140.388 190.562 138.04C190.562 135.691 188.657 133.786 186.308 133.786H179.871C170.944 133.786 163.707 126.549 163.707 117.622C163.707 109.632 169.5 102.994 177.129 101.675V89.9492C177.129 86.6617 179.795 83.9961 183.082 83.9961C186.37 83.9961 189.035 86.6617 189.035 89.9492V101.392C193.482 101.912 197.656 103.435 201.26 105.815C204.005 107.63 204.759 111.323 202.945 114.068C201.131 116.812 197.438 117.567 194.693 115.752C191.858 113.876 188.536 112.88 185.137 112.88H179.871C177.523 112.88 175.618 114.785 175.618 117.133C175.618 119.482 177.523 121.387 179.871 121.387L186.308 121.445Z" fill="#24A35E"/>
+  </g>
+
+  <text x="350" y="162" fill="#0A1A2A" font-size="138" font-weight="700" font-family="Inter, Arial, sans-serif">Contai</text>
+  <text x="352" y="230" fill="#11765A" font-size="44" font-weight="500" font-family="Inter, Arial, sans-serif">Seu Financeiro no WhatsApp</text>
+</svg>

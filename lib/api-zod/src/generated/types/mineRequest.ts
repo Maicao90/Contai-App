@@ -9,5 +9,6 @@
 export interface MineRequest {
   nicho: string;
   cidade: string;
+  uf: string;
   campanhaId?: number | null;
 }

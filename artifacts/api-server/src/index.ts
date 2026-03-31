@@ -1,19 +1,23 @@
-import app from "./app";
+import { loadIntegrationSecretsIntoEnv } from "./lib/integration-secrets";
+import { loadEmailTemplates } from "./lib/email-template-settings";
 import { logger } from "./lib/logger";
+import { loadSystemSettings } from "./lib/system-settings";
 
-const rawPort = process.env["PORT"];
+await loadIntegrationSecretsIntoEnv();
+await loadSystemSettings();
+await loadEmailTemplates();
 
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
+const { dbReady, databaseProvider, databaseLocation } = await import("@workspace/db");
+const { default: app } = await import("./app");
 
+const rawPort = process.env["PORT"] || "3000";
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
+  logger.warn(`Invalid PORT value: "${rawPort}". Falling back to 3000.`);
 }
+
+await dbReady;
 
 app.listen(port, (err) => {
   if (err) {
@@ -21,5 +25,5 @@ app.listen(port, (err) => {
     process.exit(1);
   }
 
-  logger.info({ port }, "Server listening");
+  logger.info({ port, databaseProvider, databaseLocation }, "Server listening");
 });

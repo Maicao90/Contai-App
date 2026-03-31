@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListLeadsQueryKey, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { buildCanonicalWhatsappUrl } from "@/lib/whatsapp";
 
 type PromptTab = "blueprint" | "generico" | "compacto";
 
@@ -30,7 +31,7 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
   const [editedMessage, setEditedMessage] = useState("");
 
   const { data: msgData, isLoading } = useGetLeadMessage(lead?.id || 0, {
-    query: { enabled: !!lead?.id && isOpen }
+    query: { enabled: !!lead?.id && isOpen } as any
   });
 
   const data = msgData as any;
@@ -78,9 +79,7 @@ export function MessageModal({ lead, isOpen, onClose }: MessageModalProps) {
 
   const buildWhatsappUrl = () => {
     if (!data) return null;
-    const rawPhone = lead?.telefone?.replace(/\D/g, "") ?? "";
-    if (rawPhone.length < 10) return null;
-    return `https://wa.me/55${rawPhone}?text=${encodeURIComponent(editedMessage)}`;
+    return buildCanonicalWhatsappUrl(lead?.whatsapp ?? lead?.telefone, editedMessage);
   };
 
   if (!lead) return null;

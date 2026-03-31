@@ -50,8 +50,12 @@ export const GetRecentLeadsResponseItem = zod.object({
   nomeEmpresa: zod.string(),
   nicho: zod.string(),
   cidade: zod.string(),
+  uf: zod.string(),
   telefone: zod.string().nullish(),
+  email: zod.string().nullish(),
   whatsapp: zod.string().nullish(),
+  whatsappVerificado: zod.boolean(),
+  fonteBusca: zod.string().nullish(),
   urlOrigem: zod.string().nullish(),
   temSite: zod.boolean(),
   urlSite: zod.string().nullish(),
@@ -62,7 +66,7 @@ export const GetRecentLeadsResponseItem = zod.object({
   urlInstagram: zod.string().nullish(),
   score: zod.number(),
   temperatura: zod.enum(["Frio", "Morno", "Quente"]),
-  status: zod.enum(["Novo", "Contatado", "Convertido"]),
+  status: zod.enum(["Novo", "Contatado", "Convertido", "Perdido", "Ignorado"]),
   dataCadastro: zod.date(),
 });
 export const GetRecentLeadsResponse = zod.array(GetRecentLeadsResponseItem);
@@ -73,7 +77,9 @@ export const GetRecentLeadsResponse = zod.array(GetRecentLeadsResponseItem);
 export const ListCampaignsResponseItem = zod.object({
   id: zod.number(),
   nome: zod.string(),
+  mercado: zod.enum(["Nacional", "Internacional"]),
   nicho: zod.string(),
+  pais: zod.string().nullish(),
   cidade: zod.string(),
   uf: zod.string(),
   status: zod.enum(["Ativa", "Concluída", "Pausada"]),
@@ -84,13 +90,15 @@ export const ListCampaignsResponseItem = zod.object({
 export const ListCampaignsResponse = zod.array(ListCampaignsResponseItem);
 
 /**
- * @summary Create a new campaign and start mining
+ * @summary Create a new campaign
  */
 export const CreateCampaignBody = zod.object({
   nome: zod.string(),
+  mercado: zod.enum(["Nacional", "Internacional"]),
   nicho: zod.string(),
+  pais: zod.string().nullish(),
   cidade: zod.string(),
-  uf: zod.string(),
+  uf: zod.string().nullish(),
 });
 
 /**
@@ -103,7 +111,9 @@ export const GetCampaignParams = zod.object({
 export const GetCampaignResponse = zod.object({
   id: zod.number(),
   nome: zod.string(),
+  mercado: zod.enum(["Nacional", "Internacional"]),
   nicho: zod.string(),
+  pais: zod.string().nullish(),
   cidade: zod.string(),
   uf: zod.string(),
   status: zod.enum(["Ativa", "Concluída", "Pausada"]),
@@ -136,8 +146,11 @@ export const ListLeadsResponseItem = zod.object({
   nomeEmpresa: zod.string(),
   nicho: zod.string(),
   cidade: zod.string(),
+  uf: zod.string(),
   telefone: zod.string().nullish(),
   whatsapp: zod.string().nullish(),
+  whatsappVerificado: zod.boolean(),
+  fonteBusca: zod.string().nullish(),
   urlOrigem: zod.string().nullish(),
   temSite: zod.boolean(),
   urlSite: zod.string().nullish(),
@@ -148,7 +161,7 @@ export const ListLeadsResponseItem = zod.object({
   urlInstagram: zod.string().nullish(),
   score: zod.number(),
   temperatura: zod.enum(["Frio", "Morno", "Quente"]),
-  status: zod.enum(["Novo", "Contatado", "Convertido"]),
+  status: zod.enum(["Novo", "Contatado", "Convertido", "Perdido", "Ignorado"]),
   dataCadastro: zod.date(),
 });
 export const ListLeadsResponse = zod.array(ListLeadsResponseItem);
@@ -161,7 +174,9 @@ export const CreateLeadBody = zod.object({
   nomeEmpresa: zod.string(),
   nicho: zod.string(),
   cidade: zod.string(),
+  uf: zod.string().optional(),
   telefone: zod.string().nullish(),
+  email: zod.string().nullish(),
   whatsapp: zod.string().nullish(),
   urlOrigem: zod.string().nullish(),
   temSite: zod.boolean().optional(),
@@ -183,8 +198,12 @@ export const GetLeadResponse = zod.object({
   nomeEmpresa: zod.string(),
   nicho: zod.string(),
   cidade: zod.string(),
+  uf: zod.string(),
   telefone: zod.string().nullish(),
+  email: zod.string().nullish(),
   whatsapp: zod.string().nullish(),
+  whatsappVerificado: zod.boolean(),
+  fonteBusca: zod.string().nullish(),
   urlOrigem: zod.string().nullish(),
   temSite: zod.boolean(),
   urlSite: zod.string().nullish(),
@@ -195,7 +214,7 @@ export const GetLeadResponse = zod.object({
   urlInstagram: zod.string().nullish(),
   score: zod.number(),
   temperatura: zod.enum(["Frio", "Morno", "Quente"]),
-  status: zod.enum(["Novo", "Contatado", "Convertido"]),
+  status: zod.enum(["Novo", "Contatado", "Convertido", "Perdido", "Ignorado"]),
   dataCadastro: zod.date(),
 });
 
@@ -207,12 +226,16 @@ export const UpdateLeadParams = zod.object({
 });
 
 export const UpdateLeadBody = zod.object({
-  status: zod.enum(["Novo", "Contatado", "Convertido"]).optional(),
+  status: zod
+    .enum(["Novo", "Contatado", "Convertido", "Perdido", "Ignorado"])
+    .optional(),
   temperatura: zod.enum(["Frio", "Morno", "Quente"]).optional(),
   nomeEmpresa: zod.string().optional(),
   nicho: zod.string().optional(),
   cidade: zod.string().optional(),
+  uf: zod.string().optional(),
   telefone: zod.string().nullish(),
+  email: zod.string().nullish(),
   whatsapp: zod.string().nullish(),
   temSite: zod.boolean().optional(),
   urlSite: zod.string().nullish(),
@@ -227,8 +250,12 @@ export const UpdateLeadResponse = zod.object({
   nomeEmpresa: zod.string(),
   nicho: zod.string(),
   cidade: zod.string(),
+  uf: zod.string(),
   telefone: zod.string().nullish(),
+  email: zod.string().nullish(),
   whatsapp: zod.string().nullish(),
+  whatsappVerificado: zod.boolean(),
+  fonteBusca: zod.string().nullish(),
   urlOrigem: zod.string().nullish(),
   temSite: zod.boolean(),
   urlSite: zod.string().nullish(),
@@ -239,7 +266,7 @@ export const UpdateLeadResponse = zod.object({
   urlInstagram: zod.string().nullish(),
   score: zod.number(),
   temperatura: zod.enum(["Frio", "Morno", "Quente"]),
-  status: zod.enum(["Novo", "Contatado", "Convertido"]),
+  status: zod.enum(["Novo", "Contatado", "Convertido", "Perdido", "Ignorado"]),
   dataCadastro: zod.date(),
 });
 
@@ -261,14 +288,25 @@ export const GetLeadMessageResponse = zod.object({
   mensagem: zod.string(),
   whatsappUrl: zod.string().nullish(),
   promptDemo: zod.string(),
+  demoUrl: zod.string().nullish(),
+  prompts: zod
+    .object({
+      blueprint: zod.string(),
+      generico: zod.string(),
+      compacto: zod.string(),
+    })
+    .optional(),
 });
 
 /**
  * @summary Mine leads for a niche and city
  */
 export const MineLeadsBody = zod.object({
+  mercado: zod.enum(["Nacional", "Internacional"]),
   nicho: zod.string(),
+  pais: zod.string().nullish(),
   cidade: zod.string(),
+  uf: zod.string().nullish(),
   campanhaId: zod.number().nullish(),
 });
 
@@ -280,9 +318,13 @@ export const MineLeadsResponse = zod.object({
       campanhaId: zod.number().nullish(),
       nomeEmpresa: zod.string(),
       nicho: zod.string(),
-      cidade: zod.string(),
-      telefone: zod.string().nullish(),
-      whatsapp: zod.string().nullish(),
+        cidade: zod.string(),
+        uf: zod.string(),
+        telefone: zod.string().nullish(),
+        email: zod.string().nullish(),
+        whatsapp: zod.string().nullish(),
+      whatsappVerificado: zod.boolean(),
+      fonteBusca: zod.string().nullish(),
       urlOrigem: zod.string().nullish(),
       temSite: zod.boolean(),
       urlSite: zod.string().nullish(),
@@ -293,7 +335,13 @@ export const MineLeadsResponse = zod.object({
       urlInstagram: zod.string().nullish(),
       score: zod.number(),
       temperatura: zod.enum(["Frio", "Morno", "Quente"]),
-      status: zod.enum(["Novo", "Contatado", "Convertido"]),
+      status: zod.enum([
+        "Novo",
+        "Contatado",
+        "Convertido",
+        "Perdido",
+        "Ignorado",
+      ]),
       dataCadastro: zod.date(),
     }),
   ),
