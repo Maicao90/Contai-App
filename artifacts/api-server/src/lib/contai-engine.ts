@@ -308,7 +308,7 @@ function getHelpText() {
 }
 
 function getAppBaseUrl() {
-  return process.env.APP_BASE_URL?.trim() || "http://localhost:5173";
+  return process.env.APP_BASE_URL?.trim() || "https://contai.site";
 }
 
 function capitalizeLabel(value: string | null | undefined) {

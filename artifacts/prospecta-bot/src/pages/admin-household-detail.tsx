@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJson, postJson } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 type HouseholdDetail = {
   household: {
@@ -36,6 +37,7 @@ type HouseholdDetail = {
 export default function AdminHouseholdDetailPage() {
   const [match, params] = useRoute("/admin/households/:id");
   const householdId = match ? Number(params.id) : null;
+  const { toast } = useToast();
 
   const { data, refetch } = useQuery({
     queryKey: ["admin-household-detail", householdId],
@@ -45,7 +47,20 @@ export default function AdminHouseholdDetailPage() {
 
   const actionMutation = useMutation({
     mutationFn: (action: string) => postJson(`/admin/households/${householdId}/actions`, { action }),
-    onSuccess: () => void refetch(),
+    onSuccess: (_, action) => {
+      toast({
+        title: "Sucesso",
+        description: `Acao '${action}' executada com sucesso.`,
+      });
+      void refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Erro na acao",
+        description: error.message || "Nao foi possivel executar a acao agora.",
+      });
+    },
   });
 
   return (
@@ -149,17 +164,31 @@ export default function AdminHouseholdDetailPage() {
                 <CardTitle>Acoes da conta</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start rounded-2xl" onClick={() => actionMutation.mutate("remove_partner")}>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start rounded-2xl" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => actionMutation.mutate("remove_partner")}
+                >
                   <UserMinus className="h-4 w-4" />
-                  Remover parceiro
+                  {actionMutation.isPending && actionMutation.variables === "remove_partner" ? "Aguarde..." : "Remover parceiro"}
                 </Button>
-                <Button variant="outline" className="w-full justify-start rounded-2xl" onClick={() => actionMutation.mutate("deactivate")}>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start rounded-2xl" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => actionMutation.mutate("deactivate")}
+                >
                   <Power className="h-4 w-4" />
-                  Desativar conta
+                  {actionMutation.isPending && actionMutation.variables === "deactivate" ? "Desativando..." : "Desativar conta"}
                 </Button>
-                <Button className="w-full justify-start rounded-2xl bg-emerald-500 text-white hover:bg-emerald-600" onClick={() => actionMutation.mutate("reactivate")}>
+                <Button 
+                  className="w-full justify-start rounded-2xl bg-emerald-500 text-white hover:bg-emerald-600" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => actionMutation.mutate("reactivate")}
+                >
                   <RotateCcw className="h-4 w-4" />
-                  Reativar conta
+                  {actionMutation.isPending && actionMutation.variables === "reactivate" ? "Reativando..." : "Reativar conta"}
                 </Button>
               </CardContent>
             </Card>

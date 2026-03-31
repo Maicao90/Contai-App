@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getJson, postJson } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 type AdminUser = {
   id: number;
@@ -57,6 +58,7 @@ export default function AdminUsersPage() {
   const [householdType, setHouseholdType] = useState("all");
   const [role, setRole] = useState("all");
   const [createMode, setCreateMode] = useState<"owner" | "partner">("owner");
+  const { toast } = useToast();
   const [createForm, setCreateForm] = useState({
     name: "",
     displayName: "",
@@ -98,6 +100,7 @@ export default function AdminUsersPage() {
       }),
     onSuccess: async () => {
       setCreateFeedback("Usuário criado com sucesso.");
+      toast({ title: "Sucesso", description: "O novo usuario foi cadastrado no sistema." });
       setCreateForm({
         name: "",
         displayName: "",
@@ -110,8 +113,10 @@ export default function AdminUsersPage() {
       });
       await refetch();
     },
-    onError: (error) => {
-      setCreateFeedback(error instanceof Error ? error.message : "Não foi possível criar o usuário.");
+    onError: (error: any) => {
+      const msg = error.message || "Não foi possível criar o usuário.";
+      setCreateFeedback(msg);
+      toast({ variant: "destructive", title: "Erro no cadastro", description: msg });
     },
   });
 

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getJson, postJson } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 type IntegrationField = {
   key: string;
@@ -43,6 +44,7 @@ export default function AdminIntegrationDetailPage() {
   const [form, setForm] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const { toast } = useToast();
 
   const { data, refetch, isLoading } = useQuery({
     queryKey: ["admin-integration-detail", integrationKey],
@@ -70,13 +72,13 @@ export default function AdminIntegrationDetailPage() {
       postJson<{ ok: boolean; message: string }>(`/admin/integrations/${integrationKey}/settings`, { values: payload }),
     onSuccess: async (result) => {
       setFeedback({ type: "success", message: result.message });
+      toast({ title: "Sucesso", description: result.message });
       await refetch();
     },
-    onError: (error) => {
-      setFeedback({
-        type: "error",
-        message: error instanceof Error ? error.message : "Nao foi possivel salvar as chaves agora.",
-      });
+    onError: (error: any) => {
+      const msg = error.message || "Nao foi possivel salvar as chaves agora.";
+      setFeedback({ type: "error", message: msg });
+      toast({ variant: "destructive", title: "Falha ao salvar", description: msg });
     },
   });
 
@@ -110,13 +112,13 @@ export default function AdminIntegrationDetailPage() {
     mutationFn: () => postJson<{ message: string }>("/admin/integrations/test", { service: integrationKey }),
     onSuccess: async (result) => {
       setFeedback({ type: "success", message: result.message });
+      toast({ title: "Conexao estabelecida!", description: result.message });
       await refetch();
     },
-    onError: (error) => {
-      setFeedback({
-        type: "error",
-        message: error instanceof Error ? error.message : "Nao foi possivel testar a conexao agora.",
-      });
+    onError: (error: any) => {
+      const msg = error.message || "Nao foi possivel testar a conexao agora.";
+      setFeedback({ type: "error", message: msg });
+      toast({ variant: "destructive", title: "Erro de Conexao", description: msg });
     },
   });
 

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJson, postJson } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 type UserDetail = {
   profile: {
@@ -61,6 +62,7 @@ function relativeTime(date: string) {
 export default function AdminUserDetailPage() {
   const [match, params] = useRoute("/admin/users/:id");
   const userId = match ? Number(params.id) : null;
+  const { toast } = useToast();
 
   const { data, refetch } = useQuery({
     queryKey: ["admin-user-detail", userId],
@@ -70,7 +72,20 @@ export default function AdminUserDetailPage() {
 
   const actionMutation = useMutation({
     mutationFn: (action: string) => postJson(`/admin/users/${userId}/actions`, { action }),
-    onSuccess: () => void refetch(),
+    onSuccess: (_, action) => {
+      toast({
+        title: "Sucesso",
+        description: `Acao '${action}' executada com sucesso.`,
+      });
+      void refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Erro na acao",
+        description: error.message || "Nao foi possivel executar a acao agora.",
+      });
+    },
   });
 
   return (
@@ -209,29 +224,58 @@ export default function AdminUserDetailPage() {
                 <CardTitle>Ações administrativas</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start rounded-2xl" onClick={() => actionMutation.mutate("suspend")}>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start rounded-2xl" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => actionMutation.mutate("suspend")}
+                >
                   <Power className="h-4 w-4" />
-                  Suspender usuário
+                  {actionMutation.isPending && actionMutation.variables === "suspend" ? "Aguarde..." : "Suspender usuario"}
                 </Button>
-                <Button variant="outline" className="w-full justify-start rounded-2xl" onClick={() => actionMutation.mutate("reactivate")}>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start rounded-2xl" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => actionMutation.mutate("reactivate")}
+                >
                   <RotateCcw className="h-4 w-4" />
-                  Reativar usuário
+                  {actionMutation.isPending && actionMutation.variables === "reactivate" ? "Reativando..." : "Reativar usuario"}
                 </Button>
-                <Button variant="outline" className="w-full justify-start rounded-2xl" onClick={() => actionMutation.mutate("remove_from_household")}>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start rounded-2xl" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => actionMutation.mutate("remove_from_household")}
+                >
                   <UserMinus className="h-4 w-4" />
-                  Remover da conta
+                  {actionMutation.isPending && actionMutation.variables === "remove_from_household" ? "Removendo..." : "Remover da conta"}
                 </Button>
-                <Button variant="outline" className="w-full justify-start rounded-2xl" onClick={() => actionMutation.mutate("reset_whatsapp_session")}>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start rounded-2xl" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => actionMutation.mutate("reset_whatsapp_session")}
+                >
                   <MessageCircle className="h-4 w-4" />
-                  Resetar sessão do WhatsApp
+                  {actionMutation.isPending && actionMutation.variables === "reset_whatsapp_session" ? "Resetando..." : "Resetar sessao do WhatsApp"}
                 </Button>
-                <Button variant="outline" className="w-full justify-start rounded-2xl" onClick={() => actionMutation.mutate("resend_onboarding")}>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start rounded-2xl" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => actionMutation.mutate("resend_onboarding")}
+                >
                   <Send className="h-4 w-4" />
-                  Reenviar onboarding
+                  {actionMutation.isPending && actionMutation.variables === "resend_onboarding" ? "Enviando..." : "Reenviar onboarding"}
                 </Button>
-                <Button className="w-full justify-start rounded-2xl bg-emerald-500 text-white hover:bg-emerald-600" onClick={() => actionMutation.mutate("mark_active")}>
+                <Button 
+                  className="w-full justify-start rounded-2xl bg-emerald-500 text-white hover:bg-emerald-600" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => actionMutation.mutate("mark_active")}
+                >
                   <RotateCcw className="h-4 w-4" />
-                  Marcar como ativo manualmente
+                  {actionMutation.isPending && actionMutation.variables === "mark_active" ? "Aguarde..." : "Marcar como ativo manualmente"}
                 </Button>
               </CardContent>
             </Card>

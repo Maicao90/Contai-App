@@ -318,7 +318,7 @@ type IntegrationTestResult = {
 };
 
 function buildIntegrationHints(key: IntegrationKey) {
-  const appBaseUrl = process.env.APP_BASE_URL?.trim() || "http://localhost:5173";
+  const appBaseUrl = process.env.APP_BASE_URL?.trim() || "https://contai.site";
   const apiBaseUrl = process.env.API_BASE_URL?.trim() || "http://localhost:3000";
 
   if (key === "whatsapp") {
