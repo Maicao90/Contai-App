@@ -24,9 +24,9 @@ git commit -m "Deploy: Producao Contai V1 (Supabase Conectado, Vercel Ready)"
 git branch -M main
 
 echo.
-echo [3/4] Conectando no seu link: github.com/Maicao90/Contai-App...
-git remote remove origin 2>nul
-git remote add origin https://github.com/Maicao90/Contai-App.git
+echo [3/4] Conectando no seu link: github.com/AidaBusiness/contai-app...
+git remote add origin https://github.com/AidaBusiness/contai-app.git >nul 2>&1
+git remote set-url origin https://github.com/AidaBusiness/contai-app.git
 
 echo.
 echo [4/4] Decolando nave para as nuvens! (Isso pode demorar um pouco...)
