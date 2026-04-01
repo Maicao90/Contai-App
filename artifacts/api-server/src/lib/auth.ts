@@ -295,32 +295,46 @@ export async function resetPasswordWithToken(token: string, password: string) {
   };
 }
 
-export function attachSession(req: SessionRequest, _res: Response, next: NextFunction) {
-  const token = req.cookies?.[SESSION_COOKIE];
-  const session = token ? sessions.get(token) ?? null : null;
+export async function attachSession(req: SessionRequest, res: Response, next: NextFunction) {
+  try {
+    const token = req.cookies?.[SESSION_COOKIE];
+    const session = token ? sessions.get(token) ?? null : null;
 
-  if (!session) {
-    req.session = null;
+    if (!session) {
+      req.session = null;
+      return next();
+    }
+
+    if (session.expiresAt <= Date.now()) {
+      sessions.delete(token);
+      persistSessions();
+      req.session = null;
+      return next();
+    }
+
+    // Ghost Session Protection: Verificar se o usuário ainda existe no banco
+    if (session.userId) {
+      const [userExists] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId)).limit(1);
+      if (!userExists) {
+        sessions.delete(token);
+        persistSessions();
+        res.clearCookie(SESSION_COOKIE, { path: "/" });
+        req.session = null;
+        return next();
+      }
+    }
+
+    const refreshedSession = {
+      ...session,
+      expiresAt: buildSessionExpiry(session.role),
+    };
+
+    storeSession(refreshedSession);
+    req.session = refreshedSession;
     next();
-    return;
+  } catch (error) {
+    next(error);
   }
-
-  if (session.expiresAt <= Date.now()) {
-    sessions.delete(token);
-    persistSessions();
-    req.session = null;
-    next();
-    return;
-  }
-
-  const refreshedSession = {
-    ...session,
-    expiresAt: buildSessionExpiry(session.role),
-  };
-
-  storeSession(refreshedSession);
-  req.session = refreshedSession;
-  next();
 }
 
 export function setSessionCookie(res: Response, session: SessionData) {

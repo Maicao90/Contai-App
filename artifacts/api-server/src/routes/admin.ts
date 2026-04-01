@@ -1481,14 +1481,29 @@ router.post("/admin/households/:id/actions", async (req, res, next) => {
     if (action === "delete_household") {
       const [household] = await db.select().from(householdsTable).where(eq(householdsTable.id, householdId)).limit(1);
       if (household) {
-        // 1. Limpeza de logs e eventos manuais (que não cascateiam automaticamente)
+        // Encontrar usuários para deletar (Wipe Real)
+        const members = await db.select().from(householdMembersTable).where(eq(householdMembersTable.householdId, householdId));
+        const userIds = members.map(m => m.userId);
+        const masterEmail = (process.env.MASTER_ADMIN_EMAIL || "").toLowerCase().trim();
+
+        // 1. Limpeza de logs e eventos manuais
         await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
         await db.delete(notificationEventsTable).where(eq(notificationEventsTable.householdId, householdId));
         
         // 2. Wipe Total (Cascata de Membros, Transações, etc.)
         await db.delete(householdsTable).where(eq(householdsTable.id, householdId));
+
+        // 3. Deletar os usuários (se não forem Master Admin)
+        if (userIds.length > 0) {
+          for (const uid of userIds) {
+            const [u] = await db.select().from(usersTable).where(eq(usersTable.id, uid)).limit(1);
+            if (u && u.email?.toLowerCase().trim() !== masterEmail) {
+              await db.delete(usersTable).where(eq(usersTable.id, uid));
+            }
+          }
+        }
         
-        await logAdminAction(req, "delete_household", { householdId, name: household.name });
+        await logAdminAction(req, "delete_household_and_users_wipe", { householdId, name: household.name, deletedUsers: userIds.length });
       }
     }
     res.json({ ok: true, action });

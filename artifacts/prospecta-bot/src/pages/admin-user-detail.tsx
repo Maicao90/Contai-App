@@ -9,7 +9,7 @@ import { MetricCard } from "@/components/metric-card";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getJson, postJson } from "@/lib/api";
+import { getJson, postJson, deleteJson } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -73,7 +73,7 @@ export default function AdminUserDetailPage() {
   const actionMutation = useMutation({
     mutationFn: (action: string) => {
       if (action === "delete") {
-        return fetch(`/api/admin/users/${userId}`, { method: "DELETE" }).then(r => r.json());
+        return deleteJson(`/admin/users/${userId}`);
       }
       return postJson(`/admin/users/${userId}/actions`, { action });
     },
