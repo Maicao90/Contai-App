@@ -51,13 +51,13 @@ const chatMessages = [
   {
     from: "bot",
     text:
-      "Anotei com seguranca os R$ 200,00\nque voce gastou com mercado hoje.\nTudo esta organizado para voce.\n\n📋 Resumo da transacao:\n🧾 Descricao: Mercado\n💸 Valor: R$ 200,00\n📂 Categoria: Mercado\n📅 Data: 30/03/2026\n✅ Status: Pago\n👤 Tipo: Gasto pessoal",
+      "Anotei os R$ 200,00 que você gastou com mercado hoje, Maicon. Tudo já está organizado para você.\n\n📋 Resumo da transação:\n🧾 Descrição: Mercado\n💸 Valor: R$ 200,00\n📂 Categoria: Mercado\n📅 Data: 30/03/2026\n✅ Status: Pago\n👤 Tipo: Pessoal\n💳 Pagamento: Pix\n\n💰 Saldo anterior: R$ 3.000,00\n💸 Valor descontado: R$ 200,00\n✅ Seu saldo pessoal atual: R$ 2.800,00",
   },
-  { from: "user", text: "Recebi 2500 de salario" },
+  { from: "user", text: "Registra 500 entrada da casa" },
   {
     from: "bot",
     text:
-      "Anotei os R$ 2.500,00 que voce\nrecebeu hoje. Ja deixei essa\nentrada organizada para voce.\n\n📋 Resumo da transacao:\n🧾 Descricao: Salario\n💰 Valor: R$ 2.500,00\n📂 Categoria: Salario\n📅 Data: 30/03/2026\n✅ Status: Recebido",
+      "Anotei os R$ 500,00 que você recebeu de Entrada hoje, Maicon. Tudo já está organizado para você.\n\n📋 Resumo da transação:\n🧾 Descrição: Entrada\n💰 Valor: R$ 500,00\n📂 Categoria: Freela\n📅 Data: 30/03/2026\n✅ Status: Recebido\n🏠 Tipo: Gasto da casa\n💳 Pagamento: Pix\n\n💰 Seu saldo na casa antes: R$ 1.000,00\n💰 Seu ganho na casa: R$ 500,00\n✅ Seu saldo na casa agora: R$ 1.500,00\n\n👥 Saldo total da casa agora: R$ 2.500,00",
   },
 ];
 const steps = [
@@ -97,7 +97,9 @@ const features = [
   { icon: Link2, title: "Contas a receber", description: "Acompanhe o que ainda precisa entrar." },
   { icon: CalendarDays, title: "Compromissos", description: "Salve consultas, reuniões e eventos." },
   { icon: AlarmClock, title: "Lembretes", description: "Receba ajuda para não deixar nada passar." },
-  { icon: Sparkles, title: "Categorias personalizadas", description: "Organize do seu jeito, sem rigidez." },
+  { icon: Wallet, title: "Saldos Multi-Nível", description: "Veja seu saldo pessoal, seu saldo na casa e o total da casa separadamente." },
+  { icon: Target, title: "Metas e Alertas", description: "Receba avisos instantâneos quando atingir 80% do uso do saldo da casa." },
+  { icon: Shield, title: "Privacidade Real", description: "Seus gastos pessoais são 100% invisíveis para os outros membros da casa." },
   { icon: Clock3, title: "Agenda", description: "Veja o dia e a semana com clareza." },
   { icon: LayoutDashboard, title: "Painel web", description: "Mais controle quando você quiser aprofundar." },
   { icon: Link2, title: "Google Agenda", description: "Sincronize compromissos quando fizer sentido." },
@@ -492,77 +494,99 @@ export default function LandingPage() {
 
 
 
-        <section className="px-4 py-9 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <section className="px-4 py-12 sm:px-6 sm:py-20 lg:px-8 bg-emerald-500/5">
           <div className="mx-auto max-w-7xl">
-            <SectionDivider />
-          </div>
-          <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:items-center lg:gap-10">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
               <Reveal>
-                <div className="max-w-2xl text-left">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/80 sm:text-[11px] sm:tracking-[0.28em]">
-                    Conta compartilhada
-                  </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:mt-4 sm:text-4xl">
-                    Uma conta para você.
-                  </h2>
-                  <div className="-mt-1 -ml-4 sm:-mt-2">
-                    <HandWrittenTitle
-                      title="Ou para vocês."
-                      compact
-                      className="max-w-[420px] py-0 sm:max-w-[520px]"
-                      titleClassName="justify-start text-left text-[1.9rem] font-medium italic text-emerald-200 sm:text-[2.7rem]"
-                      strokeClassName="text-emerald-300/70"
-                    />
-                  </div>
-                  <p className="mt-2 text-sm leading-7 text-slate-300 sm:mt-3 sm:text-base">
-                    Use sozinho ou compartilhe com outra pessoa. Cada membro entra com seu próprio login e usa seu próprio WhatsApp, mantendo a mesma conta organizada.
-                  </p>
-                </div>
-                <div className="mt-6 space-y-3 sm:mt-8">
-                  {[
-                    "Até 2 membros por conta",
-                  "Cada pessoa com login e senha próprios",
-                  "Cada pessoa com seu próprio número",
-                  "Histórico individual com conta compartilhada",
-                  "Ideal para casal ou parceria",
-                ].map((item) => (
-                  <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/6 px-4 py-3.5 text-sm text-slate-100 sm:py-4">
-                    <Check className="h-4 w-4 text-emerald-300" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-            <Reveal delay={0.08}>
-              <div className="relative rounded-[26px] border border-white/10 bg-white/6 p-3.5 backdrop-blur-xl sm:rounded-[30px] sm:p-6">
-                <div className="absolute inset-x-10 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-emerald-300/35 to-transparent" />
-                <div className="grid gap-4">
-                  <div className="rounded-[24px] border border-white/10 bg-[#0c1622] p-4 sm:rounded-[26px] sm:p-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-300 sm:h-12 sm:w-12">C</div>
-                      <div>
-                        <p className="font-medium text-white">Camila</p>
-                        <p className="text-sm text-slate-300">Titular</p>
+                <div className="relative aspect-square max-w-md mx-auto lg:mx-0">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-[40px] blur-3xl animate-pulse" />
+                  <div className="relative h-full w-full rounded-[40px] border border-white/10 bg-[#0a151f] p-8 flex flex-col justify-center shadow-2xl">
+                    <div className="space-y-6">
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs text-slate-400">Saldo Pessoal</span>
+                          <Shield className="h-4 w-4 text-emerald-400" />
+                        </div>
+                        <p className="text-2xl font-semibold text-white">R$ 3.450,00</p>
+                        <p className="text-[10px] text-emerald-400 mt-1">🔒 Apenas você vê este valor</p>
                       </div>
-                    </div>
-                  </div>
-                  <div className="rounded-[24px] border border-emerald-300/20 bg-emerald-400/8 p-4 text-center sm:rounded-[26px] sm:p-5">
-                    <p className="text-xs uppercase tracking-[0.24em] text-emerald-200/80">Conta compartilhada</p>
-                    <p className="mt-2 text-xl font-semibold text-white sm:text-2xl">Casa Camila & Rafa</p>
-                    <p className="mt-2 text-sm text-slate-300">Dinheiro, contas e rotina na mesma conta.</p>
-                  </div>
-                  <div className="rounded-[24px] border border-white/10 bg-[#0c1622] p-4 sm:rounded-[26px] sm:p-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-400/20 text-teal-200 sm:h-12 sm:w-12">R</div>
-                      <div>
-                        <p className="font-medium text-white">Rafa</p>
-                        <p className="text-sm text-slate-300">Membro</p>
+                      <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs text-slate-400">Saldo na Casa</span>
+                          <Users className="h-4 w-4 text-emerald-400" />
+                        </div>
+                        <p className="text-2xl font-semibold text-white">R$ 1.200,00</p>
+                        <p className="text-[10px] text-slate-400 mt-1">Sua contribuição para as despesas comuns</p>
                       </div>
                     </div>
                   </div>
                 </div>
+              </Reveal>
+              <Reveal delay={0.1}>
+                <div className="space-y-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/80">Privacidade Garantida</p>
+                  <h2 className="text-3xl font-semibold text-white sm:text-4xl">Suas finanças pessoais são sagradas.</h2>
+                  <p className="text-slate-300 text-lg leading-relaxed">
+                    O Contai foi desenhado com um muro digital entre o que é seu e o que é da casa. 
+                    Registre seus gastos pessoais com Pix ou Crédito e tenha certeza: <b>ninguém na casa terá acesso a esses dados.</b>
+                  </p>
+                  <ul className="space-y-4">
+                    {[
+                      "Isolamento total de saldos pessoais",
+                      "Visualização clara do 'seu' dinheiro vs 'nosso' dinheiro",
+                      "Alertas de uso específicos para as contas da casa",
+                      "Histórico de transações privadas criptografado"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-center gap-3 text-slate-200">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <Reveal>
+              <div className="text-center mb-12">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/80">Alertas Inteligentes</p>
+                <h2 className="text-3xl font-semibold text-white mt-4 sm:text-4xl">O robô que cuida do seu limite por você.</h2>
               </div>
             </Reveal>
+            <div className="grid gap-6 md:grid-cols-3">
+              {[
+                { 
+                  title: "Alerta de 80%", 
+                  desc: "Mantenha a saúde financeira. O Contai avisa assim que a conta da casa atingir 80% do uso previsto.",
+                  icon: Zap,
+                  color: "border-yellow-500/20 bg-yellow-500/5 text-yellow-200"
+                },
+                { 
+                  title: "Aviso de Saldo Crítico", 
+                  desc: "Nunca seja pego de surpresa. Receba notificações automáticas quando o saldo estiver próximo de zerar.",
+                  icon: Target,
+                  color: "border-orange-500/20 bg-orange-500/5 text-orange-200"
+                },
+                { 
+                  title: "Gestão Proativa", 
+                  desc: "Se o saldo da casa ficar negativo, o bot te alerta em qualquer interação para que você possa agir rápido.",
+                  icon: Shield,
+                  color: "border-red-500/20 bg-red-500/5 text-red-100"
+                }
+              ].map((alert, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <div className={`p-6 rounded-3xl border ${alert.color} h-full`}>
+                    <alert.icon className="h-8 w-8 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">{alert.title}</h3>
+                    <p className="text-sm opacity-80 leading-relaxed">{alert.desc}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
           </div>
         </section>
 

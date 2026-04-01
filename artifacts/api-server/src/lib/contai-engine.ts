@@ -62,6 +62,8 @@ type ParsedMessage = {
   recurrence?: string | null;
   notes?: string | null;
   visibility?: Visibility;
+  accountType?: "personal" | "house";
+  paymentMethod?: "debito" | "credito" | "pix" | "dinheiro" | "boleto";
 };
 
 type PendingKind = "registrar_gasto" | "registrar_conta" | "registrar_compromisso";
@@ -162,7 +164,7 @@ function inferCategory(text: string, fallbackType: "expense" | "income") {
   return fallbackType === "income" ? "Freela" : "Outros";
 }
 
-function detectExplicitVisibility(text: string): Visibility | undefined {
+function detectAccountType(text: string): "personal" | "house" | undefined {
   const normalized = normalizeText(text);
   if (
     normalized.includes("da casa") ||
@@ -172,7 +174,7 @@ function detectExplicitVisibility(text: string): Visibility | undefined {
     normalized.includes("nosso") ||
     normalized.includes("nossa")
   ) {
-    return "shared";
+    return "house";
   }
 
   if (
@@ -188,6 +190,23 @@ function detectExplicitVisibility(text: string): Visibility | undefined {
     return "personal";
   }
 
+  return undefined;
+}
+
+function detectPaymentMethod(text: string): ParsedMessage["paymentMethod"] {
+  const normalized = normalizeText(text);
+  if (normalized.includes("pix")) return "pix";
+  if (normalized.includes("credito") || normalized.includes("crédito")) return "credito";
+  if (normalized.includes("debito") || normalized.includes("débito")) return "debito";
+  if (normalized.includes("dinheiro")) return "dinheiro";
+  if (normalized.includes("boleto")) return "boleto";
+  return undefined;
+}
+
+function detectExplicitVisibility(text: string): Visibility | undefined {
+  const type = detectAccountType(text);
+  if (type === "house") return "shared";
+  if (type === "personal") return "personal";
   return undefined;
 }
 
@@ -450,6 +469,8 @@ function parseMessageByRules(content: string): ParsedMessage {
       description: cleanDescription(content) || undefined,
       category: inferCategory(content, "expense"),
       visibility: detectExplicitVisibility(content),
+      accountType: detectAccountType(content),
+      paymentMethod: detectPaymentMethod(content),
     };
   }
 
@@ -460,6 +481,8 @@ function parseMessageByRules(content: string): ParsedMessage {
       description: cleanDescription(content) || "Entrada",
       category: inferCategory(content, "income"),
       visibility: "personal",
+      accountType: detectAccountType(content) || "personal",
+      paymentMethod: detectPaymentMethod(content) || "pix",
     };
   }
 
@@ -605,19 +628,21 @@ function buildUnregisteredReply() {
   const appBaseUrl = getAppBaseUrl();
   const baseMessage = resolveBotTemplateMessage(
     systemSettings.botUnregisteredAccessMessage?.trim() ||
-      "Oi! Para usar o Contai no WhatsApp, esse numero precisa estar cadastrado no sistema.",
+      "Olá! Notei que esse número de WhatsApp ainda não está vinculado a uma conta no Contai.",
     appBaseUrl,
   );
 
   return [
     baseMessage,
     "",
-    "Como liberar seu acesso:",
-    "1. Crie sua conta no Contai.",
-    "2. Use esse mesmo numero de WhatsApp no cadastro.",
-    "3. Entre no plano e conclua o pagamento.",
+    "🚀 *Como liberar seu acesso agora:*",
+    "1. Acesse o Painel do Contai.",
+    "2. Crie sua conta usando este número.",
+    "3. Escolha um plano para ativar o robô.",
     "",
-    `Cadastre-se aqui: ${appBaseUrl}/cadastro`,
+    `👉 *Comece aqui:* ${appBaseUrl}/cadastro`,
+    "",
+    "Te espero lá para começarmos a organizar suas finanças!",
   ].join("\n");
 }
 
@@ -626,16 +651,18 @@ function buildInactivePlanReply() {
   const loginUrl = `${appBaseUrl}/login?next=${encodeURIComponent("/app/assinatura")}`;
   const baseMessage = resolveBotTemplateMessage(
     systemSettings.botInactivePlanMessage?.trim() ||
-      "Seu numero foi encontrado no Contai, mas o acesso do bot ainda nao esta liberado.",
+      "Identifiquei seu cadastro no Contai, mas o seu plano atual não inclui o acesso ao robô do WhatsApp.",
     appBaseUrl,
   );
 
   return [
     baseMessage,
     "",
-    "Para usar o WhatsApp do Contai, voce precisa concluir um plano ativo.",
+    "💡 Para liberar as anotações automáticas e lembretes por aqui, você precisa de um plano ativo.",
     "",
-    `Finalize seu plano aqui: ${loginUrl}`,
+    `💳 *Ative seu plano no Painel:* ${loginUrl}`,
+    "",
+    "Assim que confirmar, eu estarei pronto para te ajudar!",
   ].join("\n");
 }
 
@@ -821,182 +848,226 @@ async function saveParsedAction(
 ) {
   const previewOnly = options.previewOnly === true;
   const replyDate = new Date();
+  const appBaseUrl = getAppBaseUrl();
 
-  if (parsed.intent === "registrar_gasto") {
-    if (!parsed.description) return "Foi gasto com o quê?";
-    if (!parsed.amount) return "Qual foi o valor?";
+  switch (parsed.intent) {
+    case "registrar_gasto":
+    case "registrar_receita": {
+      if (parsed.intent === "registrar_gasto" && !parsed.description) return "Foi gasto com o quê?";
+      if (!parsed.amount) return parsed.intent === "registrar_gasto" ? "Qual foi o valor?" : "Qual foi o valor da entrada?";
 
-    const category = parsed.category ?? "Outros";
-    const visibility = parsed.visibility ?? "personal";
-    const appBaseUrl = getAppBaseUrl();
-    const description = capitalizeLabel(parsed.description);
-    const firstName = getFirstName(identity.user.name);
-
-    if (!previewOnly) {
-      await db.insert(transactionsTable).values({
-        householdId: identity.household.id,
-        memberId: identity.member?.id ?? null,
-        type: "expense",
-        amount: parsed.amount.toFixed(2),
-        category,
-        description: parsed.description,
-        visibility,
-        sourceType: input.messageType ?? "text",
-        source: input.source ?? DEFAULT_SOURCE,
-        transactionDate: replyDate,
-        createdBy: identity.member?.displayName ?? identity.user.name,
-      });
-    }
-
-    return [
-      firstName
-        ? `Notei os ${formatCurrency(parsed.amount)} que você gastou com o ${parsed.description} hoje, ${firstName}. Tudo já está organizado para você.`
-        : `Notei os ${formatCurrency(parsed.amount)} que você gastou com o ${parsed.description} hoje. Tudo já está organizado para você.`,
-      "",
-      "📋 *Resumo da transação:*",
-      "",
-      `🧾 *Descrição:* ${description}`,
-      `💸 *Valor:* ${formatCurrency(parsed.amount)}`,
-      `📂 *Categoria:* ${category}`,
-      `📅 *Data:* ${formatFullDate(replyDate)}`,
-      "✅ *Status:* Pago",
-      visibility === "shared" ? "🏠 *Tipo:* Gasto da casa" : "👤 *Tipo:* Gasto pessoal",
-      "",
-      previewOnly
-        ? "🧪 Isso é um teste do painel do bot. Nenhum dado foi salvo."
-        : "Se precisar de mais alguma coisa, é só me chamar!",
-    ]
-      .filter((line) => line !== undefined)
-      .join("\n");
-  }
-
-  if (parsed.intent === "registrar_receita") {
-    if (!parsed.amount) return "Qual foi o valor da entrada?";
-
-    const category = parsed.category ?? "Freela";
-    const description = parsed.description ?? "Entrada";
-    const appBaseUrl = getAppBaseUrl();
-    const firstName = getFirstName(identity.user.name);
-
-    if (!previewOnly) {
-      await db.insert(transactionsTable).values({
-        householdId: identity.household.id,
-        memberId: identity.member?.id ?? null,
-        type: "income",
-        amount: parsed.amount.toFixed(2),
-        category,
-        description,
-        visibility: "personal",
-        sourceType: input.messageType ?? "text",
-        source: input.source ?? DEFAULT_SOURCE,
-        transactionDate: replyDate,
-        createdBy: identity.member?.displayName ?? identity.user.name,
-      });
-    }
-
-    return [
-      firstName
-        ? `Anotei os ${formatCurrency(parsed.amount)} que você recebeu hoje, ${firstName}.`
-        : `Anotei os ${formatCurrency(parsed.amount)} que você recebeu hoje.`,
-      "Já deixei essa entrada organizada para você.",
-      "",
-      "📋 *Resumo da transação:*",
-      "",
-      `🧾 *Descrição:* ${capitalizeLabel(description)}`,
-      `💰 *Valor:* ${formatCurrency(parsed.amount)}`,
-      `📂 *Categoria:* ${category}`,
-      `📅 *Data:* ${formatFullDate(replyDate)}`,
-      "✅ *Status:* Recebido",
-      "",
-      previewOnly
-        ? "🧪 Isso é um teste do painel do bot. Nenhum dado foi salvo."
-        : `📊 Para visualizar mais detalhes e relatórios, acesse: ${appBaseUrl}/app/dashboard`,
-      previewOnly ? "" : "Se precisar de algo a mais, é só me chamar.",
-    ]
-      .filter(Boolean)
-      .join("\n");
-  }
-
-  if (parsed.intent === "registrar_conta") {
-    if (!parsed.when) return "Que dia vence essa conta?";
-
-    let syncedToGoogle = false;
-    if (!previewOnly) {
-      const [bill] = await db.insert(billsTable).values({
-        householdId: identity.household.id,
-        memberId: identity.member?.id ?? null,
-        title: parsed.title?.trim() || "Conta",
-        amount: parsed.amount ? parsed.amount.toFixed(2) : null,
-        category: parsed.category ?? "Contas",
-        dueDate: parsed.when,
-        isRecurring: false,
-        status: "pending",
-        visibility: parsed.visibility ?? "shared",
-        type: "payable",
-        sourceType: input.messageType ?? "text",
-      }).returning();
-
-      try {
-        const syncResult = await syncBillForUser(identity.user.id, bill);
-        syncedToGoogle = syncResult.synced;
-      } catch {
-        syncedToGoogle = false;
+      // 1. Verificar informações faltantes (Regra do Maicon)
+      if (!parsed.accountType && identity.household.type !== "individual") {
+        return "Me fala só mais uma coisa pra organizar certo: esse registro é da sua *conta pessoal* ou da *conta da casa*?";
       }
-    }
-
-    return `🔔 Conta salva para ${formatShortDate(parsed.when)}.${
-      parsed.visibility === "shared" ? " Salvei como conta da casa." : " Salvei como conta pessoal."
-    }${syncedToGoogle ? " Também deixei esse vencimento no seu Google Agenda." : ""}${previewOnly ? " Este foi só um teste do painel." : ""}`;
-  }
-
-  if (parsed.intent === "registrar_lembrete") {
-    if (!parsed.when) return "Que dia você quer que eu te lembre?";
-
-    let syncedToGoogle = false;
-    if (!previewOnly) {
-      const [reminder] = await db.insert(remindersTable).values({
-        householdId: identity.household.id,
-        memberId: identity.member?.id ?? null,
-        type: "custom",
-        title: parsed.title?.trim() || "Lembrete",
-        description: parsed.notes ?? null,
-        reminderDate: parsed.when,
-        reminderTimeLabel: parsed.when.toTimeString().slice(0, 5),
-        status: "scheduled",
-        sourceType: input.messageType ?? "text",
-        source: input.source ?? DEFAULT_SOURCE,
-      }).returning();
-
-      try {
-        const syncResult = await syncReminderForUser(identity.user.id, reminder);
-        syncedToGoogle = syncResult.synced;
-      } catch {
-        syncedToGoogle = false;
+      if (!parsed.paymentMethod) {
+        return "E qual foi a forma de pagamento? (débito, crédito, pix, dinheiro ou boleto)";
       }
-    }
 
-    return `⏰ Lembrete salvo para ${formatShortDate(parsed.when)}.${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}${previewOnly ? " Este foi só um teste do painel." : ""}`;
-  }
+      const accountType = parsed.accountType || "personal";
+      const paymentMethod = parsed.paymentMethod!;
+      const amount = parsed.amount;
+      const category = parsed.category || (parsed.intent === "registrar_gasto" ? "Outros" : "Freela");
+      const description = parsed.description || "Entrada";
+      const visibility = accountType === "house" ? "shared" : "personal";
 
-  if (parsed.intent === "registrar_compromisso") {
-    if (!parsed.when) return "Qual dia e horário eu devo salvar?";
+      // 2. Capturar saldos anteriores
+      const oldPersonalBalance = toAmountNumber(identity.user.personalBalance);
+      const oldUserHouseBalance = toAmountNumber(identity.member?.householdBalance);
+      const oldTotalHouseBalance = toAmountNumber(identity.household.totalHouseBalance);
 
-    if (options.forceGoogleAgendaBlocked) {
-      return buildGoogleCalendarConnectionReply();
-    }
+      let newPersonalBalance = oldPersonalBalance;
+      let newUserHouseBalance = oldUserHouseBalance;
+      let newTotalHouseBalance = oldTotalHouseBalance;
 
-    if (systemSettings.botGoogleCalendarRequiredForScheduling && !previewOnly) {
-      const googleStatus = await getGoogleCalendarStatus(identity.user.id);
-      if (!googleStatus.canSync) {
-        return buildGoogleCalendarConnectionReply();
+      if (parsed.intent === "registrar_receita") {
+        if (accountType === "personal") {
+          newPersonalBalance += amount;
+        } else {
+          newUserHouseBalance += amount;
+          newTotalHouseBalance += amount;
+        }
+      } else {
+        if (accountType === "personal") {
+          newPersonalBalance -= amount;
+        } else {
+          newUserHouseBalance -= amount;
+          newTotalHouseBalance -= amount;
+        }
       }
+
+      // 3. Persistir no Banco
+      if (!previewOnly) {
+        await db.insert(transactionsTable).values({
+          householdId: identity.household.id,
+          memberId: identity.member?.id ?? null,
+          type: parsed.intent === "registrar_gasto" ? "expense" : "income",
+          amount: amount.toFixed(2),
+          category,
+          description,
+          visibility,
+          accountType,
+          paymentMethod,
+          sourceType: input.messageType ?? "text",
+          source: input.source ?? DEFAULT_SOURCE,
+          transactionDate: replyDate,
+          createdBy: identity.member?.displayName || identity.user.name,
+        });
+
+        // Atualizar saldos
+        await db.update(usersTable).set({ personalBalance: newPersonalBalance.toFixed(2) }).where(eq(usersTable.id, identity.user.id));
+        if (identity.member) {
+          await db.update(householdMembersTable).set({ householdBalance: newUserHouseBalance.toFixed(2) }).where(eq(householdMembersTable.id, identity.member.id));
+        }
+        await db.update(householdsTable).set({ totalHouseBalance: newTotalHouseBalance.toFixed(2) }).where(eq(householdsTable.id, identity.household.id));
+      }
+
+      // 4. Formatar Resposta (Template do Maicon)
+      const firstName = getFirstName(identity.user.name);
+      const icon = parsed.intent === "registrar_gasto" ? "💸" : "💰";
+      const actionText = parsed.intent === "registrar_gasto" ? "gastou com" : "recebeu de";
+      const statusText = parsed.intent === "registrar_gasto" ? "Pago" : "Recebido";
+      const typeLabel = accountType === "house" ? "🏠 Tipo: Gasto da casa" : "👤 Tipo: Pessoal";
+
+      const response = [
+        `Anotei os ${formatCurrency(amount)} que você ${actionText} ${description} hoje, ${firstName}. Tudo já está organizado para você.`,
+        "",
+        "📋 *Resumo da transação:*",
+        `🧾 *Descrição:* ${capitalizeLabel(description)}`,
+        `${icon} *Valor:* ${formatCurrency(amount)}`,
+        `📂 *Categoria:* ${category}`,
+        `📅 *Data:* ${formatFullDate(replyDate)}`,
+        `✅ *Status:* ${statusText}`,
+        typeLabel,
+        `💳 *Pagamento:* ${capitalizeLabel(paymentMethod)}`,
+        accountType === "house" ? `👤 *Lançado por:* ${firstName}` : "",
+        "",
+      ];
+
+      if (accountType === "personal") {
+        response.push(`💰 *Saldo anterior:* ${formatCurrency(oldPersonalBalance)}`);
+        response.push(`${icon} *Valor ${parsed.intent === "registrar_gasto" ? "descontado" : "adicionado"}:* ${formatCurrency(amount)}`);
+        response.push(`✅ *Seu saldo pessoal atual:* ${formatCurrency(newPersonalBalance)}`);
+      } else {
+        response.push(`💰 *Seu saldo na casa antes:* ${formatCurrency(oldUserHouseBalance)}`);
+        response.push(`${icon} *Seu ${parsed.intent === "registrar_gasto" ? "gasto" : "ganho"} na casa:* ${formatCurrency(amount)}`);
+        response.push(`✅ *Seu saldo na casa agora:* ${formatCurrency(newUserHouseBalance)}`);
+        response.push("");
+        response.push(`👥 *Saldo total da casa agora:* ${formatCurrency(newTotalHouseBalance)}`);
+      }
+
+      response.push("");
+      response.push(previewOnly ? "🧪 _Isso é um teste do painel do bot._" : `📊 *Veja mais no seu Painel:* ${appBaseUrl}/app/dashboard`);
+
+      return response.filter(l => l !== undefined).join("\n");
     }
 
-    let syncedToGoogle = false;
-    if (!previewOnly) {
-      const [commitment] = await db
-        .insert(commitmentsTable)
-        .values({
+    case "consulta_resumo": {
+      const personal = toAmountNumber(identity.user.personalBalance);
+      const memberHouse = toAmountNumber(identity.member?.householdBalance);
+      const totalHouse = toAmountNumber(identity.household.totalHouseBalance);
+
+      const response = [
+        "💰 *Seu saldo pessoal:* " + formatCurrency(personal),
+        "🏠 *Seu saldo na casa:* " + formatCurrency(memberHouse),
+        "👥 *Saldo total da casa:* " + formatCurrency(totalHouse),
+        "",
+        `📊 Para mais detalhes, acesse: ${appBaseUrl}/app/dashboard`
+      ];
+
+      return response.join("\n");
+    }
+
+    case "consulta_categoria": {
+      const summary = await buildMonthlySummary(identity.household.id, parsed.category);
+      return `📊 Neste mês vocês gastaram ${formatCurrency(summary.total)} com ${parsed.category}.`;
+    }
+
+    case "consulta_histórico": {
+      const rows = await db
+        .select()
+        .from(transactionsTable)
+        .where(eq(transactionsTable.householdId, identity.household.id))
+        .orderBy(desc(transactionsTable.transactionDate))
+        .limit(4);
+
+      if (rows.length === 0) {
+        return "Ainda não achei movimentações por aqui.";
+      }
+
+      return rows
+        .map(
+          (row) =>
+            `${row.type === "income" ? "💰" : "💸"} ${formatCurrency(toAmountNumber(row.amount))} • ${row.category}`,
+        )
+        .join("\n");
+    }
+
+    case "registrar_conta": {
+      if (!parsed.when) return "Que dia vence essa conta?";
+      let syncedToGoogle = false;
+      if (!previewOnly) {
+        const [bill] = await db.insert(billsTable).values({
+          householdId: identity.household.id,
+          memberId: identity.member?.id ?? null,
+          title: parsed.title?.trim() || "Conta",
+          amount: parsed.amount ? parsed.amount.toFixed(2) : null,
+          category: parsed.category ?? "Contas",
+          dueDate: parsed.when,
+          isRecurring: false,
+          status: "pending",
+          visibility: parsed.visibility ?? "shared",
+          type: "payable",
+          sourceType: input.messageType ?? "text",
+        }).returning();
+        try {
+          const syncResult = await syncBillForUser(identity.user.id, bill);
+          syncedToGoogle = syncResult.synced;
+        } catch {
+          syncedToGoogle = false;
+        }
+      }
+      return `🔔 Conta salva para ${formatShortDate(parsed.when)}.${
+        parsed.visibility === "shared" ? " Salvei como conta da casa." : " Salvei como conta pessoal."
+      }${syncedToGoogle ? " Também deixei esse vencimento no seu Google Agenda." : ""}\n\n📊 *Acompanhe no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}`;
+    }
+
+    case "registrar_lembrete": {
+      if (!parsed.when) return "Que dia você quer que eu te lembre?";
+      let syncedToGoogle = false;
+      if (!previewOnly) {
+        const [reminder] = await db.insert(remindersTable).values({
+          householdId: identity.household.id,
+          memberId: identity.member?.id ?? null,
+          type: "custom",
+          title: parsed.title?.trim() || "Lembrete",
+          description: parsed.notes ?? null,
+          reminderDate: parsed.when,
+          reminderTimeLabel: parsed.when.toTimeString().slice(0, 5),
+          status: "scheduled",
+          sourceType: input.messageType ?? "text",
+          source: input.source ?? DEFAULT_SOURCE,
+        }).returning();
+        try {
+          const syncResult = await syncReminderForUser(identity.user.id, reminder);
+          syncedToGoogle = syncResult.synced;
+        } catch {
+          syncedToGoogle = false;
+        }
+      }
+      return `⏰ Lembrete salvo para ${formatShortDate(parsed.when)}.${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}\n\n📊 *Ver todos no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}`;
+    }
+
+    case "registrar_compromisso": {
+      if (!parsed.when) return "Qual dia e horário eu devo salvar?";
+      if (options.forceGoogleAgendaBlocked) return buildGoogleCalendarConnectionReply();
+      if (systemSettings.botGoogleCalendarRequiredForScheduling && !previewOnly) {
+        const googleStatus = await getGoogleCalendarStatus(identity.user.id);
+        if (!googleStatus.canSync) return buildGoogleCalendarConnectionReply();
+      }
+      let syncedToGoogle = false;
+      if (!previewOnly) {
+        const [commitment] = await db.insert(commitmentsTable).values({
           householdId: identity.household.id,
           memberId: identity.member?.id ?? null,
           title: parsed.title?.trim() || "Compromisso",
@@ -1007,145 +1078,91 @@ async function saveParsedAction(
           reminderMinutesBefore: 60,
           sourceType: input.messageType ?? "text",
           source: input.source ?? DEFAULT_SOURCE,
-        })
-        .returning();
-
-      try {
-        const syncResult = await syncCommitmentForUser(identity.user.id, commitment);
-        syncedToGoogle = syncResult.synced;
-      } catch {
-        syncedToGoogle = false;
-      }
-
-      await queueNotificationEvent({
-        template: "meeting_scheduled",
-        user: identity.user,
-        payload: {
-          title: parsed.title?.trim() || "Compromisso",
-          date: parsed.when.toISOString(),
-          googleCalendarConnected: syncedToGoogle,
-        },
-      });
-    }
-
-    return `📅 ${parsed.title?.trim() || "Compromisso"} salvo para ${formatShortDate(parsed.when)}.${
-      parsed.visibility === "shared"
-        ? " Salvei como compromisso compartilhado."
-        : " Salvei como compromisso pessoal."
-    }${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}${previewOnly ? " Este foi só um teste do painel." : ""}`;
-  }
-
-  if (parsed.intent === "consulta_resumo") {
-    const summary = await buildMonthlySummary(
-      identity.household.id,
-      undefined,
-      parsed.visibility,
-      parsed.visibility === "personal" ? identity.member?.id : undefined,
-    );
-
-    if (parsed.visibility === "shared") {
-      return `📊 Neste mês vocês gastaram ${formatCurrency(summary.total)}.${
-        summary.topCategory ? ` Maior categoria: ${summary.topCategory}.` : ""
-      }`;
-    }
-
-    return `📊 Neste mês você gastou ${formatCurrency(summary.total)}.${
-      summary.topCategory ? ` Maior categoria: ${summary.topCategory}.` : ""
-    }`;
-  }
-
-  if (parsed.intent === "consulta_categoria") {
-    const summary = await buildMonthlySummary(identity.household.id, parsed.category);
-    return `📊 Neste mês vocês gastaram ${formatCurrency(summary.total)} com ${parsed.category}.`;
-  }
-
-  if (parsed.intent === "consulta_histórico") {
-    const rows = await db
-      .select()
-      .from(transactionsTable)
-      .where(eq(transactionsTable.householdId, identity.household.id))
-      .orderBy(desc(transactionsTable.transactionDate))
-      .limit(4);
-
-    if (rows.length === 0) {
-      return "Ainda não achei movimentações por aqui.";
-    }
-
-    return rows
-      .map(
-        (row) =>
-          `${row.type === "income" ? "💰" : "💸"} ${formatCurrency(toAmountNumber(row.amount))} • ${row.category}`,
-      )
-      .join("\n");
-  }
-
-  if (parsed.intent === "reset_dados") {
-    if (previewOnly) {
-      return "🧪 Teste de reset de dados. Em produção, isso apagaria todo o seu histórico.";
-    }
-
-    const householdId = identity.household.id;
-
-    // Delete all related data for this household
-    await db.delete(transactionsTable).where(eq(transactionsTable.householdId, householdId));
-    await db.delete(billsTable).where(eq(billsTable.householdId, householdId));
-    await db.delete(commitmentsTable).where(eq(commitmentsTable.householdId, householdId));
-    await db.delete(remindersTable).where(eq(remindersTable.householdId, householdId));
-    await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
-
-    return [
-      "Pronto! Zerei suas contas e compromissos com sucesso.",
-      "Agora você pode começar do zero. O que quer anotar primeiro?",
-    ].join("\n");
-  }
-
-  if (parsed.intent === "registrar_meta") {
-    if (!parsed.amount) return "Qual o valor do limite que você quer definir?";
-    const categoryName = parsed.category || "Outros";
-
-    if (!previewOnly) {
-      let [category] = await db
-        .select()
-        .from(categoriesTable)
-        .where(
-          and(
-            eq(categoriesTable.householdId, identity.household.id),
-            eq(categoriesTable.name, categoryName),
-          ),
-        )
-        .limit(1);
-
-      if (!category) {
-        await db.insert(categoriesTable).values({
-          householdId: identity.household.id,
-          name: categoryName,
-          type: "expense",
-          monthlyLimit: parsed.amount.toFixed(2),
+        }).returning();
+        try {
+          const syncResult = await syncCommitmentForUser(identity.user.id, commitment);
+          syncedToGoogle = syncResult.synced;
+        } catch {
+          syncedToGoogle = false;
+        }
+        await queueNotificationEvent({
+          template: "meeting_scheduled",
+          user: identity.user,
+          payload: {
+            title: parsed.title?.trim() || "Compromisso",
+            date: parsed.when.toISOString(),
+            googleCalendarConnected: syncedToGoogle,
+          },
         });
-      } else {
-        await db
-          .update(categoriesTable)
-          .set({ monthlyLimit: parsed.amount.toFixed(2) })
-          .where(eq(categoriesTable.id, category.id));
       }
+      return `📅 ${parsed.title?.trim() || "Compromisso"} salvo para ${formatShortDate(parsed.when)}.${
+        parsed.visibility === "shared" ? " Salvei como compromisso compartilhado." : " Salvei como compromisso pessoal."
+      }${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}\n\n📊 *Sua Agenda no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}`;
     }
 
-    return `✅ Meta definida! O limite mensal para *${categoryName}* agora é ${formatCurrency(
-      parsed.amount,
-    )}. Eu te aviso quando você chegar perto desse valor!`;
-  }
+    case "reset_dados": {
+      if (previewOnly) return "🧪 Teste de reset de dados. Em produção, isso apagaria todo o seu histórico.";
+      const householdId = identity.household.id;
+      await db.delete(transactionsTable).where(eq(transactionsTable.householdId, householdId));
+      await db.delete(billsTable).where(eq(billsTable.householdId, householdId));
+      await db.delete(commitmentsTable).where(eq(commitmentsTable.householdId, householdId));
+      await db.delete(remindersTable).where(eq(remindersTable.householdId, householdId));
+      await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
+      return ["Pronto! Zerei suas contas e compromissos com sucesso.", "Agora você pode começar do zero. O que quer anotar primeiro?"].join("\n");
+    }
 
-  if (parsed.intent === "saudacao") {
-    return "Oi! Me fala um gasto, uma entrada ou um compromisso que eu organizo pra você.";
-  }
+    case "registrar_meta": {
+      if (!parsed.amount) return "Qual o valor do limite que você quer definir?";
+      const categoryName = parsed.category || "Outros";
+      if (!previewOnly) {
+        let [category] = await db.select().from(categoriesTable).where(and(eq(categoriesTable.householdId, identity.household.id), eq(categoriesTable.name, categoryName))).limit(1);
+        if (!category) {
+          await db.insert(categoriesTable).values({ householdId: identity.household.id, name: categoryName, type: "expense", monthlyLimit: parsed.amount.toFixed(2) });
+        } else {
+          await db.update(categoriesTable).set({ monthlyLimit: parsed.amount.toFixed(2) }).where(eq(categoriesTable.id, category.id));
+        }
+      }
+      return `✅ Meta definida! O limite mensal para *${categoryName}* agora é ${formatCurrency(parsed.amount)}. Eu te aviso quando você chegar perto desse valor!`;
+    }
 
-  if (parsed.intent === "ajuda") {
-    return getHelpText();
-  }
+    case "saudacao": {
+      const firstName = getFirstName(identity.user.name);
+      return `Olá, ${firstName}! 👋\nMe fala um gasto, uma entrada ou um compromisso que eu organizo pra você.`;
+    }
 
-  return "Não entendi tudo ainda. Me manda de um jeito mais direto que eu organizo.";
+    case "ajuda":
+      return getHelpText();
+
+    default:
+      return "Não entendi tudo ainda. Me manda de um jeito mais direto que eu organizo.";
+  }
 }
 
+
+async function checkHouseholdAlerts(identity: Identity) {
+  if (identity.household.type === "individual") return "";
+
+  const totalBalance = toAmountNumber(identity.household.totalHouseBalance);
+  const monthlyIncome = toAmountNumber(identity.household.monthlyIncome || 0);
+
+  if (monthlyIncome <= 0) return "";
+
+  const remainingPercentage = (totalBalance / monthlyIncome) * 100;
+
+  if (totalBalance < 0) {
+    return "\n\n🚨 *Atenção:* a conta da casa ultrapassou o limite disponível.\n👥 *Saldo atual:* " + formatCurrency(totalBalance) + "\nÉ importante revisar os gastos.";
+  }
+
+  if (totalBalance === 0) {
+    return "\n\n🚨 *Atenção:* o saldo da casa acabou.\n👥 *Poupem os próximos gastos.*";
+  }
+
+  if (remainingPercentage <= 20) {
+    return "\n\n⚠️ *Atenção:* a conta da casa já usou mais de 80% do saldo.\n👥 *Saldo total restante:* " + formatCurrency(totalBalance) + "\nFiquem atentos aos próximos gastos.";
+  }
+
+  return "";
+}
 
 async function checkBudgetLimits(identity: Identity, amount: number, categoryName: string) {
   let budgetAlert = "";
@@ -1359,6 +1376,12 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   const isFirstTime = !existingLog || isOnboardingMessage;
 
   reply = await applyReplyPrompt(reply);
+
+  // Regra do Maicon: Alerta em QUALQUER mensagem se a conta da casa estiver em risco
+  const houseAlert = await checkHouseholdAlerts(identity);
+  if (houseAlert) {
+    reply += houseAlert;
+  }
 
   if (isFirstTime) {
     const welcomePrefix = [

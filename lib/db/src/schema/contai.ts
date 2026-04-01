@@ -19,6 +19,7 @@ export const householdsTable = pgTable("households", {
   planType: text("plan_type").notNull().default("annual"),
   billingStatus: text("billing_status").notNull().default("active"),
   monthlyIncome: numeric("monthly_income", { precision: 12, scale: 2 }),
+  totalHouseBalance: numeric("total_house_balance", { precision: 12, scale: 2 }).notNull().default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -37,6 +38,7 @@ export const usersTable = pgTable("users", {
   role: text("role").notNull().default("owner"),
   planType: text("plan_type").notNull().default("annual"),
   billingStatus: text("billing_status").notNull().default("active"),
+  personalBalance: numeric("personal_balance", { precision: 12, scale: 2 }).notNull().default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -51,6 +53,7 @@ export const householdMembersTable = pgTable("household_members", {
   }),
   displayName: text("display_name").notNull(),
   memberType: text("member_type").notNull().default("owner"),
+  householdBalance: numeric("household_balance", { precision: 12, scale: 2 }).notNull().default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -90,6 +93,9 @@ export const transactionsTable = pgTable("transactions", {
   recurrenceType: text("recurrence_type"),
   source: text("source").notNull().default("whatsapp"),
   createdBy: text("created_by").default("Titular"),
+  accountType: text("account_type").notNull().default("personal"),
+  paymentMethod: text("payment_method").notNull().default("pix"),
+  status: text("status").notNull().default("paid"),
   transactionDate: timestamp("transaction_date").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
