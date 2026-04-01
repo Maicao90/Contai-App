@@ -5,6 +5,7 @@ import { MetricCard } from "@/components/metric-card";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getJson } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
@@ -69,7 +70,7 @@ export default function AppDashboardPage() {
           />
           <MetricCard
             title="Agenda do dia"
-            value={String((data?.commitments.length ?? 0) + (data?.reminders.length ?? 0))}
+            value={String((data?.commitments?.length ?? 0) + (data?.reminders?.length ?? 0))}
             helper="Compromissos e lembretes ativos"
             icon={CalendarClock}
           />
@@ -109,7 +110,7 @@ export default function AppDashboardPage() {
               <CardDescription>Gastos e receitas mais recentes da conta.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {data?.transactions.map((item) => (
+              {data?.transactions?.map((item) => (
                 <div
                   key={item.id}
                   className="rounded-[20px] border border-slate-100 bg-white px-4 py-3.5"
@@ -135,7 +136,7 @@ export default function AppDashboardPage() {
                 <CardTitle>Gastos por categoria</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {data?.categoryBreakdown.map((item) => (
+                {data?.categoryBreakdown?.map((item) => (
                     <div key={item.category} className="min-w-0 space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="min-w-0 pr-3 font-medium text-slate-700">{item.category}</span>
@@ -167,7 +168,7 @@ export default function AppDashboardPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-slate-200">
-                {data?.bills.slice(0, 3).map((bill) => (
+                {data?.bills?.slice(0, 3).map((bill) => (
                   <div key={bill.id} className="rounded-[20px] border border-white/8 bg-white/5 px-4 py-3.5">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <p className="font-medium">{bill.title}</p>
