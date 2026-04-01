@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, MessageCircle, Power, RotateCcw, Send, UserMinus } from "lucide-react";
+import { ArrowLeft, MessageCircle, Power, RotateCcw, Send, Trash2, UserMinus } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { AdminLayout } from "@/components/admin-layout";
 import { SimpleInfoBadge, UserStatusBadge } from "@/components/admin-user-badges";
@@ -71,7 +71,12 @@ export default function AdminUserDetailPage() {
   });
 
   const actionMutation = useMutation({
-    mutationFn: (action: string) => postJson(`/admin/users/${userId}/actions`, { action }),
+    mutationFn: (action: string) => {
+      if (action === "delete") {
+        return fetch(`/api/admin/users/${userId}`, { method: "DELETE" }).then(r => r.json());
+      }
+      return postJson(`/admin/users/${userId}/actions`, { action });
+    },
     onSuccess: (_, action) => {
       toast({
         title: "Sucesso",
@@ -260,13 +265,13 @@ export default function AdminUserDetailPage() {
                   className="w-full justify-start rounded-2xl" 
                   disabled={actionMutation.isPending}
                   onClick={() => {
-                    if (confirm("TEM CERTEZA? Isso apagara o registro do usuario do sistema para sempre.")) {
+                    if (window.confirm("TEM CERTEZA? Isso apagara o registro do usuario e TODOS os dados da conta desta pessoa para sempre (Wipe).")) {
                       actionMutation.mutate("delete");
                     }
                   }}
                 >
-                  <Power className="h-4 w-4" />
-                  {actionMutation.isPending && actionMutation.variables === "delete" ? "Excluindo..." : "Excluir usuario (DEBUG)"}
+                  <Trash2 className="h-4 w-4" />
+                  {actionMutation.isPending && actionMutation.variables === "delete" ? "Excluindo tudo..." : "Excluir Usuário (Sumir Tudo)"}
                 </Button>
                 <Button 
                   variant="outline" 

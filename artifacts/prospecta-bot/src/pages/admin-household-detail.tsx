@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Power, RotateCcw, UserMinus } from "lucide-react";
+import { ArrowLeft, Power, RotateCcw, Trash2, UserMinus } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { AdminLayout } from "@/components/admin-layout";
 import { SimpleInfoBadge, UserStatusBadge } from "@/components/admin-user-badges";
@@ -52,7 +52,11 @@ export default function AdminHouseholdDetailPage() {
         title: "Sucesso",
         description: `Acao '${action}' executada com sucesso.`,
       });
-      void refetch();
+      if (action === "delete_household") {
+        window.location.href = "/admin/households";
+      } else {
+        void refetch();
+      }
     },
     onError: (error: any) => {
       toast({
@@ -190,6 +194,22 @@ export default function AdminHouseholdDetailPage() {
                   <RotateCcw className="h-4 w-4" />
                   {actionMutation.isPending && actionMutation.variables === "reactivate" ? "Reativando..." : "Reativar conta"}
                 </Button>
+
+                <div className="pt-2">
+                  <Button 
+                    variant="destructive" 
+                    className="w-full justify-start rounded-2xl" 
+                    disabled={actionMutation.isPending}
+                    onClick={() => {
+                      if (window.confirm("TEM CERTEZA? Esta acao apagara todos os dados da conta permanentemente (Wipe).")) {
+                        actionMutation.mutate("delete_household");
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {actionMutation.isPending && actionMutation.variables === "delete_household" ? "Apagando tudo..." : "Excluir Conta (Wipe)"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
