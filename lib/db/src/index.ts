@@ -6,7 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import { PGlite } from "@electric-sql/pglite";
 import pg from "pg";
 import { scryptSync } from "node:crypto";
-import * as schema from "./schema/index.js";
+import * as schema from "./schema";
 
 const { Pool } = pg;
 
@@ -762,5 +762,5 @@ export const dbReady = (async () => {
   await ensureDefaultReferralCampaign();
 })();
 
-export * from "./schema/index.js";
-export * from "./schema/contai.js";
+export * from "./schema";
+export * from "./schema/contai";
