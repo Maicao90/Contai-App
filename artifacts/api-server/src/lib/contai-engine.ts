@@ -15,7 +15,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { and, asc, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
-import { interpretTextWithOpenAI, rewriteReplyWithOpenAI, type AIParsedMessage } from "./openai-client";
+import { interpretTextWithOpenAI, rewriteReplyWithOpenAI, generateFinancialInsights, type AIParsedMessage } from "./openai-client";
 import {
   getGoogleCalendarStatus,
   syncBillForUser,
@@ -42,6 +42,7 @@ type ParsedIntent =
   | "ajuda"
   | "reset_dados"
   | "registrar_meta"
+  | "analise_financeira"
   | "indefinido";
 
 type ProcessIncomingMessageInput = {
@@ -840,6 +841,82 @@ function replyForPendingQuestion(kind: PendingKind) {
   return "É da casa ou só seu?";
 }
 
+async function checkBudgetAlerts(identity: Identity, categoryName: string, amount: number) {
+  const alerts: string[] = [];
+  const start = startOfMonth();
+  const end = endOfMonth();
+
+  // 1. Alerta por Categoria
+  const [category] = await db
+    .select()
+    .from(categoriesTable)
+    .where(and(eq(categoriesTable.householdId, identity.household.id), ilike(categoriesTable.name, categoryName)))
+    .limit(1);
+
+  if (category && category.monthlyLimit) {
+    const limit = toAmountNumber(category.monthlyLimit);
+    const summary = await buildMonthlySummary(identity.household.id, categoryName);
+    const totalWithThis = summary.total + amount;
+
+    if (totalWithThis >= limit) {
+      alerts.push(`🚨 *META ATINGIDA:* Você atingiu o limite de *${formatCurrency(limit)}* definido para *${categoryName}*!`);
+    } else if (totalWithThis >= limit * 0.8) {
+      alerts.push(`⚠️ *ALERTA DE GASTO:* Você atingiu 80% do limite de *${formatCurrency(limit)}* para *${categoryName}*.`);
+    }
+  }
+
+  // 2. Alerta Orçamento Total da Casa
+  if (identity.household.monthlyIncome) {
+    const income = toAmountNumber(identity.household.monthlyIncome);
+    const houseSpending = await db
+      .select({ total: sql<string>`coalesce(sum(${transactionsTable.amount}), 0)` })
+      .from(transactionsTable)
+      .where(and(
+        eq(transactionsTable.householdId, identity.household.id),
+        eq(transactionsTable.type, "expense"),
+        eq(transactionsTable.accountType, "house"),
+        gte(transactionsTable.transactionDate, start),
+        lte(transactionsTable.transactionDate, end)
+      ));
+    
+    const totalHouseSpent = toAmountNumber(houseSpending[0]?.total) + (identity.household.type !== "individual" ? amount : 0);
+    if (totalHouseSpent >= income) {
+      alerts.push(`🔴 *ORÇAMENTO ESGOTADO:* Os gastos da casa superaram sua renda mensal de *${formatCurrency(income)}*!`);
+    } else if (totalHouseSpent >= income * 0.85) {
+      alerts.push(`🟡 *ATENÇÃO:* Os gastos da casa já consumiram 85% da renda mensal planejada.`);
+    }
+  }
+
+  return alerts;
+}
+
+async function getHistoricalSpendingSummary(householdId: number, months = 6) {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setMonth(startDate.getMonth() - months);
+  startDate.setDate(1);
+
+  const rows = await db
+    .select({
+      month: sql<string>`to_char(${transactionsTable.transactionDate}, 'YYYY-MM')`,
+      category: transactionsTable.category,
+      total: sql<string>`sum(${transactionsTable.amount})`,
+    })
+    .from(transactionsTable)
+    .where(and(
+      eq(transactionsTable.householdId, householdId),
+      eq(transactionsTable.type, "expense"),
+      gte(transactionsTable.transactionDate, startDate),
+      lte(transactionsTable.transactionDate, endDate)
+    ))
+    .groupBy(sql`to_char(${transactionsTable.transactionDate}, 'YYYY-MM')`, transactionsTable.category)
+    .orderBy(sql`to_char(${transactionsTable.transactionDate}, 'YYYY-MM') desc`, sql`sum(${transactionsTable.amount}) desc`);
+
+  if (!rows.length) return "Sem histórico suficiente para análise.";
+
+  return rows.map(r => `[${r.month}] ${r.category}: ${formatCurrency(toAmountNumber(r.total))}`).join("\n");
+}
+
 async function saveParsedAction(
   identity: Identity,
   parsed: ParsedMessage,
@@ -895,6 +972,10 @@ async function saveParsedAction(
           newTotalHouseBalance -= amount;
         }
       }
+
+      const budgetAlerts = !previewOnly && parsed.intent === "registrar_gasto"
+        ? await checkBudgetAlerts(identity, category, amount)
+        : [];
 
       // 3. Persistir no Banco
       if (!previewOnly) {
@@ -958,6 +1039,10 @@ async function saveParsedAction(
 
       response.push("");
       response.push(previewOnly ? "🧪 _Isso é um teste do painel do bot._" : `📊 *Veja mais no seu Painel:* ${appBaseUrl}/app/dashboard`);
+
+      if (budgetAlerts.length > 0) {
+        response.push("", ...budgetAlerts);
+      }
 
       return response.filter(l => l !== undefined).join("\n");
     }
@@ -1098,6 +1183,21 @@ async function saveParsedAction(
       return `📅 ${parsed.title?.trim() || "Compromisso"} salvo para ${formatShortDate(parsed.when)}.${
         parsed.visibility === "shared" ? " Salvei como compromisso compartilhado." : " Salvei como compromisso pessoal."
       }${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}\n\n📊 *Sua Agenda no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}`;
+    }
+
+    case "analise_financeira": {
+      const history = await getHistoricalSpendingSummary(identity.household.id);
+      const suggestions = await generateFinancialInsights(history);
+      if (!suggestions) {
+        return "Tive uma falha ao analisar seu histórico agora. Tente de novo em alguns instantes!";
+      }
+      return [
+        "💡 *Análise de Inteligência Contai*",
+        "",
+        suggestions,
+        "",
+        "📊 *Dica:* Mantenha suas anotações em dia para uma análise cada vez mais precisa!"
+      ].join("\n");
     }
 
     case "reset_dados": {

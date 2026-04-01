@@ -10,10 +10,12 @@ import {
   householdsTable,
   pendingDecisionsTable,
   remindersTable,
+  referralsTable,
   subscriptionsTable,
   toAmountNumber,
   transactionsTable,
   usersTable,
+  adminAuditLogsTable,
   ensureDefaultReferralCampaign,
   ensurePermanentAdminUser,
 } from "@workspace/db";
@@ -36,6 +38,48 @@ import { previewBotMessage, type BotPreviewScenario } from "../lib/contai-engine
 import { normalizeBrazilPhone } from "../lib/phone";
 
 const router = Router();
+
+async function logAdminAction(req: any, action: string, details?: any) {
+  try {
+    const session = getSession(req);
+    if (!session || session.role !== "admin") return;
+
+    const ip =
+      req.headers["x-forwarded-for"] ||
+      req.socket?.remoteAddress ||
+      req.connection?.remoteAddress ||
+      null;
+
+    const sanitizedDetails = details ? { ...details } : null;
+    if (sanitizedDetails) {
+      const keysToMask = [
+        "password",
+        "token",
+        "secret",
+        "api_key",
+        "passwordHash",
+        "password_hash",
+        "KEY",
+        "TOKEN",
+        "SECRET",
+      ];
+      for (const key of Object.keys(sanitizedDetails)) {
+        if (keysToMask.some((m) => key.toLowerCase().includes(m.toLowerCase()))) {
+          delete sanitizedDetails[key];
+        }
+      }
+    }
+
+    await db.insert(adminAuditLogsTable).values({
+      adminId: session.userId,
+      action,
+      details: sanitizedDetails,
+      ip: typeof ip === "string" ? ip : Array.isArray(ip) ? ip[0] : null,
+    });
+  } catch (error) {
+    logger.error({ error }, "Failed to log admin action:");
+  }
+}
 const PLAN_NAME = "Plano Contai";
 const PLAN_MONTHLY_AMOUNT = 14.9;
 const PLAN_ANNUAL_AMOUNT = 99.9;
@@ -1087,12 +1131,17 @@ router.post("/admin/users", async (req, res, next) => {
     const rawPhone = String(req.body.phone ?? "").trim();
     const phone = normalizeBrazilPhone(rawPhone);
     const password = String(req.body.password ?? "");
-    const role = String(req.body.role ?? "owner").trim().toLowerCase();
+    // Seguranca Bancaria: Apenas Admin Master (Hardcoded) pode existir. 
+    // Criacao de novos usuarios restrita a owner/partner.
+    const requestedRole = String(req.body.role ?? "owner").trim().toLowerCase();
+    const role = requestedRole === "admin" ? "owner" : requestedRole;
     const displayName = String(req.body.displayName ?? name).trim() || name;
     const householdName = String(req.body.householdName ?? `Conta ${name}`).trim() || `Conta ${name}`;
     const householdType = String(req.body.householdType ?? "individual").trim().toLowerCase();
     const planType = normalizePlanType(String(req.body.planType ?? "annual"));
     const existingHouseholdId = Number(req.body.householdId ?? 0) || null;
+
+    await logAdminAction(req, "create_user", { name, phone, email, role, householdName });
 
     if (!name || !phone || !password) {
       res.status(400).json({ message: "Nome, telefone e senha sao obrigatorios." });
@@ -1295,6 +1344,8 @@ router.post("/admin/users/:id/actions", async (req, res, next) => {
       res.status(404).json({ error: "not_found" });
       return;
     }
+    
+    await logAdminAction(req, `user_action:${action}`, { userId, action });
     if (action === "suspend") {
       await db.update(usersTable).set({ billingStatus: "suspended" }).where(eq(usersTable.id, userId));
       await queueNotificationEvent({
@@ -1322,12 +1373,13 @@ router.post("/admin/users/:id/actions", async (req, res, next) => {
   }
 });
 
-router.post("/admin/danger/wipe-database", async (_req, res, next) => {
+router.post("/admin/danger/wipe-database", async (req, res, next) => {
   try {
     // Apenas admin (já protegido pelo middleware global se houver, mas garantindo aqui)
     // O requireAdmin já deve estar sendo usado no router ou app
     
     logger.info("WIPE DATABASE initiated by admin");
+    await logAdminAction(req, "wipe_database_dangerous", { confirmed: true });
     
     // TRUNCATE com CASCADE limpa todas as tabelas vinculadas (transações, logs, etc.)
     await db.execute(sql`TRUNCATE households, users RESTART IDENTITY CASCADE;`);
@@ -1744,6 +1796,7 @@ router.post("/admin/integrations/:key/settings", async (req, res, next) => {
       return acc;
     }, {});
 
+    await logAdminAction(req, `update_integration:${key}`, { key });
     await saveIntegrationStoredValues(key, payload);
     await appendIntegrationHistory(key, {
       status: "disconnected",
@@ -1838,7 +1891,9 @@ router.post("/admin/bot/test-message", async (req, res, next) => {
 
 router.post("/admin/system-settings", async (req, res, next) => {
   try {
-    res.json({ ok: true, settings: await updateSystemSettings(req.body ?? {}) });
+    const settings = req.body ?? {};
+    await logAdminAction(req, "update_system_settings");
+    res.json({ ok: true, settings: await updateSystemSettings(settings) });
   } catch (error) {
     next(error);
   }

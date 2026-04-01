@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 import {
   Accordion,
   AccordionContent,
@@ -563,23 +564,23 @@ export default function LandingPage() {
                   title: "Alerta de 80%", 
                   desc: "Mantenha a saúde financeira. O Contai avisa assim que a conta da casa atingir 80% do uso previsto.",
                   icon: Zap,
-                  color: "border-yellow-500/20 bg-yellow-500/5 text-yellow-200"
+                  color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-200"
                 },
                 { 
                   title: "Aviso de Saldo Crítico", 
                   desc: "Nunca seja pego de surpresa. Receba notificações automáticas quando o saldo estiver próximo de zerar.",
                   icon: Target,
-                  color: "border-orange-500/20 bg-orange-500/5 text-orange-200"
+                  color: "border-emerald-400/40 bg-emerald-400/10 text-emerald-100"
                 },
                 { 
                   title: "Gestão Proativa", 
                   desc: "Se o saldo da casa ficar negativo, o bot te alerta em qualquer interação para que você possa agir rápido.",
                   icon: Shield,
-                  color: "border-red-500/20 bg-red-500/5 text-red-100"
+                  color: "border-emerald-600/60 bg-emerald-600/15 text-white"
                 }
               ].map((alert, i) => (
                 <Reveal key={i} delay={i * 0.1}>
-                  <div className={`p-6 rounded-3xl border ${alert.color} h-full`}>
+                  <div className={cn("p-6 rounded-3xl border h-full transition-all hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]", alert.color)}>
                     <alert.icon className="h-8 w-8 mb-4" />
                     <h3 className="text-xl font-semibold mb-2">{alert.title}</h3>
                     <p className="text-sm opacity-80 leading-relaxed">{alert.desc}</p>

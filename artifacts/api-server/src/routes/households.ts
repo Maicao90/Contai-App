@@ -117,7 +117,7 @@ router.post("/households/:id/members", requireOwner, async (req, res, next) => {
       .where(eq(householdsTable.id, householdId));
 
     // Despachar e-mail de convite
-    const [owner] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId)).limit(1);
+    const [owner] = await db.select().from(usersTable).where(eq(usersTable.id, Number(session.userId))).limit(1);
     if (user.email) {
       try {
         await queueNotificationEvent({

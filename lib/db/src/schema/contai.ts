@@ -300,6 +300,17 @@ export const referralEventsTable = pgTable("referral_events", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const adminAuditLogsTable = pgTable("admin_audit_logs", {
+  id: serial("id").primaryKey(),
+  adminId: integer("admin_id").references(() => usersTable.id, {
+    onDelete: "set null",
+  }),
+  action: text("action").notNull(),
+  details: jsonb("details"),
+  ip: text("ip"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(usersTable).omit({
   id: true,
   createdAt: true,
@@ -343,6 +354,7 @@ export type NotificationEvent = typeof notificationEventsTable.$inferSelect;
 export type ReferralCampaign = typeof referralCampaignsTable.$inferSelect;
 export type Referral = typeof referralsTable.$inferSelect;
 export type ReferralEvent = typeof referralEventsTable.$inferSelect;
+export type AdminAuditLog = typeof adminAuditLogsTable.$inferSelect;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;

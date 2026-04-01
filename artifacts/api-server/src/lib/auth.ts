@@ -66,8 +66,9 @@ function loadPersistedSessions() {
   }
 }
 
-function buildSessionExpiry() {
-  return Date.now() + SESSION_MAX_AGE_MS;
+function buildSessionExpiry(role?: SessionRole) {
+  const age = role === "admin" ? 1000 * 60 * 30 : SESSION_MAX_AGE_MS;
+  return Date.now() + age;
 }
 
 function storeSession(session: SessionData) {
@@ -150,7 +151,7 @@ function buildSessionFromIdentity(identity: NonNullable<Awaited<ReturnType<typeo
     memberId: identity.member?.id ?? null,
     name: identity.member?.displayName ?? identity.user.name,
     email: identity.user.email ?? null,
-    expiresAt: buildSessionExpiry(),
+    expiresAt: buildSessionExpiry(role),
   };
 
   return storeSession(session);
@@ -206,23 +207,8 @@ export async function createDemoSession(role: SessionRole) {
     return storeSession(session);
   }
 
-  const demo = await getDemoIdentity();
-  if (role === "user") {
-    const [partnerUser] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.role, "partner"))
-      .limit(1);
-
-    if (partnerUser) {
-      const partnerIdentity = await getIdentityByUserId(partnerUser.id);
-      if (partnerIdentity) {
-        return buildSessionFromIdentity(partnerIdentity);
-      }
-    }
-  }
-
-  return buildSessionFromIdentity(demo);
+  // Demo sessions disabled for production safety
+  return null;
 }
 
 export async function createCredentialSession(identifier: string, password: string) {
@@ -329,7 +315,7 @@ export function attachSession(req: SessionRequest, _res: Response, next: NextFun
 
   const refreshedSession = {
     ...session,
-    expiresAt: buildSessionExpiry(),
+    expiresAt: buildSessionExpiry(session.role),
   };
 
   storeSession(refreshedSession);
@@ -365,7 +351,8 @@ export function requireSession(req: SessionRequest, res: Response, next: NextFun
 }
 
 export function requireAdmin(req: SessionRequest, res: Response, next: NextFunction) {
-  if (!req.session || req.session.role !== "admin") {
+  const masterEmail = process.env.MASTER_ADMIN_EMAIL?.trim().toLowerCase();
+  if (!req.session || req.session.role !== "admin" || (masterEmail && req.session.email !== masterEmail)) {
     res.status(403).json({ error: "forbidden" });
     return;
   }
