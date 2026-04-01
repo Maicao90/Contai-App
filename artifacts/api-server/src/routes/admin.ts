@@ -16,9 +16,11 @@ import {
   transactionsTable,
   usersTable,
   adminAuditLogsTable,
+  notificationEventsTable,
   ensureDefaultReferralCampaign,
   ensurePermanentAdminUser,
 } from "@workspace/db";
+import { addDays } from "date-fns";
 import { getSession, hashPassword, requireAdmin } from "../lib/auth";
 import { logger } from "../lib/logger";
 import type { IntegrationKey } from "../lib/integration-secrets";
@@ -1458,9 +1460,35 @@ router.post("/admin/households/:id/actions", async (req, res, next) => {
     if (action === "remove_partner") {
       const members = await db.select().from(householdMembersTable).where(eq(householdMembersTable.householdId, householdId));
       const partner = members.find((item) => item.memberType !== "owner");
+      const owner = members.find((item) => item.memberType === "owner") ?? members[0];
+
       if (partner) {
         await db.delete(householdMembersTable).where(eq(householdMembersTable.id, partner.id));
         await db.update(usersTable).set({ householdId: null }).where(eq(usersTable.id, partner.userId));
+        
+        // Reset Household to Individual
+        const ownerName = owner?.displayName || "Titular";
+        await db.update(householdsTable).set({ 
+          type: "individual", 
+          name: `Individual: ${ownerName}`,
+          updatedAt: new Date() 
+        }).where(eq(householdsTable.id, householdId));
+        
+        await logAdminAction(req, "remove_partner", { householdId, partnerUserId: partner.userId, partnerName: partner.displayName });
+      }
+    }
+
+    if (action === "delete_household") {
+      const [household] = await db.select().from(householdsTable).where(eq(householdsTable.id, householdId)).limit(1);
+      if (household) {
+        // 1. Limpeza de logs e eventos manuais (que não cascateiam automaticamente)
+        await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
+        await db.delete(notificationEventsTable).where(eq(notificationEventsTable.householdId, householdId));
+        
+        // 2. Wipe Total (Cascata de Membros, Transações, etc.)
+        await db.delete(householdsTable).where(eq(householdsTable.id, householdId));
+        
+        await logAdminAction(req, "delete_household", { householdId, name: household.name });
       }
     }
     res.json({ ok: true, action });
@@ -1620,6 +1648,49 @@ router.post("/admin/subscriptions/:id/actions", async (req, res, next) => {
         .where(eq(subscriptionsTable.id, id));
     }
     res.json({ ok: true, action, planName: PLAN_NAME });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/admin/users/:id", async (req, res, next) => {
+  try {
+    const userId = Number(req.params.id);
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    
+    if (!user) {
+      res.status(404).json({ error: "user_not_found" });
+      return;
+    }
+
+    // Proteção Master Admin
+    const masterEmail = (process.env.MASTER_ADMIN_EMAIL || "").toLowerCase().trim();
+    if (user.email && user.email.toLowerCase().trim() === masterEmail) {
+      res.status(403).json({ error: "cannot_delete_master_admin" });
+      return;
+    }
+
+    const [member] = await db.select().from(householdMembersTable).where(eq(householdMembersTable.userId, userId)).limit(1);
+    
+    // Se for o dono da casa, fazemos o wipe da casa inteira (Sumir tudo)
+    if (member && member.memberType === "owner") {
+      const householdId = member.householdId;
+      // 1. Limpeza de logs e eventos manuais
+      await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
+      await db.delete(notificationEventsTable).where(eq(notificationEventsTable.householdId, householdId));
+      // 2. Wipe Total (Cascata)
+      await db.delete(householdsTable).where(eq(householdsTable.id, householdId));
+      await logAdminAction(req, "delete_user_and_household_wipe", { userId, householdId });
+    } else {
+      // Se for apenas membro ou sem casa, deletamos apenas o usuário e sua participação
+      if (member) {
+        await db.delete(householdMembersTable).where(eq(householdMembersTable.id, member.id));
+      }
+      await db.delete(usersTable).where(eq(usersTable.id, userId));
+      await logAdminAction(req, "delete_user", { userId, email: user.email });
+    }
+
+    res.json({ ok: true });
   } catch (error) {
     next(error);
   }
