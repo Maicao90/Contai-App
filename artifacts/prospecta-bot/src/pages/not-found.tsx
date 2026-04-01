@@ -11,7 +11,7 @@ export default function NotFound() {
           <AlertCircle className="w-10 h-10 text-destructive" />
         </div>
         <h1 className="text-4xl font-display font-bold text-white mb-2">404</h1>
-        <p className="text-xl text-muted-foreground mb-8">P\u00e1gina n\u00e3o encontrada</p>
+        <p className="text-xl text-muted-foreground mb-8">Página não encontrada</p>
         <Link href="/">
           <Button size="lg">Voltar ao Dashboard</Button>
         </Link>

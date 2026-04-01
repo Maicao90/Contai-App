@@ -4,7 +4,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BrandLogo } from "@/components/brand-logo";
-import { getJson, postJson } from "@/lib/api";
+import { getJson, postJson, BASE_URL } from "@/lib/api";
 import { AnimatedCharactersGroup } from "@/components/ui/animated-characters-group";
 
 // Icones Google e Apple omitidos para brevidade (vou manter os SVGs do original)
@@ -100,7 +100,7 @@ export default function SignupPage() {
     if (referralCode) {
       params.set("ref", referralCode);
     }
-    window.location.href = `/api/auth/${provider}/start?${params.toString()}`;
+    window.location.href = `${BASE_URL}/api/auth/${provider}/start?${params.toString()}`;
   }
 
   return (

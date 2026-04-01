@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand-logo";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
-import { getJson } from "@/lib/api";
+import { getJson, BASE_URL } from "@/lib/api";
 import { AnimatedCharactersGroup } from "@/components/ui/animated-characters-group";
 
 type SocialProvidersResponse = {
@@ -131,7 +131,7 @@ export default function LoginPage() {
     if (nextPath) {
       params.set("next", nextPath);
     }
-    window.location.href = `/api/auth/${provider}/start?${params.toString()}`;
+    window.location.href = `${BASE_URL}/api/auth/${provider}/start?${params.toString()}`;
   }
 
   return (
