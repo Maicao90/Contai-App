@@ -98,6 +98,9 @@ body.theme-dark {
     width: 100%;
     max-width: 100%;
     overflow-x: clip;
+    /* Evita o bounce branco no iOS em scroll lateral acidental */
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   body {
@@ -105,6 +108,15 @@ body.theme-dark {
     width: 100%;
     max-width: 100%;
     overflow-x: clip;
+    /* Suporte para Dynamic Viewport Height no iOS Safari */
+    min-height: 100vh;
+    min-height: 100svh;
+    
+    /* Prevenção de safe areas do iPhone */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 
   #root {

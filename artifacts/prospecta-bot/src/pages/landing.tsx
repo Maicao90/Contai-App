@@ -142,7 +142,7 @@ function Reveal({
       className={className}
       initial={{ opacity: 0, y: 28 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
+      viewport={{ once: true, amount: 0.1 }}
       transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
@@ -222,7 +222,7 @@ export default function LandingPage() {
   }, []);
 
     return (
-      <div className="min-h-screen overflow-x-hidden bg-[#050b12] text-white">
+      <div className="min-h-screen min-h-[100svh] overflow-x-hidden bg-[#050b12] text-white">
         <DigitalSerenityTextStyles />
         <div className="fixed inset-0 -z-10 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_16%,rgba(16,185,129,0.24),transparent_20%),radial-gradient(circle_at_88%_14%,rgba(20,184,166,0.2),transparent_22%),radial-gradient(circle_at_50%_55%,rgba(16,185,129,0.08),transparent_34%),radial-gradient(circle_at_50%_110%,rgba(52,211,153,0.12),transparent_30%),linear-gradient(180deg,#03070d_0%,#07101a_42%,#04070c_100%)]" />

@@ -34,8 +34,9 @@ export function Header({ links = defaultLinks, primaryHref = "/cadastro" }: Head
 
   return (
     <header
+      style={{ top: scrolled ? 'env(safe-area-inset-top)' : '0' }}
       className={cn(
-        "sticky top-0 z-50 mx-auto w-full max-w-6xl border-b border-transparent transition-all ease-out sm:px-4",
+        "sticky z-50 mx-auto w-full max-w-6xl border-b border-transparent transition-all ease-out sm:px-4",
         {
           "border-white/10 bg-[#07111a]/82 shadow-[0_14px_50px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:top-3 sm:rounded-full":
             scrolled && !open,
@@ -136,7 +137,7 @@ export function Header({ links = defaultLinks, primaryHref = "/cadastro" }: Head
             ))}
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
             <Button
               asChild
               variant="outline"
