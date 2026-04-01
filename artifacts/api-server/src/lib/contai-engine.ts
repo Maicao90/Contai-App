@@ -1269,6 +1269,9 @@ async function checkBudgetLimits(identity: Identity, amount: number, categoryNam
   try {
     const start = startOfMonth();
     const end = endOfMonth();
+    const now = new Date();
+    const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const currentDayOfMonth = now.getDate();
 
     const [category] = await db
       .select()
@@ -1298,10 +1301,20 @@ async function checkBudgetLimits(identity: Identity, amount: number, categoryNam
       const currentTotal = (sumResult?.total ?? 0) + (amount > 0 ? amount : 0);
       const percentage = (currentTotal / limit) * 100;
 
-      if (percentage >= 80 && percentage < 100) {
-        budgetAlert = `\n\n⚠️ **Atenção:** Você já gastou ${Math.round(percentage)}% do seu orçamento de ${categoryName} este mês (${formatCurrency(currentTotal)} de ${formatCurrency(limit)}).`;
-      } else if (percentage >= 100) {
-        budgetAlert = `\n\n🚨 **Limite Atingido!** Você ultrapassou seu orçamento de ${categoryName} para este mês.`;
+      // Cálculo de Velocidade de Gasto (Proativo)
+      // v = Gasto Total / Dias Decorridos
+      const dailyVelocity = currentTotal / currentDayOfMonth;
+      const projectedTotal = dailyVelocity * daysInCurrentMonth;
+      const isProjectedToExceed = projectedTotal > limit;
+      const daysUntilLimit = Math.max(0, Math.floor((limit - currentTotal) / dailyVelocity));
+
+      if (percentage >= 100) {
+        budgetAlert = `\n\n🚨 *Limite Atingido!* Você ultrapassou seu orçamento de ${categoryName} para este mês.`;
+      } else if (isProjectedToExceed && currentDayOfMonth >= 5) {
+        // Alerta proativo apenas após alguns dias de amostragem (atrito zero, valor real)
+        budgetAlert = `\n\n⚠️ *Alerta de Velocidade:* Notei que você está gastando *${categoryName}* mais rápido que o planejado. No ritmo atual, seu orçamento de ${formatCurrency(limit)} acabará em aproximadamente *${daysUntilLimit} dias* (antes do fim do mês).`;
+      } else if (percentage >= 80) {
+        budgetAlert = `\n\n⚠️ *Atenção:* Você já usou ${Math.round(percentage)}% do seu orçamento de ${categoryName} (${formatCurrency(currentTotal)} de ${formatCurrency(limit)}).`;
       }
     }
   } catch (e) {

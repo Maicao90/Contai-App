@@ -9,7 +9,8 @@ import {
   householdMembersTable,
   householdsTable,
   pendingDecisionsTable,
-  remindersTable,
+  referralCampaignsTable,
+  referralEventsTable,
   referralsTable,
   subscriptionsTable,
   toAmountNumber,
@@ -1678,7 +1679,6 @@ router.delete("/admin/users/:id", async (req, res, next) => {
       return;
     }
 
-    // Proteção Master Admin
     const masterEmail = (process.env.MASTER_ADMIN_EMAIL || "").toLowerCase().trim();
     if (user.email && user.email.toLowerCase().trim() === masterEmail) {
       res.status(403).json({ error: "cannot_delete_master_admin" });
@@ -1687,17 +1687,28 @@ router.delete("/admin/users/:id", async (req, res, next) => {
 
     const [member] = await db.select().from(householdMembersTable).where(eq(householdMembersTable.userId, userId)).limit(1);
     
-    // Se for o dono da casa, fazemos o wipe da casa inteira (Sumir tudo)
     if (member && member.memberType === "owner") {
       const householdId = member.householdId;
+      const members = await db.select().from(householdMembersTable).where(eq(householdMembersTable.householdId, householdId));
+      const userIds = members.map(m => m.userId);
+
       // 1. Limpeza de logs e eventos manuais
       await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
       await db.delete(notificationEventsTable).where(eq(notificationEventsTable.householdId, householdId));
+      
       // 2. Wipe Total (Cascata)
       await db.delete(householdsTable).where(eq(householdsTable.id, householdId));
-      await logAdminAction(req, "delete_user_and_household_wipe", { userId, householdId });
+
+      // 3. Deletar os usuários vinculados (Wipe Real)
+      for (const uid of userIds) {
+        const [u] = await db.select().from(usersTable).where(eq(usersTable.id, uid)).limit(1);
+        if (u && u.email?.toLowerCase().trim() !== masterEmail) {
+          await db.delete(usersTable).where(eq(usersTable.id, uid));
+        }
+      }
+      
+      await logAdminAction(req, "delete_user_and_household_wipe", { userId, householdId, deletedUsers: userIds.length });
     } else {
-      // Se for apenas membro ou sem casa, deletamos apenas o usuário e sua participação
       if (member) {
         await db.delete(householdMembersTable).where(eq(householdMembersTable.id, member.id));
       }
@@ -1706,6 +1717,41 @@ router.delete("/admin/users/:id", async (req, res, next) => {
     }
 
     res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/system/nuke", async (req, res, next) => {
+  try {
+    const masterEmail = (process.env.MASTER_ADMIN_EMAIL || "").toLowerCase().trim();
+    
+    // 1. Identificar quem fica (Master Admin)
+    const [master] = await db.select().from(usersTable).where(eq(usersTable.email, masterEmail)).limit(1);
+    
+    // 2. Limpar TUDO (Cascata)
+    // Deletar households apagará membros, transações, assinaturas, etc via FK Cascade
+    await db.delete(householdsTable);
+    
+    // 3. Limpar Logs e Eventos (Manuais)
+    await db.delete(conversationLogsTable);
+    await db.delete(notificationEventsTable);
+    await db.delete(adminAuditLogsTable).where(sql`admin_id IS NULL OR admin_id != ${master?.id ?? -1}`);
+    
+    // 4. Deletar usuários (exceto Master)
+    if (master) {
+      await db.delete(usersTable).where(sql`id != ${master.id}`);
+    } else {
+      await db.delete(usersTable);
+    }
+    
+    // 5. Limpar Campanhas e Referrals
+    await db.delete(referralEventsTable);
+    await db.delete(referralsTable);
+    await db.delete(referralCampaignsTable);
+
+    await logAdminAction(req, "system_nuke_wipe", { reason: "requested_by_admin" });
+    res.json({ ok: true, message: "System Wiped Successfully" });
   } catch (error) {
     next(error);
   }

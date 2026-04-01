@@ -54,13 +54,13 @@ export default function AdminSettingsPage() {
   });
 
   const wipeMutation = useMutation({
-    mutationFn: () => postJson("/admin/danger/wipe-database", {}),
+    mutationFn: () => postJson("/admin/system/nuke", {}),
     onSuccess: () => {
-      alert("Sistema zerado com sucesso! O sistema recriou seu usuario mestre. Voce sera redirecionado para o login.");
+      alert("SISTEMA ZERADO COM SUCESSO! O banco de dados foi limpo e apenas seu acesso mestre foi preservado. Você será redirecionado para o login.");
       window.location.href = "/login";
     },
     onError: (error: any) => {
-      alert("Erro ao zerar banco: " + (error.message || "Erro desconhecido"));
+      alert("Erro ao realizar o Wipe: " + (error.message || "Erro desconhecido"));
     },
   });
 
@@ -197,15 +197,22 @@ export default function AdminSettingsPage() {
                   className="h-11 rounded-xl font-semibold shadow-sm"
                   disabled={wipeMutation.isPending}
                   onClick={() => {
-                    if (confirm("AVISO CRÍTICO: Você tem certeza que deseja APAGAR TUDO? Esta ação não pode ser desfeita.")) {
-                      if (confirm("ÚLTIMO AVISO: Deseja realmente zerar o banco de dados agora?")) {
-                        wipeMutation.mutate();
+                    const confirm1 = confirm("AVISO CRÍTICO: Você tem certeza que deseja APAGAR TODO O SISTEMA? Esta ação é irreversível.");
+                    if (confirm1) {
+                      const confirm2 = confirm("Atenção: Todos os usuários, transações e logs serão destruídos. Continuar?");
+                      if (confirm2) {
+                        const safety = prompt("Para confirmar a destruição total, digite NUCLEAR no campo abaixo:");
+                        if (safety === "NUCLEAR") {
+                          wipeMutation.mutate();
+                        } else {
+                          alert("Confirmação inválida. Operação cancelada.");
+                        }
                       }
                     }
                   }}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  {wipeMutation.isPending ? "Zerando tudo..." : "Zerar Todo o Banco de Dados"}
+                  {wipeMutation.isPending ? "Limpando tudo..." : "OPERAR NUKE (ZERAR TUDO)"}
                 </Button>
               </div>
             </div>
