@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import {
   clearSessionCookie,
   createPasswordResetRequest,
@@ -360,6 +360,10 @@ router.post("/auth/demo-login", async (req, res, next) => {
       ? (req.body.role as SessionRole)
       : "owner";
     const session = await createDemoSession(role);
+    if (!session) {
+      res.status(401).json({ message: "Demo login is not available." });
+      return;
+    }
     setSessionCookie(res, session);
     res.json({ session });
   } catch (error) {
