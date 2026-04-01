@@ -19,7 +19,7 @@ git add .
 
 echo.
 echo [2/4] Selando o codigo de Producao...
-git commit -m "Deploy: Atualização Contai (Correção Dashboard e Cérebro 3D)"
+git commit -m "Deploy: Atualização Completa do Sistema (Dashboard, Pagamentos e Automação)"
 git branch -M main
 
 echo.
