@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/admin-layout";
 import { PageHeader } from "@/components/page-header";
@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { getJson, postJson } from "@/lib/api";
+import { Trash2, AlertTriangle, ShieldAlert } from "lucide-react";
+
 
 type SystemSettings = {
   planName: string;
@@ -50,6 +52,18 @@ export default function AdminSettingsPage() {
       setFeedback({ type: "error", message: "Não foi possível salvar agora." });
     },
   });
+
+  const wipeMutation = useMutation({
+    mutationFn: () => postJson("/admin/danger/wipe-database", {}),
+    onSuccess: () => {
+      alert("Sistema zerado com sucesso! O sistema recriou seu usuario mestre. Voce sera redirecionado para o login.");
+      window.location.href = "/login";
+    },
+    onError: (error: any) => {
+      alert("Erro ao zerar banco: " + (error.message || "Erro desconhecido"));
+    },
+  });
+
 
   return (
     <AdminLayout>
@@ -157,6 +171,47 @@ export default function AdminSettingsPage() {
             </label>
           </CardContent>
         </Card>
+
+        <Card className="border-red-200 bg-red-50/50 shadow-none dark:border-red-900/30 dark:bg-red-950/20">
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600">
+              <ShieldAlert className="h-5 w-5" />
+            </div>
+            <CardTitle className="text-red-700 dark:text-red-400">Zona de Perigo</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-red-100 bg-white p-4 dark:border-red-900/20 dark:bg-slate-900">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-1 h-5 w-5 text-amber-500" />
+                <div>
+                  <p className="font-semibold text-slate-900 dark:text-white">Reset Total do Sistema</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Esta ação apagará todos os usuários, grupos (households), transações, logs e configurações atuais. 
+                    O acesso do administrador principal será mantido, mas todos os outros dados serão removidos permanentemente.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4">
+                <Button 
+                  variant="destructive" 
+                  className="h-11 rounded-xl font-semibold shadow-sm"
+                  disabled={wipeMutation.isPending}
+                  onClick={() => {
+                    if (confirm("AVISO CRÍTICO: Você tem certeza que deseja APAGAR TUDO? Esta ação não pode ser desfeita.")) {
+                      if (confirm("ÚLTIMO AVISO: Deseja realmente zerar o banco de dados agora?")) {
+                        wipeMutation.mutate();
+                      }
+                    }
+                  }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {wipeMutation.isPending ? "Zerando tudo..." : "Zerar Todo o Banco de Dados"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
 
         {feedback ? (
           <div className={`rounded-3xl border px-5 py-4 text-sm ${feedback.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>

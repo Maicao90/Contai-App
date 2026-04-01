@@ -40,6 +40,7 @@ type ParsedIntent =
   | "consulta_categoria"
   | "saudacao"
   | "ajuda"
+  | "reset_dados"
   | "indefinido";
 
 type ProcessIncomingMessageInput = {
@@ -233,6 +234,7 @@ function cleanDescription(text: string) {
       "",
     )
     .replace(/(\d{1,3}(?:[.\s]\d{3})*(?:,\d{1,2})|\d+(?:,\d{1,2})?)/, "")
+    .replace(/\b(reais|real|r\$)\b/gi, "")
     .replace(/\b(no|na|de|do|da|pro|pra)\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -456,6 +458,17 @@ function parseMessageByRules(content: string): ParsedMessage {
       category: inferCategory(content, "income"),
       visibility: "personal",
     };
+  }
+
+  if (
+    normalized.includes("zerar") ||
+    normalized.includes("resetar") ||
+    normalized.includes("limpar tudo") ||
+    normalized.includes("apagar tudo") ||
+    normalized.includes("começar de novo") ||
+    normalized.includes("começar do zero")
+  ) {
+    return { intent: "reset_dados" };
   }
 
   return { intent: "indefinido" };
@@ -834,9 +847,8 @@ async function saveParsedAction(
 
     return [
       firstName
-        ? `Anotei os ${formatCurrency(parsed.amount)} que você gastou com ${parsed.description} hoje, ${firstName}.`
-        : `Anotei os ${formatCurrency(parsed.amount)} que você gastou com ${parsed.description} hoje.`,
-      "Já deixei tudo organizado para você.",
+        ? `Notei os ${formatCurrency(parsed.amount)} que você gastou com o ${parsed.description} hoje, ${firstName}. Tudo já está organizado para você.`
+        : `Notei os ${formatCurrency(parsed.amount)} que você gastou com o ${parsed.description} hoje. Tudo já está organizado para você.`,
       "",
       "📋 *Resumo da transação:*",
       "",
@@ -849,10 +861,9 @@ async function saveParsedAction(
       "",
       previewOnly
         ? "🧪 Isso é um teste do painel do bot. Nenhum dado foi salvo."
-        : `📊 Para visualizar mais detalhes e relatórios, acesse: ${appBaseUrl}/app/dashboard`,
-      previewOnly ? "" : "Se precisar de algo a mais, é só me chamar.",
+        : "Se precisar de mais alguma coisa, é só me chamar!",
     ]
-      .filter(Boolean)
+      .filter((line) => line !== undefined)
       .join("\n");
   }
 
@@ -1065,6 +1076,26 @@ async function saveParsedAction(
       .join("\n");
   }
 
+  if (parsed.intent === "reset_dados") {
+    if (previewOnly) {
+      return "🧪 Teste de reset de dados. Em produção, isso apagaria todo o seu histórico.";
+    }
+
+    const householdId = identity.household.id;
+
+    // Delete all related data for this household
+    await db.delete(transactionsTable).where(eq(transactionsTable.householdId, householdId));
+    await db.delete(billsTable).where(eq(billsTable.householdId, householdId));
+    await db.delete(commitmentsTable).where(eq(commitmentsTable.householdId, householdId));
+    await db.delete(remindersTable).where(eq(remindersTable.householdId, householdId));
+    await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
+
+    return [
+      "Pronto! Zerei suas contas e compromissos com sucesso.",
+      "Agora você pode começar do zero. O que quer anotar primeiro?",
+    ].join("\n");
+  }
+
   if (parsed.intent === "saudacao") {
     return "Oi! Me fala um gasto, uma entrada ou um compromisso que eu organizo pra você.";
   }
@@ -1272,7 +1303,39 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
     structuredData: parsed,
   });
 
+  const [existingLog] = await db
+    .select({ id: conversationLogsTable.id })
+    .from(conversationLogsTable)
+    .where(
+      and(
+        eq(conversationLogsTable.userId, identity.user.id),
+        eq(conversationLogsTable.direction, "outbound")
+      )
+    )
+    .limit(1);
+
+  const isFirstTime = !existingLog;
+
   reply = await applyReplyPrompt(reply);
+
+  if (isFirstTime) {
+    const welcomePrefix = [
+      "Olá! Sou o seu assistente Contai. 🤖",
+      "Vou te ajudar a organizar seus gastos, contas e compromissos pelo WhatsApp.",
+      "",
+      "*Como falar comigo:*",
+      "• 'Gastei 50 no mercado'",
+      "• 'Recebi 2000 de salário'",
+      "• 'Conta de luz 150 dia 10'",
+      "• 'Lembrar de ir ao dentista amanhã às 14h'",
+      "• 'Quanto eu gastei esse mês?'",
+      "",
+      "Tudo o que você me disser será organizado automaticamente no seu painel!",
+      "--------------------------",
+      "",
+    ].join("\n");
+    reply = welcomePrefix + reply;
+  }
 
   await logConversation({
     householdId: identity.household.id,

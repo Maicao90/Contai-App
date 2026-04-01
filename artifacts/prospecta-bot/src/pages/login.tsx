@@ -162,14 +162,11 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-20 flex items-center gap-6 text-sm text-slate-400">
-          <a href="#" className="transition-colors hover:text-white">
+          <a href="/privacy" className="transition-colors hover:text-white">
             Privacidade
           </a>
-          <a href="#" className="transition-colors hover:text-white">
+          <a href="/terms" className="transition-colors hover:text-white">
             Termos
-          </a>
-          <a href="#" className="transition-colors hover:text-white">
-            Contato
           </a>
         </div>
 

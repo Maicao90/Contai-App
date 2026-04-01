@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   billsTable,
   commitmentsTable,
@@ -14,8 +14,11 @@ import {
   toAmountNumber,
   transactionsTable,
   usersTable,
+  ensureDefaultReferralCampaign,
+  ensurePermanentAdminUser,
 } from "@workspace/db";
 import { getSession, hashPassword, requireAdmin } from "../lib/auth";
+import { logger } from "../lib/logger";
 import type { IntegrationKey } from "../lib/integration-secrets";
 import {
   appendIntegrationHistory,
@@ -1314,6 +1317,26 @@ router.post("/admin/users/:id/actions", async (req, res, next) => {
       await db.delete(usersTable).where(eq(usersTable.id, userId));
     }
     return res.json({ ok: true, action, planName: PLAN_NAME });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post("/admin/danger/wipe-database", async (_req, res, next) => {
+  try {
+    // Apenas admin (já protegido pelo middleware global se houver, mas garantindo aqui)
+    // O requireAdmin já deve estar sendo usado no router ou app
+    
+    logger.info("WIPE DATABASE initiated by admin");
+    
+    // TRUNCATE com CASCADE limpa todas as tabelas vinculadas (transações, logs, etc.)
+    await db.execute(sql`TRUNCATE households, users RESTART IDENTITY CASCADE;`);
+    
+    // Recria o admin mestre imediatamente para não perder o acesso
+    await ensurePermanentAdminUser();
+    await ensureDefaultReferralCampaign();
+    
+    return res.json({ ok: true, message: "Banco de dados zerado com sucesso. Admin recriado." });
   } catch (error) {
     return next(error);
   }

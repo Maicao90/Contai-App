@@ -454,7 +454,7 @@ export default function LandingPage() {
 
 
         {/* SESSÃO HERÓI: Cérebro IA (Substituiu os antigos Benefícios) */}
-        <section id="funcionalidades" className="px-4 py-9 sm:px-6 sm:py-16 lg:px-8 lg:py-20 relative">
+        <section id="beneficios" className="px-4 py-9 sm:px-6 sm:py-16 lg:px-8 lg:py-20 relative">
           <div className="mx-auto max-w-7xl relative z-10">
             <SectionDivider />
             

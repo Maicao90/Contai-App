@@ -179,6 +179,22 @@ export default function SubscriptionPage() {
                   : "Seguir com mensal"}
             </Button>
 
+            <div className="flex flex-col gap-3">
+              <Button
+                asChild
+                variant="outline"
+                className="w-full border-white/20 bg-white/5 text-white hover:bg-white/10"
+              >
+                <a
+                  href="https://wa.me/556195010700?text=Oi%20Contai!%20Acabei%20de%20me%20cadastrar."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Falar agora com o Robô
+                </a>
+              </Button>
+            </div>
+
             {checkoutMutation.data ? (
               <div className="rounded-3xl border border-emerald-300/20 bg-emerald-500/10 p-4 text-sm text-slate-100">
                 <p>

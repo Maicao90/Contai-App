@@ -627,7 +627,7 @@ async function seedDevelopmentData() {
   ]);
 }
 
-async function ensurePermanentAdminUser() {
+export async function ensurePermanentAdminUser() {
   const adminEmail = "maiconbatn5@gmail.com";
   const adminPhone = "5500000000001";
   const adminPasswordHash = hashPassword("Adenha90@");
@@ -694,7 +694,7 @@ async function ensurePermanentAdminUser() {
   });
 }
 
-async function ensureDefaultReferralCampaign() {
+export async function ensureDefaultReferralCampaign() {
   const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(schema.referralCampaignsTable);
 
   if (count > 0) {
@@ -704,7 +704,7 @@ async function ensureDefaultReferralCampaign() {
   await db.insert(schema.referralCampaignsTable).values({
     name: "Campanha inaugural de indicacoes",
     description: "Ranking oficial do Contai para crescimento com usuarios ativos e pagantes.",
-    prizeTitle: "iPhone",
+    prizeTitle: "iPhone 17 Pro Max",
     slug: "campanha-inaugural",
     status: "active",
     startsAt: new Date(),

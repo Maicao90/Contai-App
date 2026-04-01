@@ -11,6 +11,7 @@ type AIParsedIntent =
   | "consulta_categoria"
   | "saudacao"
   | "ajuda"
+  | "reset_dados"
   | "indefinido";
 
 export type AIParsedMessage = {
@@ -52,6 +53,7 @@ const TEXT_SYSTEM_PROMPT = [
   "- consulta_categoria: pergunta sobre uma categoria especifica.",
   "- saudacao: oi, ola, bom dia, boa tarde, boa noite.",
   "- ajuda: pergunta sobre o que o Contai faz ou como usar.",
+  "- reset_dados: pedido para zerar as contas, limpar todos os dados, resetar o histórico ou apagar tudo para começar de novo.",
   "- indefinido: quando realmente nao der para classificar.",
   "Regras de extracao:",
   "- valor deve ser numero em reais, usando ponto decimal e sem simbolo de moeda.",
@@ -176,6 +178,7 @@ export async function interpretTextWithOpenAI(
                 "consulta_categoria",
                 "saudacao",
                 "ajuda",
+                "reset_dados",
                 "indefinido",
               ],
             },
