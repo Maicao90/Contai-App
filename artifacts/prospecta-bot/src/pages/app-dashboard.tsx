@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getJson } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
+import { BOT_WHATSAPP_LINK } from "@/lib/constants";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 
 type OverviewResponse = {
   user: { id: number; name: string; phone: string; billingStatus: string };
@@ -92,7 +100,7 @@ export default function AppDashboardPage() {
                 className="bg-emerald-600 px-8 hover:bg-emerald-700"
               >
                 <a
-                  href="https://wa.me/556195010700?text=Oi%20Contai!%20Acabei%20de%20me%20cadastrar."
+                  href={BOT_WHATSAPP_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -116,9 +124,14 @@ export default function AppDashboardPage() {
                   className="rounded-[20px] border border-slate-100 bg-white px-4 py-3.5"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="font-medium text-slate-900">{item.description}</p>
-                      <p className="text-sm text-slate-500">{item.category} · {formatTransactionDate(item.transactionDate)}</p>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${item.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
+                        {item.type === 'income' ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-900 truncate">{item.description}</p>
+                        <p className="text-sm text-slate-500">{item.category} · {formatTransactionDate(item.transactionDate)}</p>
+                      </div>
                     </div>
                     <p className={item.type === "income" ? "text-base font-semibold text-emerald-600 sm:text-right" : "text-base font-semibold text-rose-500 sm:text-right"}>
                       {item.type === "income" ? "+" : "-"}
@@ -135,28 +148,65 @@ export default function AppDashboardPage() {
               <CardHeader>
                 <CardTitle>Gastos por categoria</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {data?.categoryBreakdown?.map((item) => (
-                    <div key={item.category} className="min-w-0 space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="min-w-0 pr-3 font-medium text-slate-700">{item.category}</span>
-                        <span className="shrink-0 text-slate-500">{formatCurrency(item.total)}</span>
-                      </div>
-                    <div className="h-2 rounded-full bg-slate-100">
-                      <div
-                        className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            (item.total /
-                              Math.max(...(data?.categoryBreakdown.map((entry) => entry.total) ?? [1]))) *
-                              100,
-                          )}%`,
+              <CardContent className="pt-0">
+                <div className="h-[240px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={data?.categoryBreakdown ?? []}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="total"
+                        nameKey="category"
+                      >
+                        {(data?.categoryBreakdown ?? []).map((_, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={[
+                              "#059669", // Contai Primary
+                              "#10b981", 
+                              "#34d399", 
+                              "#6ee7b7", 
+                              "#a7f3d0",
+                              "#064e3b"
+                            ][index % 6]} 
+                            className="stroke-white dark:stroke-slate-900" 
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'white', 
+                          borderRadius: '12px', 
+                          border: 'none', 
+                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' 
                         }}
+                        itemStyle={{ color: '#0F172A' }}
+                        formatter={(value: number) => formatCurrency(value)}
                       />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {data?.categoryBreakdown?.slice(0, 4).map((item, index) => (
+                    <div key={item.category} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="h-2.5 w-2.5 rounded-full" 
+                          style={{ backgroundColor: [
+                            "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0", "#064e3b"
+                          ][index % 6] }} 
+                        />
+                        <span className="font-medium text-slate-700">{item.category}</span>
+                      </div>
+                      <span className="text-slate-500">{formatCurrency(item.total)}</span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </CardContent>
             </Card>
 

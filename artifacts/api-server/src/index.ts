@@ -2,10 +2,12 @@ import { loadIntegrationSecretsIntoEnv } from "./lib/integration-secrets";
 import { loadEmailTemplates } from "./lib/email-template-settings";
 import { logger } from "./lib/logger";
 import { loadSystemSettings } from "./lib/system-settings";
+import { startSubscriptionWorker } from "./lib/subscription-worker";
 
 await loadIntegrationSecretsIntoEnv();
 await loadSystemSettings();
 await loadEmailTemplates();
+startSubscriptionWorker(); // Inicia o verificador automático de faturamento
 
 const { dbReady, databaseProvider, databaseLocation } = await import("@workspace/db");
 const { default: app } = await import("./app");

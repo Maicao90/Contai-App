@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJson, postJson } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { BOT_WHATSAPP_LINK } from "@/lib/constants";
 
 type Subscription = {
   planName: string;
@@ -66,6 +67,11 @@ export default function SubscriptionPage() {
         cycle,
         paymentMethod: "pix",
       }),
+    onSuccess: (data) => {
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    },
   });
 
   const hasDefinedSubscription = Number(data?.amount ?? 0) > 0 && data?.status !== "pending";
@@ -186,7 +192,7 @@ export default function SubscriptionPage() {
                 className="w-full border-white/20 bg-white/5 text-white hover:bg-white/10"
               >
                 <a
-                  href="https://wa.me/556195010700?text=Oi%20Contai!%20Acabei%20de%20me%20cadastrar."
+                  href={BOT_WHATSAPP_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -196,14 +202,22 @@ export default function SubscriptionPage() {
             </div>
 
             {checkoutMutation.data ? (
-              <div className="rounded-3xl border border-emerald-300/20 bg-emerald-500/10 p-4 text-sm text-slate-100">
-                <p>
-                  Checkout preparado para o ciclo <strong>{checkoutMutation.data.cycle === "monthly" ? "mensal" : "anual"}</strong>.
-                </p>
-                <p className="mt-1">
-                  Valor: <strong>R${checkoutMutation.data.amount.toFixed(2).replace(".", ",")}</strong>
-                </p>
-                {checkoutMutation.data.installments ? <p className="mt-1">{checkoutMutation.data.installments}</p> : null}
+              <div className="space-y-4">
+                <div className="rounded-3xl border border-emerald-300/20 bg-emerald-500/10 p-4 text-sm text-slate-100">
+                  <p>
+                    Checkout preparado para o ciclo <strong>{checkoutMutation.data.cycle === "monthly" ? "mensal" : "anual"}</strong>.
+                  </p>
+                  <p className="mt-1">
+                    Valor: <strong>R${checkoutMutation.data.amount.toFixed(2).replace(".", ",")}</strong>
+                  </p>
+                  {checkoutMutation.data.installments ? <p className="mt-1">{checkoutMutation.data.installments}</p> : null}
+                </div>
+                <Button 
+                  asChild
+                  className="w-full h-12 rounded-2xl bg-white text-slate-950 hover:bg-slate-100 font-bold"
+                >
+                  <a href="/app/dashboard">Entrar no Painel Agora</a>
+                </Button>
               </div>
             ) : null}
           </CardContent>

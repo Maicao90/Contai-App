@@ -3,6 +3,7 @@ import { asc, desc, eq } from "drizzle-orm";
 import { db, householdMembersTable, householdsTable, usersTable } from "@workspace/db";
 import { getSession, hashPassword, requireOwner } from "../lib/auth";
 import { normalizeBrazilPhone } from "../lib/phone";
+import { queueNotificationEvent } from "../lib/notifications";
 
 const router = Router();
 
@@ -114,6 +115,29 @@ router.post("/households/:id/members", requireOwner, async (req, res, next) => {
         updatedAt: new Date(),
       })
       .where(eq(householdsTable.id, householdId));
+
+    // Despachar e-mail de convite
+    const [owner] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId)).limit(1);
+    if (user.email) {
+      try {
+        await queueNotificationEvent({
+          template: "shared_account_added",
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            householdId: user.householdId,
+          },
+          payload: {
+            ownerName: owner?.name || "O titular",
+            userEmail: user.email,
+          },
+        });
+      } catch (err) {
+        console.error("Falha ao enviar e-mail de convite:", err);
+      }
+    }
 
     res.status(201).json({
       member: {

@@ -1,4 +1,4 @@
-﻿import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   AlertTriangle,
@@ -16,6 +16,21 @@ import { SimpleInfoBadge } from "@/components/admin-user-badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJson } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  BarChart,
+  Bar,
+} from "recharts";
 
 type SeriesPoint = {
   day: string;
@@ -46,41 +61,7 @@ type AdminMetrics = {
   annualPlanPrice: number;
 };
 
-function MiniBars({
-  points,
-  color,
-  suffix = "",
-}: {
-  points: SeriesPoint[];
-  color: string;
-  suffix?: string;
-}) {
-  const values = points.map((point) => Number(point.total ?? point.users ?? 0));
-  const max = Math.max(...values, 1);
-
-  return (
-    <div className="-mx-1 overflow-x-auto px-1">
-      <div className="flex min-w-[260px] items-end gap-2 sm:min-w-0">
-      {points.map((point) => {
-        const value = Number(point.total ?? point.users ?? 0);
-        const height = `${Math.max((value / max) * 100, value ? 14 : 8)}%`;
-
-        return (
-          <div key={point.day} className="flex min-w-[52px] flex-1 flex-col items-center gap-2">
-            <div className="flex h-28 w-full items-end rounded-2xl bg-slate-100/80 p-2">
-              <div className={`w-full rounded-xl ${color}`} style={{ height }} />
-            </div>
-            <div className="text-center">
-              <p className="text-xs font-medium text-slate-700">{value}{suffix}</p>
-              <p className="text-[11px] text-slate-500">{point.day.slice(5).replace("-", "/")}</p>
-            </div>
-          </div>
-        );
-      })}
-      </div>
-    </div>
-  );
-}
+// Eliminamos o componente MiniBars antigo para usar Recharts profissional
 
 export default function AdminDashboardPage() {
   const { data, isLoading, isError } = useQuery({
@@ -165,25 +146,69 @@ export default function AdminDashboardPage() {
               <CardTitle>Crescimento de usuários</CardTitle>
             </CardHeader>
             <CardContent>
-              <MiniBars points={data?.growthSeries ?? []} color="bg-emerald-500" />
+              <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={data?.growthSeries ?? []}>
+                    <defs>
+                      <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                    <XAxis dataKey="day" hide />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="users" stroke="#10b981" fillOpacity={1} fill="url(#colorUsers)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
           <Card className="border-white/70 bg-white/92 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
             <CardHeader>
-              <CardTitle>Mensagens por dia</CardTitle>
+              <CardTitle>Mensagens Diárias</CardTitle>
             </CardHeader>
             <CardContent>
-              <MiniBars points={data?.messagesPerDay ?? []} color="bg-sky-500" />
+              <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data?.messagesPerDay ?? []}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                    <XAxis dataKey="day" hide />
+                    <Tooltip />
+                    <Bar dataKey="total" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
           <Card className="border-white/70 bg-white/92 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
             <CardHeader>
-              <CardTitle>Custo de IA por período</CardTitle>
+              <CardTitle>Saúde Financeira (Assinaturas)</CardTitle>
             </CardHeader>
             <CardContent>
-              <MiniBars points={data?.aiCostPerDay ?? []} color="bg-slate-900" suffix="" />
+              <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Ativas", value: data?.activeSubscriptions ?? 0 },
+                        { name: "Vencidas", value: data?.expiredSubscriptions ?? 0 },
+                      ]}
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      <Cell fill="#10b981" />
+                      <Cell fill="#ef4444" />
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </section>

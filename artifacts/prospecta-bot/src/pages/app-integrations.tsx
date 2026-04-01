@@ -1,9 +1,10 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
 import { getJson, postJson } from "@/lib/api";
@@ -40,6 +41,7 @@ export default function AppIntegrationsPage() {
   const queryClient = useQueryClient();
   const userId = session?.userId ?? 1;
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [customEmail, setCustomEmail] = useState("");
 
   const { data } = useQuery({
     queryKey: ["google-calendar", userId],
@@ -62,7 +64,7 @@ export default function AppIntegrationsPage() {
   });
 
   const quickConnectCalendar = useMutation({
-    mutationFn: () => postJson<QuickConnectResponse>(`/google-calendar/${userId}/quick-connect`, {}),
+    mutationFn: (email?: string) => postJson<QuickConnectResponse>(`/google-calendar/${userId}/quick-connect`, { email }),
     onSuccess: async (result) => {
       setFeedback(result.message);
       await queryClient.invalidateQueries({ queryKey: ["google-calendar", userId] });
@@ -119,7 +121,7 @@ export default function AppIntegrationsPage() {
 
   function handleConnect() {
     if (!data?.oauthConfigured) {
-      quickConnectCalendar.mutate();
+      quickConnectCalendar.mutate(customEmail);
       return;
     }
     window.location.href = `/api/google-calendar/${userId}/connect`;
@@ -177,6 +179,20 @@ export default function AppIntegrationsPage() {
                 </p>
               </div>
             </div>
+
+            {data?.oauthConfigured ? null : !isConnected && !isPrepared && (
+              <div className="max-w-sm space-y-1.5">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  E-mail para a agenda (opcional)
+                </p>
+                <Input
+                  placeholder="ex: seu-email@gmail.com"
+                  value={customEmail}
+                  onChange={(e) => setCustomEmail(e.target.value)}
+                  className="rounded-xl border-slate-200 dark:border-white/10"
+                />
+              </div>
+            )}
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button

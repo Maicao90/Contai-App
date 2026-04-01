@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import {
   buildGoogleCalendarAuthUrl,
   buildGoogleCalendarErrorRedirect,
@@ -62,7 +62,8 @@ router.post("/google-calendar/:userId/quick-connect", requireSession, async (req
       return;
     }
 
-    const connection = await quickConnectGoogleCalendar(userId);
+    const email = String(req.body.email ?? "").trim() || undefined;
+    const connection = await quickConnectGoogleCalendar(userId, email);
     res.json({
       ok: true,
       mode: "prepared",

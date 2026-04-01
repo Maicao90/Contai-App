@@ -16,7 +16,8 @@ export type NotificationTemplateKey =
   | "payment_overdue"
   | "plan_changed"
   | "monthly_report"
-  | "meeting_scheduled";
+  | "meeting_scheduled"
+  | "shared_account_added";
 
 type NotificationPayload = Record<string, unknown>;
 
@@ -140,6 +141,7 @@ function buildTemplateContext(
     reportSummary: String(payload.summary ?? "Consulte o painel para ver os detalhes."),
     meetingTitle: String(payload.title ?? "Compromisso"),
     meetingDate: formatDate(payload.date),
+    ownerName: String(payload.ownerName ?? "o titular"),
     googleCalendarStatusLine: payload.googleCalendarConnected
       ? "Ele tambem foi sincronizado com o seu Google Agenda."
       : "Para sincronizar proximos compromissos, conecte seu Google Agenda no painel.",
@@ -294,8 +296,11 @@ async function dispatchNotificationEvent(eventId: number) {
   }
 
   const payload = ((event.payload as Record<string, unknown> | null) ?? {}) as Record<string, unknown>;
+  console.log(`[NOTIFICATIONS] Despachando evento ${eventId} (${event.type}) para ${event.recipient}`);
+
   const transport = await createEmailTransport();
   if (!transport) {
+    console.error(`[NOTIFICATIONS] Falha ao criar transporte para evento ${eventId}`);
     return event;
   }
 
@@ -308,6 +313,7 @@ async function dispatchNotificationEvent(eventId: number) {
       html: String(payload.html ?? `<p>${escapeHtml(String(payload.preview ?? ""))}</p>`),
     });
 
+    console.log(`[NOTIFICATIONS] E-mail enviado com sucesso para evento ${eventId}. MessageId: ${info.messageId}`);
     const [sent] = await db
       .update(notificationEventsTable)
       .set({
@@ -323,6 +329,7 @@ async function dispatchNotificationEvent(eventId: number) {
 
     return sent;
   } catch (error) {
+    console.error(`[NOTIFICATIONS] Erro ao enviar e-mail para evento ${eventId}:`, error);
     const [failed] = await db
       .update(notificationEventsTable)
       .set({

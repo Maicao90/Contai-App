@@ -231,19 +231,20 @@ export async function disconnectGoogleCalendar(userId: number) {
   return true;
 }
 
-export async function quickConnectGoogleCalendar(userId: number) {
+export async function quickConnectGoogleCalendar(userId: number, targetEmail?: string) {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
   if (!user) {
     throw new Error("Usuário não encontrado.");
   }
 
+  const emailToUse = targetEmail?.trim() || user.email || `${user.phone.replace(/\D/g, "")}@contai.local`;
   const existing = await getConnection(userId);
 
   if (existing) {
     const [updated] = await db
       .update(googleCalendarConnectionsTable)
       .set({
-        googleEmail: user.email ?? `${user.phone.replace(/\D/g, "")}@contai.local`,
+        googleEmail: emailToUse,
         accessToken: null,
         refreshToken: null,
         status: "prepared",
@@ -258,7 +259,7 @@ export async function quickConnectGoogleCalendar(userId: number) {
     .insert(googleCalendarConnectionsTable)
     .values({
       userId,
-      googleEmail: user.email ?? `${user.phone.replace(/\D/g, "")}@contai.local`,
+      googleEmail: emailToUse,
       accessToken: null,
       refreshToken: null,
       status: "prepared",

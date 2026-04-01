@@ -38,14 +38,15 @@ function inferCycleFromCaktoPayload(payload: any) {
       "",
   ).trim();
 
-  const configuredMonthly = process.env.CAKTO_PRODUCT_MONTHLY_ID?.trim();
-  const configuredAnnual = process.env.CAKTO_PRODUCT_ANNUAL_ID?.trim();
+  // IDs REAIS DA CAKTO
+  const configuredMonthly = "7svn9jo";
+  const configuredAnnual = "3bfrdze_827683";
 
-  if (configuredMonthly && productId && productId === configuredMonthly) {
+  if (productId === configuredMonthly) {
     return "monthly";
   }
 
-  if (configuredAnnual && productId && productId === configuredAnnual) {
+  if (productId === configuredAnnual) {
     return "annual";
   }
 
@@ -157,27 +158,39 @@ router.get("/subscriptions/:householdId", async (req, res, next) => {
   }
 });
 
-router.post("/billing/checkout-simulate", (req, res) => {
-  const paymentMethod = req.body.paymentMethod === "card" ? "card" : "pix";
+router.post("/billing/checkout-simulate", async (req, res) => {
   const cycle = normalizeCycle(String(req.body.cycle ?? req.body.plan ?? "annual"));
+  const session = await getSession(req);
+  const email = session?.email ?? "";
+
+  // LINKS REAIS DA CAKTO
+  const baseUrl = cycle === "monthly" 
+    ? "https://pay.cakto.com.br/7svn9jo" 
+    : "https://pay.cakto.com.br/3bfrdze_827683";
+  
+  // Adiciona o e-mail se disponível para facilitar o checkout
+  const checkoutUrl = email ? `${baseUrl}?email=${encodeURIComponent(email)}` : baseUrl;
+
   res.json({
-    checkoutUrl: `https://contai.app/checkout/${cycle}/${paymentMethod}`,
+    checkoutUrl,
     cycle,
     amount: cycle === "monthly" ? PLAN_MONTHLY_AMOUNT : PLAN_ANNUAL_AMOUNT,
-    installments: cycle === "annual" && paymentMethod === "card" ? "12x de R$9,90" : null,
     status: "ready",
   });
 });
 
 router.post("/billing/cakto/webhook", async (req, res, next) => {
   try {
-    const configuredSecret = process.env.CAKTO_WEBHOOK_SECRET?.trim();
+    // SEGREDO REAL DA CAKTO PARA SEGURANÇA
+    const configuredSecret = process.env.CAKTO_WEBHOOK_SECRET?.trim() || "a7fb8f76-38b1-48b1-9ca9-20941d519808";
     const providedSecret =
       String(getCaktoHeader(req, "x-cakto-secret") ?? "").trim() ||
       String(getCaktoHeader(req, "x-webhook-secret") ?? "").trim() ||
-      String(getCaktoHeader(req, "x-cakto-webhook-secret") ?? "").trim();
+      String(getCaktoHeader(req, "x-cakto-webhook-secret") ?? "").trim() ||
+      String(req.body?.secret ?? "").trim();
 
     if (configuredSecret && providedSecret && providedSecret !== configuredSecret) {
+      console.error(`[WEBHOOK] Tentativa de acesso com segredo invalido: ${providedSecret}`);
       res.status(401).json({ message: "Webhook da Cakto com segredo inválido." });
       return;
     }

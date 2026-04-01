@@ -25,6 +25,7 @@ const AppMembersPage = lazy(() => import("@/pages/app-members"));
 const AppIntegrationsPage = lazy(() => import("@/pages/app-integrations"));
 const AppReferralsPage = lazy(() => import("@/pages/app-referrals"));
 const AppSubscriptionPage = lazy(() => import("@/pages/app-subscription"));
+const SubscriptionPage = lazy(() => import("@/pages/assinatura"));
 const AppSettingsPage = lazy(() => import("@/pages/app-settings"));
 const AdminAccessPage = lazy(() => import("@/pages/admin-access"));
 const AdminDashboardPage = lazy(() => import("@/pages/admin-dashboard"));
@@ -93,6 +94,7 @@ function Router() {
         <Route path="/cadastro" component={SignupPage} />
         <Route path="/esqueci-senha" component={ForgotPasswordPage} />
         <Route path="/redefinir-senha" component={ResetPasswordPage} />
+        <Route path="/assinatura" component={SubscriptionPage} />
         <Route path="/admin-access" component={AdminAccessPage} />
 
         <Route path="/app/dashboard">

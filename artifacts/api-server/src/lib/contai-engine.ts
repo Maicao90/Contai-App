@@ -41,6 +41,7 @@ type ParsedIntent =
   | "saudacao"
   | "ajuda"
   | "reset_dados"
+  | "registrar_meta"
   | "indefinido";
 
 type ProcessIncomingMessageInput = {
@@ -79,6 +80,8 @@ type SaveParsedActionOptions = {
   forceGoogleAgendaBlocked?: boolean;
 };
 export type BotPreviewScenario = "active" | "unregistered" | "inactive_plan" | "google_required";
+
+export const BOT_PHONE = "556195010700";
 
 const DEFAULT_SOURCE = "whatsapp";
 const CATEGORY_MAP: Array<{ category: string; words: string[] }> = [
@@ -1096,6 +1099,42 @@ async function saveParsedAction(
     ].join("\n");
   }
 
+  if (parsed.intent === "registrar_meta") {
+    if (!parsed.amount) return "Qual o valor do limite que você quer definir?";
+    const categoryName = parsed.category || "Outros";
+
+    if (!previewOnly) {
+      let [category] = await db
+        .select()
+        .from(categoriesTable)
+        .where(
+          and(
+            eq(categoriesTable.householdId, identity.household.id),
+            eq(categoriesTable.name, categoryName),
+          ),
+        )
+        .limit(1);
+
+      if (!category) {
+        await db.insert(categoriesTable).values({
+          householdId: identity.household.id,
+          name: categoryName,
+          type: "expense",
+          monthlyLimit: parsed.amount.toFixed(2),
+        });
+      } else {
+        await db
+          .update(categoriesTable)
+          .set({ monthlyLimit: parsed.amount.toFixed(2) })
+          .where(eq(categoriesTable.id, category.id));
+      }
+    }
+
+    return `✅ Meta definida! O limite mensal para *${categoryName}* agora é ${formatCurrency(
+      parsed.amount,
+    )}. Eu te aviso quando você chegar perto desse valor!`;
+  }
+
   if (parsed.intent === "saudacao") {
     return "Oi! Me fala um gasto, uma entrada ou um compromisso que eu organizo pra você.";
   }
@@ -1303,6 +1342,9 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
     structuredData: parsed,
   });
 
+  const onboardingPhrases = ["acabei de me cadastrar", "como funciona", "primeira vez", "ajuda"];
+  const isOnboardingMessage = onboardingPhrases.some(phrase => input.content.toLowerCase().includes(phrase));
+
   const [existingLog] = await db
     .select({ id: conversationLogsTable.id })
     .from(conversationLogsTable)
@@ -1314,21 +1356,26 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
     )
     .limit(1);
 
-  const isFirstTime = !existingLog;
+  const isFirstTime = !existingLog || isOnboardingMessage;
 
   reply = await applyReplyPrompt(reply);
 
   if (isFirstTime) {
     const welcomePrefix = [
       "Olá! Sou o seu assistente Contai. 🤖",
-      "Vou te ajudar a organizar seus gastos, contas e compromissos pelo WhatsApp.",
+      "Vou te ajudar a organizar sua vida financeira e rotina direto por aqui.",
       "",
-      "*Como falar comigo:*",
-      "• 'Gastei 50 no mercado'",
-      "• 'Recebi 2000 de salário'",
-      "• 'Conta de luz 150 dia 10'",
-      "• 'Lembrar de ir ao dentista amanhã às 14h'",
-      "• 'Quanto eu gastei esse mês?'",
+      "🚀 *Como usar (Dúvidas Rápidas):*",
+      "• *Para anotar:* Basta falar natural, ex: 'Gastei 50 no mercado' ou 'Lembrar dentista amanhã 14h'.",
+      "• *Definir Metas:* Você pode colocar limites em categorias, ex: 'Minha meta de lazer é 200 reais'.",
+      "• *Membros da Casa:* Adicione parceiros no menu 'Minha Conta' no site para compartilharem a mesma carteira.",
+      "• *Relatórios Mensais:* Eu preparo um resumo dos seus gastos e te mando por e-mail todo mês. Ative nas configurações!",
+      "• *Para ver tudo:* Acesse seu painel em https://contai.site/app/dashboard",
+      "",
+      "*Exemplos para testar agora:*",
+      "👉 'Gastei 30 reais na padaria'",
+      "👉 'Minha meta de mercado é 1000 reais'",
+      "👉 'Conta de luz 150 dia 10'",
       "",
       "Tudo o que você me disser será organizado automaticamente no seu painel!",
       "--------------------------",

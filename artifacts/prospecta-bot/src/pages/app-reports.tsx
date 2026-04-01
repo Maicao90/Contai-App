@@ -20,6 +20,19 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/lib/auth";
 import { getJson, patchJson, postJson } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 
 type MonthlyReportResponse = {
   period: {
@@ -201,37 +214,75 @@ export default function AppReportsPage() {
         <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
           <Card className="border-white/70 bg-white/90 shadow-sm">
             <CardHeader>
-              <CardTitle>Gastos por categoria</CardTitle>
+              <CardTitle>Visão Geral Financeira</CardTitle>
               <CardDescription>
-                Veja quais áreas mais pesaram no mês e quanto cada uma representa.
+                Comparativo de entradas e saídas e distribuição por categorias.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {data?.categoryBreakdown?.length ? (
-                data.categoryBreakdown.map((item) => (
-                  <div key={item.category} className="space-y-2">
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-medium text-slate-800">{item.category}</span>
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <span>{item.percent}%</span>
-                        <span>{formatCurrency(item.total)}</span>
-                      </div>
+            <CardContent className="space-y-8">
+              {/* Pie Chart Section */}
+              <div className="space-y-4">
+                <p className="text-sm font-medium text-slate-700">Gastos por categoria</p>
+                <div className="h-[280px] w-full">
+                  {data?.categoryBreakdown?.length ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={data.categoryBreakdown}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={70}
+                          outerRadius={90}
+                          paddingAngle={5}
+                          dataKey="total"
+                          nameKey="category"
+                        >
+                          {data.categoryBreakdown.map((_, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={[
+                                "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0", "#064e3b"
+                              ][index % 6]} 
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                           formatter={(value: number) => formatCurrency(value)}
+                        />
+                        <Legend iconType="circle" />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-500">
+                      Sem dados para exibir
                     </div>
-                    <div className="h-2.5 rounded-full bg-slate-100">
-                      <div
-                        className="h-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"
-                        style={{
-                          width: `${Math.max(8, Math.round((item.total / highestCategoryValue) * 100))}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-sm text-slate-500">
-                  Ainda não há gastos suficientes para montar esse relatório.
+                  )}
                 </div>
-              )}
+              </div>
+
+              {/* Bar Chart Section */}
+              <div className="space-y-4">
+                <p className="text-sm font-medium text-slate-700">Entradas vs Saídas</p>
+                <div className="h-[240px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        { name: "Fluxo", entradas: data?.metrics.income ?? 0, saídas: data?.metrics.expenses ?? 0 }
+                      ]}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" hide />
+                      <YAxis tickFormatter={(value) => `R$ ${value}`} />
+                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Bar dataKey="entradas" fill="#10b981" radius={[8, 8, 0, 0]} barSize={60} />
+                      <Bar dataKey="saídas" fill="#ef4444" radius={[8, 8, 0, 0]} barSize={60} />
+                      <Legend />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

@@ -80,7 +80,8 @@ export default function SignupPage() {
         refCode: referralCode || null,
       });
       try { window.localStorage.removeItem("contai_ref_code"); } catch {}
-      navigate("/assinatura");
+      const cycle = queryState.get("cycle") || "annual";
+      navigate(`/assinatura?cycle=${cycle}`);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Não foi possível criar sua conta.");
     } finally {
@@ -91,7 +92,11 @@ export default function SignupPage() {
   function startSocialSignup(provider: "google" | "apple") {
     setError(null);
     setRedirectingProvider(provider);
-    const params = new URLSearchParams({ source: "signup" });
+    const cycle = queryState.get("cycle") || "annual";
+    const params = new URLSearchParams({ 
+      source: "signup",
+      next: `/assinatura?cycle=${cycle}`
+    });
     if (referralCode) {
       params.set("ref", referralCode);
     }
