@@ -3,9 +3,9 @@ title Enviar Aplicacao para o GitHub (ConTai Producao)
 color 0B
 
 echo ==========================================================
-echo BEM-VINDO A FASE 1: O UPLOAD MAESTRO!
+echo BEM-VINDO AO UPLOAD MAESTRO V2!
 echo ==========================================================
-echo Eu (o seu agente Antigravity) ja protegi todas as suas 
+echo Eu (o seu agente Antigravity) já protegi todas as suas 
 echo senhas e bancos de dados para elas NUNCA irem para o GitHub!
 echo.
 echo Pressione qualquer tecla para fazer o envio oficial...
@@ -15,12 +15,11 @@ cd /d "C:\Users\MaiconBatn\Downloads\BOTLP\Asset-Attachment-Manager"
 
 echo.
 echo [1/4] Preparando o pacote local...
-git init
 git add .
 
 echo.
 echo [2/4] Selando o codigo de Producao...
-git commit -m "Deploy: Producao Contai V1 (Supabase Conectado, Vercel Ready)"
+git commit -m "Deploy: Atualização Contai (Correção Dashboard e Cérebro 3D)"
 git branch -M main
 
 echo.
@@ -34,9 +33,15 @@ git push -u origin main --force
 
 echo.
 echo ==========================================================
-echo SUCESSO ABSOLUTO! O SEU CODIGO JA ESTA NO AR NO GITHUB!
+echo SUCESSO ABSOLUTO! O CODIGO ESTÁ NO GITHUB!
 echo ==========================================================
-echo (Ps: Se apareceu alguma tela de login do GitHub no meio do
-echo processo, espero que voce tenha logado nela!)
 echo.
+echo AGORA, PARA TERMINAR, COPIE E COLE ISSO NO SEU SERVIDOR (VPS):
+echo.
+echo    cd Contai-App
+echo    git pull origin main
+echo    pnpm install
+echo    pm2 restart all
+echo.
+echo ==========================================================
 pause

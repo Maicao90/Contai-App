@@ -48,8 +48,8 @@ class WebGPUBoundary extends React.Component<{ children: React.ReactNode; fallba
   }
 }
 
-const TEXTUREMAP = { src: "https://i.postimg.cc/XYwvXN8D/img-4.png" };
-const DEPTHMAP = { src: "https://i.postimg.cc/2SHKQh2q/raw-4.webp" };
+const TEXTUREMAP = { src: "/brain-texture.png" };
+const DEPTHMAP = { src: "/brain-depth.webp" };
 
 extend(THREE as any);
 
@@ -209,8 +209,14 @@ export function HeroFuturistic() {
   }, [visibleWords, titleWords.length]);
 
   const fallbackUI = (
-    <div className="absolute inset-0 flex items-center justify-center bg-black">
-      <div className="opacity-10 bg-[url('https://i.postimg.cc/XYwvXN8D/img-4.png')] bg-cover bg-center absolute inset-0 blur-sm mix-blend-screen" />
+    <div className="absolute inset-0 flex items-center justify-center bg-[#050B12]">
+      <div 
+        className="opacity-40 bg-[url('/brain-texture.png')] bg-contain bg-center bg-no-repeat absolute inset-0 blur-[2px] mix-blend-screen" 
+        aria-hidden="true"
+      />
+      <div className="z-10 text-emerald-500/20 text-xs uppercase tracking-widest font-mono">
+        Optimizing Experience...
+      </div>
     </div>
   );
 
