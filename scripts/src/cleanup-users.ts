@@ -17,8 +17,8 @@ async function main() {
   }
 
   const householdIds = usersToDelete
-    .map((u) => u.householdId)
-    .filter((id): id is number => id !== null);
+    .map((u: any) => u.householdId)
+    .filter((id: any): id is number => id !== null);
 
   // 2. Deletar os usuários (isso vai disparar o ON DELETE CASCADE para household_members, etc)
   for (const email of emails) {
