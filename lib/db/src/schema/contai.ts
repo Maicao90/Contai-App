@@ -165,6 +165,21 @@ export const remindersTable = pgTable("reminders", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const conversationsTable = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id, {
+    onDelete: "cascade",
+  }),
+  householdId: integer("household_id").notNull().references(() => householdsTable.id, {
+    onDelete: "cascade",
+  }),
+  status: text("status").notNull().default("active"),
+  channel: text("channel").notNull().default("whatsapp"),
+  contextData: text("context_data"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const conversationLogsTable = pgTable("conversation_logs", {
   id: serial("id").primaryKey(),
   householdId: integer("household_id").references(() => householdsTable.id, {
@@ -344,6 +359,7 @@ export type Transaction = typeof transactionsTable.$inferSelect;
 export type Bill = typeof billsTable.$inferSelect;
 export type Commitment = typeof commitmentsTable.$inferSelect;
 export type Reminder = typeof remindersTable.$inferSelect;
+export type Conversation = typeof conversationsTable.$inferSelect;
 export type ConversationLog = typeof conversationLogsTable.$inferSelect;
 export type PendingDecision = typeof pendingDecisionsTable.$inferSelect;
 export type Subscription = typeof subscriptionsTable.$inferSelect;

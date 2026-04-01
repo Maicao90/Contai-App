@@ -570,13 +570,13 @@ export default function LandingPage() {
                   title: "Aviso de Saldo Crítico", 
                   desc: "Nunca seja pego de surpresa. Receba notificações automáticas quando o saldo estiver próximo de zerar.",
                   icon: Target,
-                  color: "border-emerald-400/40 bg-emerald-400/10 text-emerald-100"
+                  color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-200"
                 },
                 { 
                   title: "Gestão Proativa", 
                   desc: "Se o saldo da casa ficar negativo, o bot te alerta em qualquer interação para que você possa agir rápido.",
                   icon: Shield,
-                  color: "border-emerald-600/60 bg-emerald-600/15 text-white"
+                  color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-200"
                 }
               ].map((alert, i) => (
                 <Reveal key={i} delay={i * 0.1}>

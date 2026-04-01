@@ -6,7 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import { PGlite } from "@electric-sql/pglite";
 import pg from "pg";
 import { scryptSync } from "node:crypto";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 
 const { Pool } = pg;
 
@@ -52,6 +52,10 @@ async function ensureSchema() {
   `));
 
   await db.execute(sql.raw(`
+    ALTER TABLE households ADD COLUMN IF NOT EXISTS total_house_balance NUMERIC(12, 2) NOT NULL DEFAULT 0;
+  `));
+
+  await db.execute(sql.raw(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       household_id INTEGER REFERENCES households(id) ON DELETE SET NULL,
@@ -80,6 +84,16 @@ async function ensureSchema() {
   `));
 
   await db.execute(sql.raw(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS personal_balance NUMERIC(12, 2) NOT NULL DEFAULT 0;
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS external_id TEXT UNIQUE;
+  `));
+
+  await db.execute(sql.raw(`
     CREATE TABLE IF NOT EXISTS conversations (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -105,6 +119,10 @@ async function ensureSchema() {
       member_type TEXT NOT NULL DEFAULT 'owner',
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE household_members ADD COLUMN IF NOT EXISTS household_balance NUMERIC(12, 2) NOT NULL DEFAULT 0;
   `));
 
   await db.execute(sql.raw(`
@@ -153,6 +171,18 @@ async function ensureSchema() {
       transaction_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'personal';
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payment_method TEXT NOT NULL DEFAULT 'pix';
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'paid';
   `));
 
   await db.execute(sql.raw(`
@@ -351,6 +381,17 @@ async function ensureSchema() {
       type TEXT NOT NULL,
       detail TEXT,
       payload JSONB,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `));
+
+  await db.execute(sql.raw(`
+    CREATE TABLE IF NOT EXISTS admin_audit_logs (
+      id SERIAL PRIMARY KEY,
+      admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      action TEXT NOT NULL,
+      details JSONB,
+      ip TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `));
@@ -721,5 +762,5 @@ export const dbReady = (async () => {
   await ensureDefaultReferralCampaign();
 })();
 
-export * from "./schema";
-export * from "./schema/contai";
+export * from "./schema/index.js";
+export * from "./schema/contai.js";

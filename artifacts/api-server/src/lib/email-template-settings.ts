@@ -83,8 +83,8 @@ const defaultTemplates: Record<NotificationTemplateKey, EmailTemplateDefinition>
     title: "Convite de Conta Compartilhada",
     description: "Enviado quando um novo membro e adicionado a uma conta.",
     subject: "{{ownerName}} te convidou para o Contai!",
-    text: "Oi {{userName}}, você foi convidado(a) por {{ownerName}} para compartilhar a conta no Contai!\n\nAgora você pode registrar seus gastos e compromissos pelo seu próprio WhatsApp.\n\nSeus dados de acesso:\nLogin: {{userEmail}}\n(Use a senha que o titular definiu para você)\n\nEntrar no painel: {{appBaseUrl}}/login",
-    html: "<p>Oi {{userName}}, você foi convidado(a) por <strong>{{ownerName}}</strong> para compartilhar a conta no <strong>Contai</strong>!</p><p>Agora você pode registrar seus gastos e compromissos pelo seu próprio WhatsApp.</p><p><strong>Seus dados de acesso:</strong><br />Login: {{userEmail}}<br /><em>(Use a senha que o titular definiu para você)</em></p><p><a href=\"{{appBaseUrl}}/login\">Entrar no painel</a></p>",
+    text: "Oi {{userName}}, você foi convidado(a) por {{ownerName}} para compartilhar a conta no Contai!\n\nAgora você pode registrar seus gastos e compromissos pelo seu próprio WhatsApp.\n\nSeus dados de acesso:\nLogin: {{userEmail}}\nSenha: {{userPassword}}\n\nFalar com o Robô no WhatsApp: {{robotUrl}}\n\nEntrar no painel: {{appBaseUrl}}/login",
+    html: "<p>Oi {{userName}}, você foi convidado(a) por <strong>{{ownerName}}</strong> para compartilhar a conta no <strong>Contai</strong>!</p><p>Agora você pode registrar seus gastos e compromissos pelo seu próprio WhatsApp.</p><p><strong>Seus dados de acesso:</strong><br />Login: <code>{{userEmail}}</code><br />Senha: <code>{{userPassword}}</code></p><p><a href=\"{{robotUrl}}\" style=\"display:inline-block;padding:12px 24px;background:#25d366;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;\">Falar com o Robô no WhatsApp</a></p><p><a href=\"{{appBaseUrl}}/login\">Entrar no painel administrativo</a></p>",
   },
 };
 

@@ -668,6 +668,13 @@ function buildInactivePlanReply() {
 }
 
 function isSubscriptionActive(identity: Identity) {
+  if (
+    identity.user.billingStatus === "active" ||
+    (identity.household && identity.household.billingStatus === "active")
+  ) {
+    return true;
+  }
+
   const subscription = identity.subscription;
   if (!subscription) {
     return false;
@@ -1038,7 +1045,7 @@ async function saveParsedAction(
       }
 
       response.push("");
-      response.push(previewOnly ? "🧪 _Isso é um teste do painel do bot._" : `📊 *Veja mais no seu Painel:* ${appBaseUrl}/app/dashboard`);
+      response.push(previewOnly ? "🧪 _Isso é um teste do painel do bot._" : `📊 *Para ver todos os detalhes e gráficos, acesse seu Painel:* ${appBaseUrl}/app/dashboard`);
 
       if (budgetAlerts.length > 0) {
         response.push("", ...budgetAlerts);
@@ -1227,7 +1234,7 @@ async function saveParsedAction(
 
     case "saudacao": {
       const firstName = getFirstName(identity.user.name);
-      return `Olá, ${firstName}! 👋\nMe fala um gasto, uma entrada ou um compromisso que eu organizo pra você.`;
+      return `Fala, ${firstName}! 👋\nBora organizar sua vida financeira sem complicação?\nVocê pode me mandar um gasto, uma entrada ou até pedir o seu resumo agora mesmo!`;
     }
 
     case "ajuda":
@@ -1497,23 +1504,29 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   }
 
   if (isFirstTime) {
+    const firstName = getFirstName(identity.user.name);
     const welcomePrefix = [
-      "Olá! Sou o seu assistente Contai. 🤖",
-      "Vou te ajudar a organizar sua vida financeira e rotina direto por aqui.",
+      `Fala, ${firstName}! 👋`,
+      "Eu sou o Contai, seu assistente financeiro aqui no WhatsApp.",
       "",
-      "🚀 *Como usar (Dúvidas Rápidas):*",
-      "• *Para anotar:* Basta falar natural, ex: 'Gastei 50 no mercado' ou 'Lembrar dentista amanhã 14h'.",
-      "• *Definir Metas:* Você pode colocar limites em categorias, ex: 'Minha meta de lazer é 200 reais'.",
-      "• *Membros da Casa:* Adicione parceiros no menu 'Minha Conta' no site para compartilharem a mesma carteira.",
-      "• *Relatórios Mensais:* Eu preparo um resumo dos seus gastos e te mando por e-mail todo mês. Ative nas configurações!",
-      "• *Para ver tudo:* Acesse seu painel em https://contai.site/app/dashboard",
+      "Aqui você controla tudo só conversando comigo — gastos, ganhos, contas da casa e até compromissos.",
       "",
-      "*Exemplos para testar agora:*",
-      "👉 'Gastei 30 reais na padaria'",
-      "👉 'Minha meta de mercado é 1000 reais'",
-      "👉 'Conta de luz 150 dia 10'",
+      "💰 Registro automático do que você gasta e recebe",
+      "🏠 Separo o que é seu e o que é da casa",
+      "📊 Te mostro quanto ainda pode gastar",
+      "🚨 Te aviso antes de estourar o orçamento",
       "",
-      "Tudo o que você me disser será organizado automaticamente no seu painel!",
+      "Pode começar do jeito mais simples:",
+      "",
+      "👉 “Gastei 50 no mercado”",
+      "👉 “Recebi 1200 hoje”",
+      "👉 “Quanto posso gastar?”",
+      "",
+      "Se faltar alguma informação, eu te pergunto 👍",
+      "",
+      "🔒 Seus dados pessoais são privados — ninguém vê seus gastos individuais",
+      "",
+      `Bora organizar isso de verdade, ${firstName}? 🚀`,
       "--------------------------",
       "",
     ].join("\n");

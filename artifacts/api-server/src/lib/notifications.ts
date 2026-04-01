@@ -142,6 +142,8 @@ function buildTemplateContext(
     meetingTitle: String(payload.title ?? "Compromisso"),
     meetingDate: formatDate(payload.date),
     ownerName: String(payload.ownerName ?? "o titular"),
+    userPassword: String(payload.userPassword ?? "Sua senha definida pelo titular"),
+    robotUrl: String(payload.robotUrl ?? "https://wa.me/556195010700"),
     googleCalendarStatusLine: payload.googleCalendarConnected
       ? "Ele tambem foi sincronizado com o seu Google Agenda."
       : "Para sincronizar proximos compromissos, conecte seu Google Agenda no painel.",

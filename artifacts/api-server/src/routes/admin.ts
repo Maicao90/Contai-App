@@ -12,6 +12,7 @@ import {
   referralCampaignsTable,
   referralEventsTable,
   referralsTable,
+  remindersTable,
   subscriptionsTable,
   toAmountNumber,
   transactionsTable,
@@ -20,6 +21,8 @@ import {
   notificationEventsTable,
   ensureDefaultReferralCampaign,
   ensurePermanentAdminUser,
+  categoriesTable,
+  conversationsTable,
 } from "@workspace/db";
 import { addDays } from "date-fns";
 import { getSession, hashPassword, requireAdmin } from "../lib/auth";
@@ -524,7 +527,7 @@ async function loadData() {
 function mapUsers(data: Awaited<ReturnType<typeof loadData>>) {
   return data.users
     .filter((user) => user.role !== "admin")
-    .filter((user) => !isInternalTestUser(user))
+    // .filter((user) => !isInternalTestUser(user))
     .map((user) => {
     const household = data.households.find((item) => item.id === user.householdId) ?? null;
     const householdMembers = data.members.filter((item) => item.householdId === user.householdId);
@@ -1038,6 +1041,8 @@ async function buildIntegrationSummary(key: IntegrationKey) {
 router.get("/admin/metrics", async (_req, res, next) => {
   try {
     const data = await loadData();
+    if (!data) throw new Error("Could not load data from database.");
+    
     const users = mapUsers(data);
     const households = mapHouseholds(data);
     const conversations = mapConversations(data);
@@ -1687,17 +1692,33 @@ router.delete("/admin/users/:id", async (req, res, next) => {
       const members = await db.select().from(householdMembersTable).where(eq(householdMembersTable.householdId, householdId));
       const userIds = members.map(m => m.userId);
 
-      // 1. Limpeza de logs e eventos manuais
+      // 1. Limpeza de tabelas dependentes (Manual)
+      await db.delete(transactionsTable).where(eq(transactionsTable.householdId, householdId));
+      await db.delete(billsTable).where(eq(billsTable.householdId, householdId));
+      await db.delete(commitmentsTable).where(eq(commitmentsTable.householdId, householdId));
+      await db.delete(remindersTable).where(eq(remindersTable.householdId, householdId));
+      await db.delete(subscriptionsTable).where(eq(subscriptionsTable.householdId, householdId));
       await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
       await db.delete(notificationEventsTable).where(eq(notificationEventsTable.householdId, householdId));
       
-      // 2. Wipe Total (Cascata)
+      // Limpeza das tabelas "órfãs" de cascade em alguns bancos
+      await db.delete(householdMembersTable).where(eq(householdMembersTable.householdId, householdId));
+      await db.delete(categoriesTable).where(eq(categoriesTable.householdId, householdId));
+      await db.delete(pendingDecisionsTable).where(eq(pendingDecisionsTable.householdId, householdId));
+      await db.delete(conversationsTable).where(eq(conversationsTable.householdId, householdId));
+      
+      // 2. Limpar o vínculo de dono na household para evitar bloqueio
+      await db.update(householdsTable).set({ ownerUserId: null }).where(eq(householdsTable.id, householdId));
+
+      // 3. Wipe Household
       await db.delete(householdsTable).where(eq(householdsTable.id, householdId));
 
       // 3. Deletar os usuários vinculados (Wipe Real)
       for (const uid of userIds) {
         const [u] = await db.select().from(usersTable).where(eq(usersTable.id, uid)).limit(1);
         if (u && u.email?.toLowerCase().trim() !== masterEmail) {
+          // Remover conexões relativas apenas ao usuário
+          await db.delete(googleCalendarConnectionsTable).where(eq(googleCalendarConnectionsTable.userId, uid));
           await db.delete(usersTable).where(eq(usersTable.id, uid));
         }
       }
@@ -1707,6 +1728,8 @@ router.delete("/admin/users/:id", async (req, res, next) => {
       if (member) {
         await db.delete(householdMembersTable).where(eq(householdMembersTable.id, member.id));
       }
+      // Limpar dependências do usuário
+      await db.delete(googleCalendarConnectionsTable).where(eq(googleCalendarConnectionsTable.userId, userId));
       await db.delete(usersTable).where(eq(usersTable.id, userId));
       await logAdminAction(req, "delete_user", { userId, email: user.email });
     }
@@ -1724,13 +1747,26 @@ router.post("/admin/system/nuke", async (req, res, next) => {
     // 1. Identificar quem fica (Master Admin)
     const [master] = await db.select().from(usersTable).where(eq(usersTable.email, masterEmail)).limit(1);
     
-    // 2. Limpar TUDO (Cascata)
-    // Deletar households apagará membros, transações, assinaturas, etc via FK Cascade
-    await db.delete(householdsTable);
-    
-    // 3. Limpar Logs e Eventos (Manuais)
+    // 2. Limpar tabelas dependentes (Manual)
+    await db.delete(transactionsTable);
+    await db.delete(billsTable);
+    await db.delete(commitmentsTable);
+    await db.delete(remindersTable);
+    await db.delete(subscriptionsTable);
     await db.delete(conversationLogsTable);
     await db.delete(notificationEventsTable);
+    
+    // Limpar orfãs
+    await db.delete(categoriesTable);
+    await db.delete(pendingDecisionsTable);
+    await db.delete(conversationsTable);
+    await db.delete(householdMembersTable);
+    await db.delete(googleCalendarConnectionsTable);
+    
+    // 3. Limpar households
+    await db.delete(householdsTable);
+
+    // 4. Limpar Logs de auditoria (exceto Master)
     await db.delete(adminAuditLogsTable).where(sql`admin_id IS NULL OR admin_id != ${master?.id ?? -1}`);
     
     // 4. Deletar usuários (exceto Master)

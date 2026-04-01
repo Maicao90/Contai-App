@@ -140,8 +140,11 @@ async function getIdentityByUserId(userId: number) {
 
 function buildSessionFromIdentity(identity: NonNullable<Awaited<ReturnType<typeof getIdentityByUserId>>>) {
   const token = randomUUID();
-  const role: SessionRole =
-    identity.user.role === "admin" ? "admin" : identity.user.role === "owner" ? "owner" : "user";
+  const masterEmail = process.env.MASTER_ADMIN_EMAIL?.trim().toLowerCase();
+  const isAdmin =
+    identity.user.role === "admin" || (masterEmail && identity.user.email?.toLowerCase().trim() === masterEmail);
+
+  const role: SessionRole = isAdmin ? "admin" : identity.user.role === "owner" ? "owner" : "user";
 
   const session: SessionData = {
     token,

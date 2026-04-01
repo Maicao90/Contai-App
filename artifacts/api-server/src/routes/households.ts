@@ -132,6 +132,7 @@ router.post("/households/:id/members", requireOwner, async (req, res, next) => {
           payload: {
             ownerName: owner?.name || "O titular",
             userEmail: user.email,
+            userPassword: password,
           },
         });
       } catch (err) {
