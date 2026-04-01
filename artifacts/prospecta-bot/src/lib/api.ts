@@ -73,6 +73,26 @@ export async function patchJson<T>(
   return response.json() as Promise<T>;
 }
 
+export async function deleteJson<T>(url: string): Promise<T> {
+  const response = await fetch(`${BASE_URL}/api${url}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    let message = `Erro ao excluir ${url}`;
+    try {
+      const data = (await response.json()) as { message?: string };
+      if (data.message) {
+        message = data.message;
+      }
+    } catch {}
+    throw new Error(message);
+  }
+
+  return response.json() as Promise<T>;
+}
+
 export async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}/api${url}`, {
     credentials: "include",
