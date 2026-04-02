@@ -1388,7 +1388,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       householdId: null,
       memberId: null,
       userId: null,
-      originalContent: input.content,
+      originalContent: finalContentForPendency,
       content: input.content,
       intent: access.intent,
       direction: "inbound",
@@ -1428,6 +1428,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   let parsed: ParsedMessage;
   let reply: string;
   let isMissingInfo: boolean | undefined = false;
+  let finalContentForPendency = input.content;
 
   if (pendingDecision) {
     const pendingPayload = pendingDecision.payload as PendingPayload;
