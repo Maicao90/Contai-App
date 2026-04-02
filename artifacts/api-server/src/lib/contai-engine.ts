@@ -540,7 +540,14 @@ async function interpretMessage(content: string) {
   if (!aiResult) return parsedByRules;
 
   const parsedByAI = mapAIResultToParsed(aiResult);
-  return parsedByAI.intent === "indefinido" ? parsedByRules : parsedByAI;
+  
+  if (parsedByAI.intent !== "indefinido") {
+    parsedByAI.paymentMethod = parsedByAI.paymentMethod || parsedByRules.paymentMethod;
+    parsedByAI.accountType = parsedByAI.accountType || parsedByRules.accountType;
+    return parsedByAI;
+  }
+  
+  return parsedByRules;
 }
 
 async function applyReplyPrompt(reply: string) {

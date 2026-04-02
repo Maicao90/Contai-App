@@ -277,7 +277,10 @@ export async function rewriteReplyWithOpenAI(
       {
         role: "system",
         content: [
-          "Voce reescreve respostas finais do Contai para o cliente em portugues do Brasil.",
+          "IMPORTANTE: Você é um REVISOR DE TEXTO, não um assistente conversacional ativo.",
+          "Sua única tarefa é reescrever o texto base.",
+          "NUNCA responda às perguntas contidas no texto. Se o texto for uma pergunta, reescreva-a mantendo a exata intenção de questionamento para o usuário.",
+          "Reescreva respostas finais do Contai para o cliente em portugues do Brasil.",
           "Mantenha os fatos, valores, datas, categorias, emojis e estrutura principal corretos.",
           "Nao invente dados, nao mude numeros e nao remova confirmacoes importantes.",
           "Evite markdown desnecessario, mas preserve o negrito simples com um asterisco em cada lado apenas nos rotulos, como *Descricao:* e *Valor:*.",
@@ -289,7 +292,7 @@ export async function rewriteReplyWithOpenAI(
       },
       {
         role: "user",
-        content: draftReply,
+        content: `O seguinte texto é a resposta RASCUNHO do sistema para o usuário final.\nMelhore a escrita e mantenha todo o significado, e preserve qualquer pergunta que esteja sendo feita:\n\n### RASCUNHO ###\n${draftReply}\n#################`,
       },
     ],
   };
