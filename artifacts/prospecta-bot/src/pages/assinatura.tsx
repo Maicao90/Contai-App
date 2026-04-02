@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Users } from "lucide-react";
-import { Layout } from "@/components/layout";
+import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJson, postJson } from "@/lib/api";
@@ -77,7 +77,7 @@ export default function SubscriptionPage() {
   const hasDefinedSubscription = Number(data?.amount ?? 0) > 0 && data?.status !== "pending";
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="border-emerald-100 bg-white/90 dark:border-white/10 dark:bg-slate-950/70">
           <CardHeader>
@@ -223,6 +223,6 @@ export default function SubscriptionPage() {
           </CardContent>
         </Card>
       </div>
-    </Layout>
+    </AppLayout>
   );
 }

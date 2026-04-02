@@ -98,7 +98,15 @@ export default function AppMetasPage() {
                   <CircleDashed className="h-8 w-8 animate-spin text-emerald-500" />
                 </div>
               ) : expenseCategories.length === 0 ? (
-                <p className="text-slate-400 text-sm">Nenhuma categoria de despesa encontrada.</p>
+                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                  <div className="mb-4 rounded-full bg-emerald-500/10 p-4 ring-1 ring-emerald-500/20">
+                    <Target className="h-8 w-8 text-emerald-400" />
+                  </div>
+                  <h3 className="text-xl font-medium text-slate-100">Nenhuma meta definida</h3>
+                  <p className="mt-2 text-sm text-slate-400 max-w-sm">
+                    Para definir limites de orçamento, você precisa ter categorias de despesa. Vá até a aba "Categorias" ou converse com o robô para criar novas categorias.
+                  </p>
+                </div>
               ) : (
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
                   {expenseCategories.map((cat) => {
@@ -203,15 +211,17 @@ export default function AppMetasPage() {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="bg-white/5 border-t border-white/5 p-6 flex flex-col md:flex-row items-center justify-between">
-               <div className="flex items-center gap-3 text-sm text-slate-400">
-                  <BadgePercent className="h-5 w-5 text-emerald-400" />
-                  <p>A inteligência artificial analisa seus gastos em tempo real ao mandar mensagem.</p>
-               </div>
-               <Button onClick={() => window.open('/admin/bot', '_blank')} className="mt-4 md:mt-0 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 transition-all flex items-center gap-2">
-                 Testar Alerta no Bot <ArrowRight className="h-4 w-4" />
-               </Button>
-            </CardFooter>
+            {expenseCategories.length > 0 && (
+              <CardFooter className="bg-white/5 border-t border-white/5 p-6 flex flex-col md:flex-row items-center justify-between">
+                 <div className="flex items-center gap-3 text-sm text-slate-400">
+                    <BadgePercent className="h-5 w-5 text-emerald-400" />
+                    <p>A inteligência artificial analisa seus gastos em tempo real ao mandar mensagem.</p>
+                 </div>
+                 <Button onClick={() => window.open('/admin/bot', '_blank')} className="mt-4 md:mt-0 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 transition-all flex items-center gap-2">
+                   Testar Alerta no Bot <ArrowRight className="h-4 w-4" />
+                 </Button>
+              </CardFooter>
+            )}
           </Card>
         </section>
       </div>

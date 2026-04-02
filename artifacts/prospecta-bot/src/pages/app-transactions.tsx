@@ -123,7 +123,7 @@ export default function AppTransactionsPage() {
         </div>
 
         {/* Filtros */}
-        <Card className="border-slate-100 bg-white/50 backdrop-blur-sm">
+        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-end">
               <div className="flex-1 space-y-2">
@@ -134,7 +134,7 @@ export default function AppTransactionsPage() {
                     placeholder="Descrição do gasto..." 
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 h-11 rounded-2xl border-slate-200 bg-white"
+                    className="pl-9 h-11 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950"
                   />
                 </div>
               </div>
@@ -142,7 +142,7 @@ export default function AppTransactionsPage() {
               <div className="w-full space-y-2 md:w-48">
                 <Label>Tipo</Label>
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="h-11 rounded-2xl border-slate-200 bg-white">
+                  <SelectTrigger className="h-11 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
                     <SelectValue placeholder="Todos os tipos" />
                   </SelectTrigger>
                   <SelectContent>
@@ -156,7 +156,7 @@ export default function AppTransactionsPage() {
               <div className="w-full space-y-2 md:w-56">
                 <Label>Categoria</Label>
                 <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger className="h-11 rounded-2xl border-slate-200 bg-white">
+                  <SelectTrigger className="h-11 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
                     <SelectValue placeholder="Todas categorias" />
                   </SelectTrigger>
                   <SelectContent>
@@ -170,7 +170,7 @@ export default function AppTransactionsPage() {
 
               <Button 
                 variant="outline" 
-                className="h-11 rounded-2xl border-slate-200 bg-white px-4 hover:bg-slate-50"
+                className="h-11 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 hover:bg-slate-50 dark:hover:bg-slate-800"
                 onClick={() => {
                   setSearch("");
                   setFilterType("all");
@@ -201,10 +201,10 @@ export default function AppTransactionsPage() {
             transactions?.map((item) => (
               <div 
                 key={item.id} 
-                className="group relative flex items-center justify-between rounded-3xl border border-slate-100 bg-white p-4 transition hover:border-emerald-200 hover:shadow-sm sm:p-5"
+                className="group relative flex items-center justify-between rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-4 transition hover:border-emerald-200 dark:hover:border-emerald-500/30 hover:shadow-sm sm:p-5"
               >
                 <div className="flex min-w-0 items-center gap-4">
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.type === 'income' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-500' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400'}`}>
                     {item.type === 'income' ? <ArrowUpRight className="h-6 w-6" /> : <ArrowDownRight className="h-6 w-6" />}
                   </div>
                   <div className="min-w-0">
@@ -224,10 +224,10 @@ export default function AppTransactionsPage() {
                 
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className={`text-base font-bold ${item.type === 'income' ? 'text-emerald-600' : 'text-slate-900'}`}>
-                      {item.type === 'income' ? '+' : '-'} {formatCurrency(Number(item.amount))}
+                    <p className={`text-base font-bold ${item.type === 'income' ? 'text-emerald-600 dark:text-emerald-500' : 'text-slate-900 dark:text-slate-100'}`}>
+                      {item.type === 'income' ? '+' : '-'} {formatCurrency(Math.abs(Number(item.amount)))}
                     </p>
-                    <Badge variant="outline" className="mt-1 text-[10px] font-medium leading-none tracking-tight uppercase border-slate-100 text-slate-400">
+                    <Badge variant="outline" className="mt-1 text-[10px] font-medium leading-none tracking-tight uppercase border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
                       {item.visibility === 'shared' ? 'Compartilhado' : 'Pessoal'}
                     </Badge>
                   </div>

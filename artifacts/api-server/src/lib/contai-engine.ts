@@ -1435,15 +1435,27 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
 
     if (pendingDecision.kind === "missing_info") {
       finalContentForPendency = `${pendingPayload.originalContent} . ${input.content}`;
-      parsed = await interpretMessage(finalContentForPendency);
+      const newlyParsed = await interpretMessage(input.content);
 
-      if (parsed.intent === "indefinido" || parsed.intent === "ajuda") {
-        const faqReply = await answerFAQWithOpenAI(input.content, identity.user.name);
-        reply = faqReply || pendingDecision.question;
+      parsed = { ...pendingPayload.parsed };
+
+      if (newlyParsed.intent !== "indefinido" && newlyParsed.intent !== "ajuda" && newlyParsed.intent !== "saudacao") {
+        if (newlyParsed.amount) parsed.amount = newlyParsed.amount;
+        if (newlyParsed.category) parsed.category = newlyParsed.category;
+        if (newlyParsed.description) parsed.description = newlyParsed.description;
+        if (newlyParsed.paymentMethod) parsed.paymentMethod = newlyParsed.paymentMethod;
+        if (newlyParsed.accountType) parsed.accountType = newlyParsed.accountType;
+        if (newlyParsed.when) parsed.when = newlyParsed.when;
       } else {
-        await clearPendingDecision(pendingDecision.id);
-        ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, input));
+        if (!parsed.amount) parsed.amount = parseAmount(input.content);
+        if (!parsed.paymentMethod) parsed.paymentMethod = detectPaymentMethod(input.content);
+        if (!parsed.accountType && identity.household.type !== "individual") parsed.accountType = detectAccountType(input.content);
+        if (!parsed.description && parsed.intent === "registrar_gasto") parsed.description = cleanDescription(input.content) || input.content;
+        if (!parsed.when) parsed.when = parseDateTime(input.content);
       }
+
+      await clearPendingDecision(pendingDecision.id);
+      ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, input));
     } else {
       const chosenVisibility = detectExplicitVisibility(input.content);
       if (!chosenVisibility) {
@@ -1548,7 +1560,8 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       "💰 Registro automático do que você gasta e recebe",
       "🏠 Separo o que é seu e o que é da casa",
       "📊 Te mostro quanto ainda pode gastar",
-      "🚨 Te aviso antes de estourar o orçamento",
+      "🚨 Te aviso se você for estourar o orçamento da casa",
+      "🎯 Dica de Metas: Defina limites pessoais mensais para não perder o controle! Mande: 'Criar meta de 500 para Mercado'.",
       "",
       "Pode começar do jeito mais simples:",
       "",

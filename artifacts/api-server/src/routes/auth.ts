@@ -199,7 +199,7 @@ function buildGoogleLoginUrl(source: SocialAuthSource, nextPath?: string | null,
   const clientId = process.env.GOOGLE_LOGIN_CLIENT_ID?.trim();
   const redirectUri =
     process.env.GOOGLE_LOGIN_REDIRECT_URI?.trim() ??
-    "http://localhost:3001/api/auth/google/callback";
+    `${getAppBaseUrl()}/api/auth/google/callback`;
 
   if (!clientId) {
     return null;
@@ -223,7 +223,7 @@ async function exchangeGoogleCode(code: string) {
   const clientSecret = process.env.GOOGLE_LOGIN_CLIENT_SECRET?.trim() ?? "";
   const redirectUri =
     process.env.GOOGLE_LOGIN_REDIRECT_URI?.trim() ??
-    "http://localhost:3001/api/auth/google/callback";
+    `${getAppBaseUrl()}/api/auth/google/callback`;
 
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -262,7 +262,7 @@ function buildAppleLoginUrl(source: SocialAuthSource, nextPath?: string | null, 
   const clientId = process.env.APPLE_CLIENT_ID?.trim();
   const redirectUri =
     process.env.APPLE_REDIRECT_URI?.trim() ??
-    "http://localhost:3001/api/auth/apple/callback";
+    `${getAppBaseUrl()}/api/auth/apple/callback`;
 
   if (!clientId) {
     return null;
@@ -313,7 +313,7 @@ async function exchangeAppleCode(code: string) {
   const clientId = process.env.APPLE_CLIENT_ID?.trim() ?? "";
   const redirectUri =
     process.env.APPLE_REDIRECT_URI?.trim() ??
-    "http://localhost:3001/api/auth/apple/callback";
+    `${getAppBaseUrl()}/api/auth/apple/callback`;
   const clientSecret = buildAppleClientSecret();
 
   if (!clientSecret) {

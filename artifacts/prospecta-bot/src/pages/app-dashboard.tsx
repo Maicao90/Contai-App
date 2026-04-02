@@ -167,11 +167,11 @@ export default function AppDashboardPage() {
                             key={`cell-${index}`} 
                             fill={[
                               "#059669", // Contai Primary
-                              "#10b981", 
-                              "#34d399", 
-                              "#6ee7b7", 
-                              "#a7f3d0",
-                              "#064e3b"
+                              "#f43f5e", // Rose
+                              "#eab308", // Yellow
+                              "#3b82f6", // Blue
+                              "#8b5cf6", // Purple
+                              "#f97316"  // Orange
                             ][index % 6]} 
                             className="stroke-white dark:stroke-slate-900" 
                             strokeWidth={2}
@@ -198,7 +198,7 @@ export default function AppDashboardPage() {
                         <div 
                           className="h-2.5 w-2.5 rounded-full" 
                           style={{ backgroundColor: [
-                            "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0", "#064e3b"
+                            "#059669", "#f43f5e", "#eab308", "#3b82f6", "#8b5cf6", "#f97316"
                           ][index % 6] }} 
                         />
                         <span className="font-medium text-slate-700">{item.category}</span>
