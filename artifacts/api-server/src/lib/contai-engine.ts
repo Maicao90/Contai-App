@@ -1381,6 +1381,7 @@ export async function validateBotPreview(input: { userId: number; message: strin
 }
 
 export async function processIncomingMessage(input: ProcessIncomingMessageInput) {
+  let finalContentForPendency = input.content;
   const access = await validateBotAccess(input.phone);
 
   if (!access.ok) {
@@ -1428,14 +1429,13 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   let parsed: ParsedMessage;
   let reply: string;
   let isMissingInfo: boolean | undefined = false;
-  let finalContentForPendency = input.content;
 
   if (pendingDecision) {
     const pendingPayload = pendingDecision.payload as PendingPayload;
 
     if (pendingDecision.kind === "missing_info") {
-      const mergedContent = `${pendingPayload.originalContent} . ${input.content}`;
-      parsed = await interpretMessage(mergedContent);
+      finalContentForPendency = `${pendingPayload.originalContent} . ${input.content}`;
+      parsed = await interpretMessage(finalContentForPendency);
 
       if (parsed.intent === "indefinido" || parsed.intent === "ajuda") {
         const faqReply = await answerFAQWithOpenAI(input.content, identity.user.name);
@@ -1486,7 +1486,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   if (isMissingInfo) {
     await createPendingDecision(identity, "missing_info", reply, {
       parsed,
-      originalContent: input.content,
+      originalContent: finalContentForPendency,
       source: input.source,
       messageType: input.messageType,
     });
