@@ -36,7 +36,7 @@ export default function AgendaPage() {
             <CardTitle>Compromissos</CardTitle>
             <CardDescription>Agenda registrada por mensagem natural.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
             {commitments?.map((item) => (
               <div key={item.id} className="rounded-2xl border border-slate-100 p-4">
                 <p className="font-medium">{item.title}</p>
@@ -56,7 +56,7 @@ export default function AgendaPage() {
             <CardTitle>Lembretes</CardTitle>
             <CardDescription>Contas e avisos futuros do usuário.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
             {reminders?.map((item) => (
               <div key={item.id} className="rounded-2xl border border-slate-100 p-4">
                 <p className="font-medium">{item.title}</p>

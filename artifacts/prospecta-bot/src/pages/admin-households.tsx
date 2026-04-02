@@ -45,7 +45,7 @@ export default function AdminHouseholdsPage() {
               {data?.length ?? 0} conta(s) {isFetching ? "• atualizando..." : ""}
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
             {data?.map((household) => (
               <div key={household.id} className="rounded-[28px] border border-slate-100 bg-white px-5 py-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
                 <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px_auto] xl:items-start">

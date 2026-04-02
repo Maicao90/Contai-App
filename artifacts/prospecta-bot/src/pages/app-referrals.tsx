@@ -162,7 +162,7 @@ export default function AppReferralsPage() {
             <CardHeader>
               <CardTitle>Top 10 da campanha</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {data?.leaderboard.map((entry) => (
                 <div key={entry.userId} className="flex items-center justify-between rounded-3xl border border-slate-100 px-4 py-3 dark:border-white/10 dark:bg-white/5">
                   <div>

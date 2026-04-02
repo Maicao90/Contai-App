@@ -119,7 +119,7 @@ export default function AdminConversationDetailPage() {
               <CardHeader>
                 <CardTitle>Trilha do processamento</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {data?.trace.map((item, index) => (
                   <div key={`${item.step}-${index}`} className="rounded-2xl border border-slate-100 px-4 py-3">
                     <p className="font-medium text-slate-900">{item.step}</p>

@@ -328,7 +328,7 @@ export default function AdminUsersPage() {
               {data?.length ?? 0} resultado(s) {isFetching ? "• atualizando..." : ""}
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
             {data?.map((user) => (
               <div
                 key={user.id}

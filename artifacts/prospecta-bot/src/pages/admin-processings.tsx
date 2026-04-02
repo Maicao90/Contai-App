@@ -126,7 +126,7 @@ export default function AdminProcessingsPage() {
             <CardHeader>
               <CardTitle>Itens operacionais</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
               {data?.items.map((item) => (
                 <div key={item.id} className="rounded-[28px] border border-slate-100 bg-white px-4 py-4 shadow-sm sm:px-5 sm:py-5">
                   <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,240px)]">
@@ -198,7 +198,7 @@ export default function AdminProcessingsPage() {
               <CardHeader>
                 <CardTitle>Ultimos erros</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {data?.latestErrors.map((item) => (
                   <div key={item.id} className="rounded-2xl border border-rose-100 bg-rose-50/50 px-4 py-3">
                     <p className="font-medium text-rose-700">{item.userName}</p>
@@ -212,7 +212,7 @@ export default function AdminProcessingsPage() {
               <CardHeader>
                 <CardTitle>Aguardando complemento</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {data?.awaitingComplement.map((item) => (
                   <div key={item.id} className="rounded-2xl border border-slate-100 px-4 py-3">
                     <p className="font-medium text-slate-900">{item.userName}</p>

@@ -50,7 +50,7 @@ export default function AppBillsPage() {
           <CardHeader>
             <CardTitle>Status das contas</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
             {data?.map((bill) => (
               <div key={bill.id} className="rounded-3xl border border-slate-100 px-4 py-4 sm:px-5">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

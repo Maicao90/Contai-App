@@ -30,7 +30,7 @@ export default function AdminSupportPage() {
             <CardHeader>
               <CardTitle>Usuários problemáticos</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {data?.problematicUsers.map((item) => (
                 <div key={item.id} className="rounded-3xl border border-slate-100 px-5 py-4">
                   <p className="font-semibold text-slate-950">{item.name}</p>
@@ -44,7 +44,7 @@ export default function AdminSupportPage() {
             <CardHeader>
               <CardTitle>Pendências reprocessáveis</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {data?.pendingProcessings.map((item) => (
                 <div key={item.id} className="rounded-3xl border border-slate-100 px-5 py-4">
                   <p className="font-semibold text-slate-950">{item.kind}</p>

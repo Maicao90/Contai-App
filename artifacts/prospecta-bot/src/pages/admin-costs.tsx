@@ -117,7 +117,7 @@ export default function AdminCostsPage() {
             <CardHeader>
               <CardTitle>Usuarios mais caros</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {data?.byUser.map((item) => (
                 <div key={item.userId} className="flex flex-col gap-1 rounded-2xl border border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="font-medium text-slate-950">{item.name}</p>
@@ -131,7 +131,7 @@ export default function AdminCostsPage() {
             <CardHeader>
               <CardTitle>Households mais caros</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {data?.byHousehold.map((item) => (
                 <div key={item.householdId} className="flex flex-col gap-1 rounded-2xl border border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="font-medium text-slate-950">{item.householdName}</p>

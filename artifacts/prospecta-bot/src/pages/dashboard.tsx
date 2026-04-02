@@ -125,7 +125,7 @@ export default function DashboardPage() {
               <CardTitle>Últimas movimentações</CardTitle>
               <CardDescription>O que entrou e saiu recentemente.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {data?.transactions.map((item) => (
                 <div
                   key={item.id}
@@ -155,7 +155,7 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle>Gastos por categoria</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {data?.categoryBreakdown.map((item) => (
                   <div key={item.category} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">

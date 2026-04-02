@@ -48,7 +48,7 @@ export default function AppAgendaPage() {
             <CardHeader>
               <CardTitle>Próximos compromissos</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {commitments.data?.map((item) => (
                 <div key={item.id} className="rounded-3xl border border-slate-100 px-4 py-4 sm:px-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -78,7 +78,7 @@ export default function AppAgendaPage() {
             <CardHeader>
               <CardTitle>Lembretes ativos</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {reminders.data?.map((item) => (
                 <div key={item.id} className="rounded-3xl border border-slate-100 px-4 py-4 sm:px-5">
                   <div className="flex flex-wrap items-center gap-2">

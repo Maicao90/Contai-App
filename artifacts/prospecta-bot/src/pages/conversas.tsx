@@ -91,7 +91,7 @@ export default function ConversationsPage() {
               Histórico estruturado para análise, suporte e produto.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
             {logs?.map((item) => (
               <div
                 key={item.id}

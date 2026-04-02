@@ -102,7 +102,7 @@ export default function AdminLogsPage() {
             <CardTitle>Conversas processadas</CardTitle>
             <p className="text-sm text-slate-500">{data?.length ?? 0} item(ns)</p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
             {data?.map((item) => (
               <div key={item.id} className="rounded-[28px] border border-slate-100 bg-white px-5 py-5 shadow-sm">
                 <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(220px,0.8fr)_minmax(0,240px)]">

@@ -117,7 +117,7 @@ export default function AppDashboardPage() {
               <CardTitle>Últimas movimentações</CardTitle>
               <CardDescription>Gastos e receitas mais recentes da conta.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {data?.transactions?.map((item) => (
                 <div
                   key={item.id}

@@ -168,7 +168,7 @@ export default function AdminReferralsPage() {
             <CardHeader>
               <CardTitle>Ranking atual</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
               {data?.leaderboard.map((entry) => (
                 <div key={entry.userId} className="flex items-center justify-between rounded-3xl border border-slate-100 px-4 py-3 dark:border-white/10 dark:bg-white/5">
                   <div>
@@ -188,7 +188,7 @@ export default function AdminReferralsPage() {
           <CardHeader>
             <CardTitle>Últimas conversões por indicação</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
             {data?.latestReferrals.map((item) => (
               <div key={item.id} className="rounded-3xl border border-slate-100 px-5 py-4 dark:border-white/10 dark:bg-white/5">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

@@ -119,7 +119,7 @@ export default function AdminHouseholdDetailPage() {
               <CardHeader>
                 <CardTitle>Membros vinculados</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {data?.members.map((member) => (
                   <div key={member.id} className="rounded-2xl border border-slate-100 px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -217,7 +217,7 @@ export default function AdminHouseholdDetailPage() {
               <CardHeader>
                 <CardTitle>Compromissos da conta</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {data?.agenda.commitments.map((item) => (
                   <div key={item.id} className="rounded-2xl border border-slate-100 px-4 py-3">
                     <p className="font-medium text-slate-900">{item.title}</p>
@@ -233,7 +233,7 @@ export default function AdminHouseholdDetailPage() {
               <CardHeader>
                 <CardTitle>Contas a vencer</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {data?.bills.map((bill) => (
                   <div key={bill.id} className="rounded-2xl border border-slate-100 px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -252,7 +252,7 @@ export default function AdminHouseholdDetailPage() {
               <CardHeader>
                 <CardTitle>Logs recentes</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {data?.logs.map((log) => (
                   <div key={log.id} className="rounded-2xl border border-slate-100 px-4 py-3">
                     <div className="flex items-center gap-2">
