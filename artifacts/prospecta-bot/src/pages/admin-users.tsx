@@ -340,7 +340,6 @@ export default function AdminUsersPage() {
                       <p className="text-base font-semibold text-slate-950 dark:text-white">{user.name}</p>
                       <SimpleInfoBadge value="Plano Contai" tone="emerald" />
                       <UserStatusBadge status={user.status} />
-                      <SimpleInfoBadge value={user.role} />
                     </div>
 
                     <p className="break-words text-sm text-slate-500 dark:text-slate-300">

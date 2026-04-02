@@ -356,7 +356,7 @@ export default function AdminUserDetailPage() {
               <CardHeader>
                 <CardTitle>Agenda</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
                 {data?.agenda.upcomingCommitments.map((item) => (
                   <div key={item.id} className="rounded-2xl border border-slate-100 px-4 py-3">
                     <p className="font-medium text-slate-900">{item.title}</p>
@@ -372,7 +372,7 @@ export default function AdminUserDetailPage() {
               <CardHeader>
                 <CardTitle>Últimas mensagens</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {data?.logs.latestMessages.map((item) => (
                   <div key={item.id} className="rounded-2xl border border-slate-100 px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -389,7 +389,7 @@ export default function AdminUserDetailPage() {
               <CardHeader>
                 <CardTitle>Erros recentes</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
                 {data?.logs.recentErrors.map((item) => (
                   <div key={item.id} className="rounded-2xl border border-rose-100 bg-rose-50/40 px-4 py-3">
                     <p className="font-medium text-rose-700">{item.kind}</p>
