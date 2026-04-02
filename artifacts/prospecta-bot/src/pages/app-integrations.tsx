@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
-import { getJson, postJson } from "@/lib/api";
+import { getJson, postJson, BASE_URL } from "@/lib/api";
 
 type GoogleCalendarStatus = {
   connection: {
@@ -124,7 +124,7 @@ export default function AppIntegrationsPage() {
       quickConnectCalendar.mutate(customEmail);
       return;
     }
-    window.location.href = `/api/google-calendar/${userId}/connect`;
+    window.location.href = `${BASE_URL}/api/google-calendar/${userId}/connect`;
   }
 
   return (

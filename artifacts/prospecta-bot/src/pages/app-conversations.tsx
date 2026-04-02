@@ -37,7 +37,7 @@ export default function AppConversationsPage() {
           <CardHeader>
             <CardTitle>Logs recentes</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
             {data?.map((item) => (
               <div key={item.id} className="rounded-3xl border border-slate-100 px-4 py-4 sm:px-5">
                 <div className="flex flex-wrap items-center gap-2">

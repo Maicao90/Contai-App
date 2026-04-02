@@ -446,19 +446,19 @@ export default function AdminBotPage() {
               <CardContent className="space-y-4">
                 <div className="rounded-[22px] border border-white/10 bg-white/5 px-4 py-4">
                   <p className="text-sm font-medium text-white">Prompt efetivo de resposta</p>
-                  <pre className="mt-3 whitespace-pre-wrap break-words rounded-2xl border border-white/10 bg-slate-950/80 p-4 text-xs leading-6 text-slate-300">
+                  <pre className="mt-3 max-h-[300px] overflow-y-auto custom-scrollbar whitespace-pre-wrap break-words rounded-2xl border border-white/10 bg-slate-950/80 p-4 text-xs leading-6 text-slate-300">
                     {renderPromptBlock(promptPreviewQuery.data?.effectiveReplyPrompt)}
                   </pre>
                 </div>
                 <div className="rounded-[22px] border border-white/10 bg-white/5 px-4 py-4">
                   <p className="text-sm font-medium text-white">Prompt efetivo de interpretacao de texto</p>
-                  <pre className="mt-3 whitespace-pre-wrap break-words rounded-2xl border border-white/10 bg-slate-950/80 p-4 text-xs leading-6 text-slate-300">
+                  <pre className="mt-3 max-h-[300px] overflow-y-auto custom-scrollbar whitespace-pre-wrap break-words rounded-2xl border border-white/10 bg-slate-950/80 p-4 text-xs leading-6 text-slate-300">
                     {renderPromptBlock(promptPreviewQuery.data?.effectiveTextPrompt)}
                   </pre>
                 </div>
                 <div className="rounded-[22px] border border-white/10 bg-white/5 px-4 py-4">
                   <p className="text-sm font-medium text-white">Prompt efetivo de interpretacao de imagem</p>
-                  <pre className="mt-3 whitespace-pre-wrap break-words rounded-2xl border border-white/10 bg-slate-950/80 p-4 text-xs leading-6 text-slate-300">
+                  <pre className="mt-3 max-h-[300px] overflow-y-auto custom-scrollbar whitespace-pre-wrap break-words rounded-2xl border border-white/10 bg-slate-950/80 p-4 text-xs leading-6 text-slate-300">
                     {renderPromptBlock(promptPreviewQuery.data?.effectiveImagePrompt)}
                   </pre>
                 </div>
