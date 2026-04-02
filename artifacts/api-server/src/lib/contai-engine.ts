@@ -542,8 +542,8 @@ async function interpretMessage(content: string) {
   const parsedByAI = mapAIResultToParsed(aiResult);
   
   if (parsedByAI.intent !== "indefinido") {
-    parsedByAI.paymentMethod = parsedByAI.paymentMethod || parsedByRules.paymentMethod;
-    parsedByAI.accountType = parsedByAI.accountType || parsedByRules.accountType;
+    parsedByAI.paymentMethod = parsedByAI.paymentMethod || parsedByRules.paymentMethod || detectPaymentMethod(content);
+    parsedByAI.accountType = parsedByAI.accountType || parsedByRules.accountType || detectAccountType(content);
     return parsedByAI;
   }
   
