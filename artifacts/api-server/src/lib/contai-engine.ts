@@ -15,7 +15,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { and, asc, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
-import { interpretTextWithOpenAI, rewriteReplyWithOpenAI, generateFinancialInsights, type AIParsedMessage } from "./openai-client";
+import { interpretTextWithOpenAI, rewriteReplyWithOpenAI, generateFinancialInsights, answerFAQWithOpenAI, type AIParsedMessage } from "./openai-client";
 import {
   getGoogleCalendarStatus,
   syncBillForUser,
@@ -67,7 +67,7 @@ type ParsedMessage = {
   paymentMethod?: "debito" | "credito" | "pix" | "dinheiro" | "boleto";
 };
 
-type PendingKind = "registrar_gasto" | "registrar_conta" | "registrar_compromisso";
+type PendingKind = "registrar_gasto" | "registrar_conta" | "registrar_compromisso" | "missing_info";
 type PendingPayload = {
   parsed: ParsedMessage;
   originalContent: string;
@@ -936,7 +936,7 @@ async function saveParsedAction(
   parsed: ParsedMessage,
   input: ProcessIncomingMessageInput,
   options: SaveParsedActionOptions = {},
-) {
+): Promise<{ reply: string; isMissingInfo?: boolean }> {
   const previewOnly = options.previewOnly === true;
   const replyDate = new Date();
   const appBaseUrl = getAppBaseUrl();
@@ -944,15 +944,15 @@ async function saveParsedAction(
   switch (parsed.intent) {
     case "registrar_gasto":
     case "registrar_receita": {
-      if (parsed.intent === "registrar_gasto" && !parsed.description) return "Foi gasto com o quê?";
-      if (!parsed.amount) return parsed.intent === "registrar_gasto" ? "Qual foi o valor?" : "Qual foi o valor da entrada?";
+      if (parsed.intent === "registrar_gasto" && !parsed.description) return { reply: "Foi gasto com o quê?", isMissingInfo: true };
+      if (!parsed.amount) return { reply: parsed.intent === "registrar_gasto" ? "Qual foi o valor?" : "Qual foi o valor da entrada?", isMissingInfo: true };
 
       // 1. Verificar informações faltantes (Regra do Maicon)
       if (!parsed.accountType && identity.household.type !== "individual") {
-        return "Me fala só mais uma coisa pra organizar certo: esse registro é da sua *conta pessoal* ou da *conta da casa*?";
+        return { reply: "Me fala só mais uma coisa pra organizar certo: esse registro é da sua *conta pessoal* ou da *conta da casa*?", isMissingInfo: true };
       }
       if (!parsed.paymentMethod) {
-        return "E qual foi a forma de pagamento? (débito, crédito, pix, dinheiro ou boleto)";
+        return { reply: "E qual foi a forma de pagamento? (débito, crédito, pix, dinheiro ou boleto)", isMissingInfo: true };
       }
 
       const accountType = parsed.accountType || "personal";
@@ -1058,7 +1058,7 @@ async function saveParsedAction(
         response.push("", ...budgetAlerts);
       }
 
-      return response.filter(l => l !== undefined).join("\n");
+      return { reply: response.filter(l => l !== undefined).join("\n") };
     }
 
     case "consulta_resumo": {
@@ -1074,12 +1074,12 @@ async function saveParsedAction(
         `📊 Para mais detalhes, acesse: ${appBaseUrl}/app/dashboard`
       ];
 
-      return response.join("\n");
+      return { reply: response.join("\n") };
     }
 
     case "consulta_categoria": {
       const summary = await buildMonthlySummary(identity.household.id, parsed.category);
-      return `📊 Neste mês vocês gastaram ${formatCurrency(summary.total)} com ${parsed.category}.`;
+      return { reply: `📊 Neste mês vocês gastaram ${formatCurrency(summary.total)} com ${parsed.category}.` };
     }
 
     case "consulta_histórico": {
@@ -1090,20 +1090,18 @@ async function saveParsedAction(
         .orderBy(desc(transactionsTable.transactionDate))
         .limit(4);
 
-      if (rows.length === 0) {
-        return "Ainda não achei movimentações por aqui.";
-      }
-
-      return rows
-        .map(
-          (row) =>
-            `${row.type === "income" ? "💰" : "💸"} ${formatCurrency(toAmountNumber(row.amount))} • ${row.category}`,
-        )
-        .join("\n");
+      return {
+        reply: rows
+          .map(
+            (row) =>
+              `${row.type === "income" ? "💰" : "💸"} ${formatCurrency(toAmountNumber(row.amount))} • ${row.category}`,
+          )
+          .join("\n")
+      };
     }
 
     case "registrar_conta": {
-      if (!parsed.when) return "Que dia vence essa conta?";
+      if (!parsed.when) return { reply: "Que dia vence essa conta?", isMissingInfo: true };
       let syncedToGoogle = false;
       if (!previewOnly) {
         const [bill] = await db.insert(billsTable).values({
@@ -1112,7 +1110,7 @@ async function saveParsedAction(
           title: parsed.title?.trim() || "Conta",
           amount: parsed.amount ? parsed.amount.toFixed(2) : null,
           category: parsed.category ?? "Contas",
-          dueDate: parsed.when,
+          dueDate: parsed.when!,
           isRecurring: false,
           status: "pending",
           visibility: parsed.visibility ?? "shared",
@@ -1126,13 +1124,14 @@ async function saveParsedAction(
           syncedToGoogle = false;
         }
       }
-      return `🔔 Conta salva para ${formatShortDate(parsed.when)}.${
+      return { reply: `🔔 Conta salva para ${formatShortDate(parsed.when!)}.${
         parsed.visibility === "shared" ? " Salvei como conta da casa." : " Salvei como conta pessoal."
-      }${syncedToGoogle ? " Também deixei esse vencimento no seu Google Agenda." : ""}\n\n📊 *Acompanhe no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}`;
+      }${syncedToGoogle ? " Também deixei esse vencimento no seu Google Agenda." : ""}\n\n📊 *Acompanhe no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}` };
     }
 
     case "registrar_lembrete": {
-      if (!parsed.when) return "Que dia você quer que eu te lembre?";
+      if (!parsed.when) return { reply: "Que dia você quer que eu te lembre?", isMissingInfo: true };
+      const when = parsed.when!;
       let syncedToGoogle = false;
       if (!previewOnly) {
         const [reminder] = await db.insert(remindersTable).values({
@@ -1141,8 +1140,8 @@ async function saveParsedAction(
           type: "custom",
           title: parsed.title?.trim() || "Lembrete",
           description: parsed.notes ?? null,
-          reminderDate: parsed.when,
-          reminderTimeLabel: parsed.when.toTimeString().slice(0, 5),
+          reminderDate: when,
+          reminderTimeLabel: when.toTimeString().slice(0, 5),
           status: "scheduled",
           sourceType: input.messageType ?? "text",
           source: input.source ?? DEFAULT_SOURCE,
@@ -1154,15 +1153,15 @@ async function saveParsedAction(
           syncedToGoogle = false;
         }
       }
-      return `⏰ Lembrete salvo para ${formatShortDate(parsed.when)}.${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}\n\n📊 *Ver todos no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}`;
+      return { reply: `⏰ Lembrete salvo para ${formatShortDate(when)}.${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}\n\n📊 *Ver todos no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}` };
     }
 
     case "registrar_compromisso": {
-      if (!parsed.when) return "Qual dia e horário eu devo salvar?";
-      if (options.forceGoogleAgendaBlocked) return buildGoogleCalendarConnectionReply();
+      if (!parsed.when) return { reply: "Qual dia e horário eu devo salvar?", isMissingInfo: true };
+      if (options.forceGoogleAgendaBlocked) return { reply: buildGoogleCalendarConnectionReply() };
       if (systemSettings.botGoogleCalendarRequiredForScheduling && !previewOnly) {
         const googleStatus = await getGoogleCalendarStatus(identity.user.id);
-        if (!googleStatus.canSync) return buildGoogleCalendarConnectionReply();
+        if (!googleStatus.canSync) return { reply: buildGoogleCalendarConnectionReply() };
       }
       let syncedToGoogle = false;
       if (!previewOnly) {
@@ -1171,7 +1170,7 @@ async function saveParsedAction(
           memberId: identity.member?.id ?? null,
           title: parsed.title?.trim() || "Compromisso",
           description: null,
-          commitmentDate: parsed.when,
+          commitmentDate: parsed.when!,
           visibility: parsed.visibility ?? "personal",
           reminderEnabled: true,
           reminderMinutesBefore: 60,
@@ -1189,66 +1188,67 @@ async function saveParsedAction(
           user: identity.user,
           payload: {
             title: parsed.title?.trim() || "Compromisso",
-            date: parsed.when.toISOString(),
+            date: parsed.when!.toISOString(),
             googleCalendarConnected: syncedToGoogle,
           },
         });
       }
-      return `📅 ${parsed.title?.trim() || "Compromisso"} salvo para ${formatShortDate(parsed.when)}.${
+      return { reply: `📅 ${parsed.title?.trim() || "Compromisso"} salvo para ${formatShortDate(parsed.when!)}.${
         parsed.visibility === "shared" ? " Salvei como compromisso compartilhado." : " Salvei como compromisso pessoal."
-      }${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}\n\n📊 *Sua Agenda no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}`;
+      }${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}\n\n📊 *Sua Agenda no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}` };
     }
 
     case "analise_financeira": {
       const history = await getHistoricalSpendingSummary(identity.household.id);
       const suggestions = await generateFinancialInsights(history);
       if (!suggestions) {
-        return "Tive uma falha ao analisar seu histórico agora. Tente de novo em alguns instantes!";
+        return { reply: "Tive uma falha ao analisar seu histórico agora. Tente de novo em alguns instantes!" };
       }
-      return [
+      return { reply: [
         "💡 *Análise de Inteligência Contai*",
         "",
         suggestions,
         "",
         "📊 *Dica:* Mantenha suas anotações em dia para uma análise cada vez mais precisa!"
-      ].join("\n");
+      ].join("\n") };
     }
 
     case "reset_dados": {
-      if (previewOnly) return "🧪 Teste de reset de dados. Em produção, isso apagaria todo o seu histórico.";
+      if (previewOnly) return { reply: "🧪 Teste de reset de dados. Em produção, isso apagaria todo o seu histórico." };
       const householdId = identity.household.id;
       await db.delete(transactionsTable).where(eq(transactionsTable.householdId, householdId));
       await db.delete(billsTable).where(eq(billsTable.householdId, householdId));
       await db.delete(commitmentsTable).where(eq(commitmentsTable.householdId, householdId));
       await db.delete(remindersTable).where(eq(remindersTable.householdId, householdId));
       await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
-      return ["Pronto! Zerei suas contas e compromissos com sucesso.", "Agora você pode começar do zero. O que quer anotar primeiro?"].join("\n");
+      return { reply: ["Pronto! Zerei suas contas e compromissos com sucesso.", "Agora você pode começar do zero. O que quer anotar primeiro?"].join("\n") };
     }
 
     case "registrar_meta": {
-      if (!parsed.amount) return "Qual o valor do limite que você quer definir?";
+      if (!parsed.amount) return { reply: "Qual o valor do limite que você quer definir?", isMissingInfo: true };
       const categoryName = parsed.category || "Outros";
       if (!previewOnly) {
         let [category] = await db.select().from(categoriesTable).where(and(eq(categoriesTable.householdId, identity.household.id), eq(categoriesTable.name, categoryName))).limit(1);
         if (!category) {
-          await db.insert(categoriesTable).values({ householdId: identity.household.id, name: categoryName, type: "expense", monthlyLimit: parsed.amount.toFixed(2) });
+          await db.insert(categoriesTable).values({ householdId: identity.household.id, name: categoryName, type: "expense", monthlyLimit: parsed.amount!.toFixed(2) });
         } else {
-          await db.update(categoriesTable).set({ monthlyLimit: parsed.amount.toFixed(2) }).where(eq(categoriesTable.id, category.id));
+          await db.update(categoriesTable).set({ monthlyLimit: parsed.amount!.toFixed(2) }).where(eq(categoriesTable.id, category.id));
         }
       }
-      return `✅ Meta definida! O limite mensal para *${categoryName}* agora é ${formatCurrency(parsed.amount)}. Eu te aviso quando você chegar perto desse valor!`;
+      const amount = parsed.amount!;
+      return { reply: `✅ Meta definida! O limite mensal para *${categoryName}* agora é ${formatCurrency(amount)}. Eu te aviso quando você chegar perto desse valor!` };
     }
 
     case "saudacao": {
       const firstName = getFirstName(identity.user.name);
-      return `Fala, ${firstName}! 👋\nBora organizar sua vida financeira sem complicação?\nVocê pode me mandar um gasto, uma entrada ou até pedir o seu resumo agora mesmo!`;
+      return { reply: `Fala, ${firstName}! 👋\nBora organizar sua vida financeira sem complicação?\nVocê pode me mandar um gasto, uma entrada ou até pedir o seu resumo agora mesmo!` };
     }
 
     case "ajuda":
-      return getHelpText();
+      return { reply: getHelpText() };
 
     default:
-      return "Não entendi tudo ainda. Me manda de um jeito mais direto que eu organizo.";
+      return { reply: "Não entendi tudo ainda. Me manda de um jeito mais direto que eu organizo." };
   }
 }
 
@@ -1355,7 +1355,7 @@ export async function previewBotMessage(input: {
   }
 
   const parsed = await interpretMessage(input.message);
-  let reply = await saveParsedAction(identity, parsed, {
+  let { reply, isMissingInfo } = await saveParsedAction(identity, parsed, {
     phone: identity.user.phone,
     content: input.message,
     source: "admin-preview",
@@ -1427,26 +1427,40 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
 
   let parsed: ParsedMessage;
   let reply: string;
+  let isMissingInfo: boolean | undefined = false;
 
   if (pendingDecision) {
-    const chosenVisibility = detectExplicitVisibility(input.content);
     const pendingPayload = pendingDecision.payload as PendingPayload;
 
-    if (!chosenVisibility) {
-      parsed = { intent: "indefinido" };
-      reply = pendingDecision.question;
+    if (pendingDecision.kind === "missing_info") {
+      const mergedContent = `${pendingPayload.originalContent} . ${input.content}`;
+      parsed = await interpretMessage(mergedContent);
+
+      if (parsed.intent === "indefinido" || parsed.intent === "ajuda") {
+        const faqReply = await answerFAQWithOpenAI(input.content, identity.user.name);
+        reply = faqReply || pendingDecision.question;
+      } else {
+        await clearPendingDecision(pendingDecision.id);
+        ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, input));
+      }
     } else {
-      parsed = {
-        ...pendingPayload.parsed,
-        visibility: chosenVisibility,
-      };
-      await clearPendingDecision(pendingDecision.id);
-      reply = await saveParsedAction(identity, parsed, {
-        ...input,
-        content: pendingPayload.originalContent,
-        source: pendingPayload.source ?? input.source,
-        messageType: pendingPayload.messageType ?? input.messageType,
-      });
+      const chosenVisibility = detectExplicitVisibility(input.content);
+      if (!chosenVisibility) {
+        parsed = { intent: "indefinido" };
+        reply = pendingDecision.question;
+      } else {
+        parsed = {
+          ...pendingPayload.parsed,
+          visibility: chosenVisibility,
+        };
+        await clearPendingDecision(pendingDecision.id);
+        ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, {
+          ...input,
+          content: pendingPayload.originalContent,
+          source: pendingPayload.source ?? input.source,
+          messageType: pendingPayload.messageType ?? input.messageType,
+        }));
+      }
     }
   } else {
     parsed = await interpretMessage(input.content);
@@ -1460,9 +1474,21 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
         source: input.source,
         messageType: input.messageType,
       });
+    } else if (parsed.intent === "indefinido" || parsed.intent === "ajuda") {
+      const faqReply = await answerFAQWithOpenAI(input.content, identity.user.name);
+      reply = faqReply || getHelpText();
     } else {
-      reply = await saveParsedAction(identity, parsed, input);
+      ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, input));
     }
+  }
+
+  if (isMissingInfo) {
+    await createPendingDecision(identity, "missing_info", reply, {
+      parsed,
+      originalContent: input.content,
+      source: input.source,
+      messageType: input.messageType,
+    });
   }
 
   if (

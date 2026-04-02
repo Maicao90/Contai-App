@@ -311,6 +311,50 @@ export async function rewriteReplyWithOpenAI(
   return rewritten ? sanitizeReplyForWhatsApp(rewritten) : null;
 }
 
+export async function answerFAQWithOpenAI(
+  userMessage: string,
+  userName: string,
+): Promise<string | null> {
+  const payload = {
+    model: CHAT_MODEL,
+    temperature: 0.5,
+    messages: [
+      {
+        role: "system",
+        content: [
+          `Você é o Contai, assistente financeiro inteligente pelo WhatsApp.`,
+          `Você está conversando com o usuário ${userName}. Tome um tom super amigável, acolhedor e direto.`,
+          `Responda apenas sobre finanças, sua funcionalidade no aplicativo, organização de gastos e orçamentos.`,
+          `Sua função é registrar gastos (pode mandar o valor e local direto), contas a pagar, lembretes de conta, separar gastos da casa e gastos individuais.`,
+          `O usuário não preenche planilhas, ele só manda WhatsApp dizendo o que gastou e você organiza.`,
+          `Se a pessoa desviar do assunto gravemente e puxar papo furado, responda rapidamente de forma amigável e direcione a conversa de volta a: "Algum gasto ou continha nova para eu registrar pra você?"`,
+          "Responda de forma simples, em textos curtos, como uma mensagem de whatsapp comum. Não crie textos enormes. Mantenha os emojis divertidos.",
+          `Tom geral configurado no painel: ${systemSettings.botTone}`
+        ].join(" "),
+      },
+      {
+        role: "user",
+        content: userMessage,
+      },
+    ],
+  };
+
+  const json = await openAIJsonRequest<{
+    choices?: Array<{ message?: { content?: string } }>;
+  }>(
+    "/chat/completions",
+    JSON.stringify(payload),
+    {
+      "Content-Type": "application/json",
+    },
+  );
+
+  const raw = json?.choices?.[0]?.message?.content;
+  if (!raw) return null;
+  
+  return sanitizeReplyForWhatsApp(raw);
+}
+
 export async function transcribeAudioWithOpenAI(
   base64: string,
   mimeType: string,
