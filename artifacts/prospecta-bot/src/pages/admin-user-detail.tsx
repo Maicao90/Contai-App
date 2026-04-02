@@ -151,12 +151,12 @@ export default function AdminUserDetailPage() {
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
                   <p className="text-sm text-slate-500">Household</p>
-                  <p className="mt-1 font-semibold text-slate-950">{data?.household.name}</p>
+                  <p className="mt-1 font-semibold text-slate-950">{data?.household?.name ?? "Sem conta"}</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
                   <p className="text-sm text-slate-500">Tipo da conta</p>
                   <p className="mt-1 font-semibold text-slate-950">
-                    {data?.household.type} · {data?.household.membersCount ?? 0} membro(s)
+                    {data?.household?.type ?? "N/A"} · {data?.household?.membersCount ?? 0} membro(s)
                   </p>
                 </div>
               </CardContent>

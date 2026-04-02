@@ -202,40 +202,7 @@ export default function LoginPage() {
             <p className="text-sm text-slate-400">Entre com seus dados ou use acesso social.</p>
           </div>
 
-          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-12 w-full justify-center rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10"
-              onClick={() => startSocialLogin("google")}
-              disabled={loadingProviders || redirectingProvider !== null}
-            >
-              <GoogleIcon />
-              {redirectingProvider === "google" ? "Abrindo..." : "Entrar com Google"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-12 w-full justify-center rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10"
-              onClick={() => startSocialLogin("apple")}
-              disabled={loadingProviders || redirectingProvider !== null}
-            >
-              <AppleIcon />
-              {redirectingProvider === "apple" ? "Abrindo..." : "Entrar com Apple"}
-            </Button>
-          </div>
 
-          <p className="text-center text-xs text-emerald-500/80 font-medium mb-5">
-            {loadingProviders
-              ? "Preparando conexões seguras..."
-              : "Login social 100% seguro."}
-          </p>
-
-          <div className="mb-5 flex items-center gap-3 text-xs uppercase tracking-[0.24em] text-slate-600">
-            <div className="h-px flex-1 bg-white/5" />
-            ou continue com senha
-            <div className="h-px flex-1 bg-white/5" />
-          </div>
 
           <form onSubmit={handleFormLogin} className="space-y-4">
             <div className="space-y-2">
