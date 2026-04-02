@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, MessageCircle, Power, RotateCcw, Send, Trash2, UserMinus } from "lucide-react";
+import { ArrowLeft, MessageCircle, Power, RotateCcw, Send, Trash2, UserMinus, Edit2, MessageSquareOff } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { AdminLayout } from "@/components/admin-layout";
 import { SimpleInfoBadge, UserStatusBadge } from "@/components/admin-user-badges";
@@ -12,6 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getJson, postJson, deleteJson } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type UserDetail = {
   profile: {
@@ -63,11 +67,37 @@ export default function AdminUserDetailPage() {
   const [match, params] = useRoute("/admin/users/:id");
   const userId = match ? Number(params.id) : null;
   const { toast } = useToast();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ name: "", phone: "", email: "", password: "" });
 
   const { data, refetch } = useQuery({
     queryKey: ["admin-user-detail", userId],
     queryFn: () => getJson<UserDetail>(`/admin/users/${userId}`),
     enabled: Boolean(userId),
+  });
+
+  useEffect(() => {
+    if (data?.profile) {
+      setEditForm(f => ({
+        ...f,
+        name: data.profile.name ?? "",
+        phone: data.profile.phone ?? "",
+        email: data.profile.email ?? ""
+      }));
+    }
+  }, [data]);
+
+  const updateMutation = useMutation({
+    mutationFn: (body: any) => postJson(`/admin/users/${userId}/update`, body),
+    onSuccess: () => {
+      toast({ title: "Sucesso", description: "Dados atualizados com sucesso." });
+      setIsEditDialogOpen(false);
+      setEditForm(f => ({ ...f, password: "" }));
+      void refetch();
+    },
+    onError: (e: any) => {
+      toast({ variant: "destructive", title: "Erro", description: e.message });
+    }
   });
 
   const actionMutation = useMutation({
@@ -107,6 +137,13 @@ export default function AdminUserDetailPage() {
               Voltar
             </Button>
           </Link>
+          <Button 
+            className="w-full rounded-2xl sm:w-auto ml-auto" 
+            onClick={() => setIsEditDialogOpen(true)}
+          >
+            <Edit2 className="h-4 w-4 mr-2" />
+            Editar Dados
+          </Button>
         </div>
 
         <PageHeader
@@ -274,6 +311,19 @@ export default function AdminUserDetailPage() {
                   {actionMutation.isPending && actionMutation.variables === "delete" ? "Excluindo tudo..." : "Excluir Usuário (Sumir Tudo)"}
                 </Button>
                 <Button 
+                  variant="destructive" 
+                  className="w-full justify-start rounded-2xl" 
+                  disabled={actionMutation.isPending}
+                  onClick={() => {
+                    if (window.confirm("TEM CERTEZA? Isso apagará TODO o histórico de mensagens deste usuário e ele recomeçará do zero com a IA.")) {
+                      actionMutation.mutate("clear_chat_history");
+                    }
+                  }}
+                >
+                  <MessageSquareOff className="h-4 w-4" />
+                  {actionMutation.isPending && actionMutation.variables === "clear_chat_history" ? "Limpando Chat..." : "Apagar Histórico de Chat"}
+                </Button>
+                <Button 
                   variant="outline" 
                   className="w-full justify-start rounded-2xl" 
                   disabled={actionMutation.isPending}
@@ -351,6 +401,64 @@ export default function AdminUserDetailPage() {
           </div>
         </section>
       </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome Completo</Label>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Ex: João Silva"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefone (WhatsApp)</Label>
+              <Input
+                value={editForm.phone}
+                onChange={(e) => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="Ex: 5511999999999"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="Ex: joao@email.com"
+              />
+            </div>
+            <div className="space-y-2 pt-2">
+              <Label>Nova Senha (opcional)</Label>
+              <Input
+                type="password"
+                value={editForm.password}
+                onChange={(e) => setEditForm(f => ({ ...f, password: e.target.value }))}
+                placeholder="Mínimo 6 caracteres"
+              />
+              <p className="text-xs text-slate-500">
+                Se não quiser alterar a senha, deixe este campo em branco.
+              </p>
+            </div>
+            <div className="pt-4 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                disabled={updateMutation.isPending}
+                onClick={() => updateMutation.mutate(editForm)}
+              >
+                {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

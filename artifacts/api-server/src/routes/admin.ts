@@ -1370,7 +1370,42 @@ router.post("/admin/users/:id/actions", async (req, res, next) => {
       // Remove usuário de fato
       await db.delete(usersTable).where(eq(usersTable.id, userId));
     }
+    if (action === "clear_chat_history") {
+      await db.delete(conversationLogsTable).where(eq(conversationLogsTable.userId, userId));
+      await db.delete(pendingDecisionsTable).where(eq(pendingDecisionsTable.userId, userId));
+    }
     return res.json({ ok: true, action, planName: PLAN_NAME });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post("/admin/users/:id/update", async (req, res, next) => {
+  try {
+    const userId = Number(req.params.id);
+    const { name, phone, email, password } = req.body;
+    
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!user) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+
+    const updates: Partial<typeof user> = {};
+    if (name) updates.name = String(name);
+    if (phone) updates.phone = normalizeBrazilPhone(String(phone));
+    if (email) updates.email = String(email).trim().toLowerCase();
+    
+    if (password && String(password).length >= 6) {
+      updates.passwordHash = await hashPassword(String(password));
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await db.update(usersTable).set(updates).where(eq(usersTable.id, userId));
+    }
+
+    await logAdminAction(req, "update_user_data", { userId, fields: Object.keys(updates) });
+    return res.json({ ok: true });
   } catch (error) {
     return next(error);
   }

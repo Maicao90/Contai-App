@@ -88,7 +88,7 @@ function normalizePhone(value: string) {
 }
 
 export function getAppBaseUrl() {
-  return process.env.APP_BASE_URL?.trim() ?? "http://localhost:5175";
+  return process.env.APP_BASE_URL?.trim() ?? "http://localhost:5173";
 }
 
 export function hashPassword(password: string) {
