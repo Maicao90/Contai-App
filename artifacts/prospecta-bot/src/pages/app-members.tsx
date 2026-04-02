@@ -121,7 +121,7 @@ export default function AppMembersPage() {
               <CardTitle>Adicionar membro</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-3xl border border-emerald-200/70 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100">
+              <div className="rounded-3xl border border-emerald-400/50 bg-emerald-50/80 px-4 py-3 text-sm font-medium text-emerald-950 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300">
                 O Plano Contai permite ate 2 pessoas por conta. Cada uma entra com o proprio login e responde no proprio numero de WhatsApp.
               </div>
 

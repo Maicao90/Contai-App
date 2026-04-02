@@ -85,13 +85,13 @@ export default function AppDashboardPage() {
         </section>
 
         <section>
-          <Card className="border-emerald-100 bg-emerald-50/50 p-6 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+          <Card className="border-emerald-500/30 bg-emerald-50/80 p-6 dark:border-emerald-500/40 dark:bg-emerald-900/20">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
               <div className="space-y-1 text-center md:text-left">
-                <CardTitle className="text-emerald-900 dark:text-emerald-100">
+                <CardTitle className="text-emerald-950 dark:text-emerald-50">
                   Pronto para começar?
                 </CardTitle>
-                <CardDescription className="text-emerald-700 dark:text-emerald-300">
+                <CardDescription className="text-emerald-800 dark:text-emerald-200/90 font-medium">
                   Mande um "Oi" para o seu assistente no WhatsApp para começar a anotar seus gastos e compromissos.
                 </CardDescription>
               </div>
