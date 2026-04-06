@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BrandLogo } from "@/components/brand-logo";
 import { getJson, postJson, BASE_URL } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { AnimatedCharactersGroup } from "@/components/ui/animated-characters-group";
 
 // Icones Google e Apple omitidos para brevidade (vou manter os SVGs do original)
@@ -29,6 +30,7 @@ function AppleIcon() {
 
 export default function SignupPage() {
   const [, navigate] = useLocation();
+  const { refresh } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [name, setName] = useState("");
@@ -80,6 +82,7 @@ export default function SignupPage() {
         refCode: referralCode || null,
       });
       try { window.localStorage.removeItem("contai_ref_code"); } catch {}
+      await refresh();
       const cycle = queryState.get("cycle") || "annual";
       navigate(`/assinatura?cycle=${cycle}`);
     } catch (submitError) {

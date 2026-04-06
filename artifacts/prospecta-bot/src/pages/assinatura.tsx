@@ -102,8 +102,8 @@ export default function SubscriptionPage() {
               <strong className="text-slate-900 dark:text-white">Renovação:</strong>{" "}
               {hasDefinedSubscription && data?.endsAt ? new Date(data.endsAt).toLocaleDateString("pt-BR") : "definida após a escolha"}
             </p>
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-emerald-900 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-100">
-              Sua conta já foi criada com sucesso. Agora você escolhe entre <strong>mensal</strong> ou <strong>anual</strong> antes de seguir para o checkout.
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[15px] font-medium text-slate-900 dark:border-emerald-500/30 dark:bg-emerald-500/20 dark:text-slate-100">
+              Sua conta já foi criada com sucesso. Agora você escolhe entre <strong className="text-slate-950 dark:text-white">mensal</strong> ou <strong className="text-slate-950 dark:text-white">anual</strong> antes de seguir para o checkout.
             </div>
           </CardContent>
         </Card>

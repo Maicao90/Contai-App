@@ -107,8 +107,8 @@ const Scene = () => {
 };
 
 export function HeroFuturistic() {
-  const titleWords = "CÉREBRO INTELIGENTE CONTROLADOR".split(" ");
-  const subtitle = "24hrs por dia calculando, organizando e avisando direto no WhatsApp.";
+  const titleWords = "O ÁPICE DA INTELIGÊNCIA FINANCEIRA".split(" ");
+  const subtitle = "Muito mais que um bot. Uma IA implacável analisando e otimizando cada centavo seu direto pelo WhatsApp.";
   const [visibleWords, setVisibleWords] = useState(0);
   const [subtitleVisible, setSubtitleVisible] = useState(false);
   const [delays, setDelays] = useState<number[]>([]);
