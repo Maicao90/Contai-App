@@ -25,6 +25,7 @@ export type AIParsedMessage = {
   data?: string | null;
   observacoes?: string | null;
   visibilidade?: "shared" | "personal" | null;
+  parcelas?: number | null;
 };
 
 export type ImageExtractionResult = {
@@ -81,6 +82,7 @@ const TEXT_SYSTEM_PROMPT = [
   "- data deve vir em formato ISO 8601 quando a mensagem trouxer informacao suficiente. Se nao houver informacao suficiente, retorne null.",
   "- observacoes deve guardar contexto util que nao cabe nos outros campos.",
   "- visibilidade so deve ser shared ou personal quando isso estiver claro na mensagem. Se nao estiver claro, retorne null.",
+  "- parcelas se o texto sugerir parcelamento explicitamente (ex: 'parcelei em 6x', '5 vezes', 'em 10x'), retorne o numero exato de parcelas. Caso contrario, retorne null. Nao inclua a palavra vezes.",
   "Regras de negocio do Contai:",
   "- se a mensagem mencionar casa, casal, familia, nosso, nossa, compartilhado, compartilhada ou da casa, isso pode indicar shared.",
   "- se a mensagem mencionar pessoal, individual, so meu, so minha, sozinho ou sozinha, isso pode indicar personal.",
@@ -213,6 +215,7 @@ export async function interpretTextWithOpenAI(
               type: ["string", "null"],
               enum: ["shared", "personal", null],
             },
+            parcelas: { type: ["number", "null"] },
           },
           required: [
             "intent",
@@ -223,6 +226,7 @@ export async function interpretTextWithOpenAI(
             "data",
             "observacoes",
             "visibilidade",
+            "parcelas",
           ],
         },
       },

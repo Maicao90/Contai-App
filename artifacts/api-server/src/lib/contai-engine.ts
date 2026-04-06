@@ -65,6 +65,7 @@ type ParsedMessage = {
   visibility?: Visibility;
   accountType?: "personal" | "house";
   paymentMethod?: "debito" | "credito" | "pix" | "dinheiro" | "boleto";
+  installments?: number;
 };
 
 type PendingKind = "registrar_gasto" | "registrar_conta" | "registrar_compromisso" | "missing_info";
@@ -529,6 +530,7 @@ function mapAIResultToParsed(ai: AIParsedMessage): ParsedMessage {
     visibility: ai.visibilidade === "shared" || ai.visibilidade === "personal"
       ? ai.visibilidade
       : undefined,
+    installments: ai.parcelas ?? undefined,
   };
 }
 
@@ -822,10 +824,20 @@ async function getPendingDecision(identity: Identity) {
         ),
       ),
     )
-    .orderBy(asc(pendingDecisionsTable.createdAt))
+    .orderBy(desc(pendingDecisionsTable.createdAt))
     .limit(1);
 
-  return rows[0] ?? null;
+  const decision = rows[0] ?? null;
+  if (!decision) return null;
+
+  // Timeout de Expiração (Filtro Anti-Amnésia) - 30 minutos de validade do contexto
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+  if (decision.createdAt < thirtyMinutesAgo) {
+    await clearPendingDecision(decision.id);
+    return null;
+  }
+
+  return decision;
 }
 
 async function createPendingDecision(
@@ -834,6 +846,20 @@ async function createPendingDecision(
   question: string,
   payload: PendingPayload,
 ) {
+  // Limpa as pendências antigas para não criar uma "fila de amnésia" em que o robô
+  // pergunta coisas de contextos diferentes pro usuário.
+  await db.delete(pendingDecisionsTable).where(
+    and(
+      eq(pendingDecisionsTable.householdId, identity.household.id),
+      or(
+        eq(pendingDecisionsTable.userId, identity.user.id),
+        identity.member?.id
+          ? eq(pendingDecisionsTable.memberId, identity.member.id)
+          : eq(pendingDecisionsTable.userId, identity.user.id),
+      ),
+    )
+  );
+
   await db.insert(pendingDecisionsTable).values({
     householdId: identity.household.id,
     memberId: identity.member?.id ?? null,
@@ -971,24 +997,32 @@ async function saveParsedAction(
       let newUserHouseBalance = oldUserHouseBalance;
       let newTotalHouseBalance = oldTotalHouseBalance;
 
+      // Logic for Multi-installments (Parcelas)
+      const installments = parsed.installments && parsed.installments > 1 ? parsed.installments : 1;
+      const parsedAmount = amount;
+      
+      // Assume o valor passado já era a parcela correta. (Se passou '10 vezes de 110', a IA dá 110).
+      // Se fosse total, IA deve ser calibrada pelo GPT. Vamos trabalhar com unitário de lançamento.
+      const currentAmount = parsedAmount;
+
       if (parsed.intent === "registrar_receita") {
         if (accountType === "personal") {
-          newPersonalBalance += amount;
+          newPersonalBalance += currentAmount;
         } else {
-          newUserHouseBalance += amount;
-          newTotalHouseBalance += amount;
+          newUserHouseBalance += currentAmount;
+          newTotalHouseBalance += currentAmount;
         }
       } else {
         if (accountType === "personal") {
-          newPersonalBalance -= amount;
+          newPersonalBalance -= currentAmount;
         } else {
-          newUserHouseBalance -= amount;
-          newTotalHouseBalance -= amount;
+          newUserHouseBalance -= currentAmount;
+          newTotalHouseBalance -= currentAmount;
         }
       }
 
       const budgetAlerts = !previewOnly && parsed.intent === "registrar_gasto"
-        ? await checkBudgetAlerts(identity, category, amount)
+        ? await checkBudgetAlerts(identity, category, currentAmount)
         : [];
 
       // 3. Persistir no Banco
@@ -997,9 +1031,9 @@ async function saveParsedAction(
           householdId: identity.household.id,
           memberId: identity.member?.id ?? null,
           type: parsed.intent === "registrar_gasto" ? "expense" : "income",
-          amount: amount.toFixed(2),
+          amount: currentAmount.toFixed(2),
           category,
-          description,
+          description: installments > 1 ? `[1/${installments}] ${description}` : description,
           visibility,
           accountType,
           paymentMethod,
@@ -1008,6 +1042,30 @@ async function saveParsedAction(
           transactionDate: replyDate,
           createdBy: identity.member?.displayName || identity.user.name,
         });
+
+        // Registrar parcelas no Contas a Pagar
+        if (installments > 1) {
+          const installmentBills = [];
+          for (let i = 2; i <= installments; i++) {
+            const nextMonthDate = new Date(replyDate);
+            nextMonthDate.setMonth(nextMonthDate.getMonth() + i - 1);
+            
+            installmentBills.push({
+              householdId: identity.household.id,
+              memberId: identity.member?.id ?? null,
+              title: `[${i}/${installments}] ${description}`,
+              amount: currentAmount.toFixed(2),
+              category,
+              dueDate: nextMonthDate,
+              isRecurring: false,
+              status: "pending",
+              visibility,
+              type: parsed.intent === "registrar_gasto" ? "payable" : "receivable",
+              sourceType: input.messageType ?? "text",
+            });
+          }
+          await db.insert(billsTable).values(installmentBills);
+        }
 
         // Atualizar saldos
         await db.update(usersTable).set({ personalBalance: newPersonalBalance.toFixed(2) }).where(eq(usersTable.id, identity.user.id));
@@ -1038,6 +1096,10 @@ async function saveParsedAction(
         accountType === "house" ? `👤 *Lançado por:* ${firstName}` : "",
         "",
       ];
+
+      if (installments > 1) {
+        response.splice(1, 0, `*Aviso:* A sua 1ª parcela tá nas transações de hoje. Lancei e organizei as outras ${installments - 1} parcelas na sua aba de Contas a Pagar dos próximos meses!`);
+      }
 
       if (accountType === "personal") {
         response.push(`💰 *Saldo anterior:* ${formatCurrency(oldPersonalBalance)}`);
@@ -1433,6 +1495,14 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   if (pendingDecision) {
     const pendingPayload = pendingDecision.payload as PendingPayload;
 
+    // Ação explícita de Cancelamento / Escape do amnesia loop
+    const lowInput = input.content.toLowerCase().trim();
+    if (lowInput === "cancelar" || lowInput === "ignorar" || lowInput === "esquece" || lowInput === "deixa pra la" || lowInput === "deixa pra lá") {
+      await clearPendingDecision(pendingDecision.id);
+      const rep = await applyReplyPrompt("Tudo bem, esqueci o último registro que estávamos fazendo. Quer anotar algo novo?");
+      return { user: identity.user, member: identity.member, household: identity.household, subscription: identity.subscription, parsed: { intent: "indefinido" }, reply: rep };
+    }
+
     if (pendingDecision.kind === "missing_info") {
       finalContentForPendency = `${pendingPayload.originalContent} . ${input.content}`;
       const newlyParsed = await interpretMessage(input.content);
@@ -1446,6 +1516,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
         if (newlyParsed.paymentMethod) parsed.paymentMethod = newlyParsed.paymentMethod;
         if (newlyParsed.accountType) parsed.accountType = newlyParsed.accountType;
         if (newlyParsed.when) parsed.when = newlyParsed.when;
+        if (newlyParsed.installments) parsed.installments = newlyParsed.installments;
       } else {
         if (!parsed.amount) parsed.amount = parseAmount(input.content);
         if (!parsed.paymentMethod) parsed.paymentMethod = detectPaymentMethod(input.content);
