@@ -28,6 +28,10 @@ export type AIParsedMessage = {
   parcelas?: number | null;
 };
 
+export type AIParsedBatch = {
+  transacoes: AIParsedMessage[];
+};
+
 export type ImageExtractionResult = {
   tipo: "gasto" | "receita";
   valor: number | null;
@@ -58,7 +62,8 @@ const TEXT_SYSTEM_PROMPT = [
   "# [FUNÇÃO OPERACIONAL BASE]",
   "Voce interpreta mensagens de WhatsApp em portugues do Brasil para o Contai, um assistente de organizacao financeira e de rotina.",
   "Responda somente com JSON valido no schema informado.",
-  "Classifique a mensagem em uma unica intencao.",
+  "Se a mensagem contiver multiplos itens, compras separadas ou lancamentos distintos, separe-os criando multiplos objetos no array 'transacoes'.",
+  "Classifique a mensagem em uma unica intencao por transacao.",
   "Intencoes possiveis:",
   "- registrar_gasto: compra, pagamento, despesa, cartao de credito, ou saida de dinheiro. IMPORTANTE: Se a mensagem disser que usou ou passou no 'credito', refere-se ao cartao de credito, portanto deve ser registrar_gasto.",
   "- registrar_receita: entrada de dinheiro, recebimento, deposito, salario ou pix recebido.",
@@ -174,7 +179,7 @@ async function openAIJsonRequest<T>(
 export async function interpretTextWithOpenAI(
   text: string,
   referenceDate: string,
-): Promise<AIParsedMessage | null> {
+): Promise<AIParsedBatch | null> {
   const payload = {
     model: CHAT_MODEL,
     temperature: 0,
@@ -186,48 +191,58 @@ export async function interpretTextWithOpenAI(
           type: "object",
           additionalProperties: false,
           properties: {
-            intent: {
-              type: "string",
-              enum: [
-                "registrar_gasto",
-                "registrar_receita",
-                "registrar_conta",
-                "registrar_compromisso",
-                "registrar_lembrete",
-                "consulta_resumo",
-                "consulta_historico",
-                "consulta_categoria",
-                "saudacao",
-                "ajuda",
-                "reset_dados",
-                "registrar_meta",
-                "analise_financeira",
-                "indefinido",
-              ],
+            transacoes: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  intent: {
+                    type: "string",
+                    enum: [
+                      "registrar_gasto",
+                      "registrar_receita",
+                      "registrar_conta",
+                      "registrar_compromisso",
+                      "registrar_lembrete",
+                      "consulta_resumo",
+                      "consulta_historico",
+                      "consulta_categoria",
+                      "saudacao",
+                      "ajuda",
+                      "reset_dados",
+                      "registrar_meta",
+                      "analise_financeira",
+                      "indefinido",
+                    ],
+                  },
+                  valor: { type: ["number", "null"] },
+                  categoria: { type: ["string", "null"] },
+                  descricao: { type: ["string", "null"] },
+                  titulo: { type: ["string", "null"] },
+                  data: { type: ["string", "null"] },
+                  observacoes: { type: ["string", "null"] },
+                  visibilidade: {
+                    type: ["string", "null"],
+                    enum: ["shared", "personal", null],
+                  },
+                  parcelas: { type: ["number", "null"] },
+                },
+                required: [
+                  "intent",
+                  "valor",
+                  "categoria",
+                  "descricao",
+                  "titulo",
+                  "data",
+                  "observacoes",
+                  "visibilidade",
+                  "parcelas",
+                ],
+              },
             },
-            valor: { type: ["number", "null"] },
-            categoria: { type: ["string", "null"] },
-            descricao: { type: ["string", "null"] },
-            titulo: { type: ["string", "null"] },
-            data: { type: ["string", "null"] },
-            observacoes: { type: ["string", "null"] },
-            visibilidade: {
-              type: ["string", "null"],
-              enum: ["shared", "personal", null],
-            },
-            parcelas: { type: ["number", "null"] },
           },
-          required: [
-            "intent",
-            "valor",
-            "categoria",
-            "descricao",
-            "titulo",
-            "data",
-            "observacoes",
-            "visibilidade",
-            "parcelas",
-          ],
+          required: ["transacoes"],
         },
       },
     },
@@ -265,7 +280,7 @@ export async function interpretTextWithOpenAI(
   }
 
   try {
-    return JSON.parse(raw) as AIParsedMessage;
+    return JSON.parse(raw) as AIParsedBatch;
   } catch {
     return null;
   }

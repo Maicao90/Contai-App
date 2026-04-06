@@ -536,20 +536,20 @@ function mapAIResultToParsed(ai: AIParsedMessage): ParsedMessage {
 
 async function interpretMessage(content: string) {
   const parsedByRules = parseMessageByRules(content);
-  if (hasEnoughRuleConfidence(parsedByRules)) return parsedByRules;
+  if (hasEnoughRuleConfidence(parsedByRules)) return [parsedByRules];
 
   const aiResult = await interpretTextWithOpenAI(content, new Date().toISOString());
-  if (!aiResult) return parsedByRules;
+  if (!aiResult || !aiResult.transacoes || aiResult.transacoes.length === 0) return [parsedByRules];
 
-  const parsedByAI = mapAIResultToParsed(aiResult);
-  
-  if (parsedByAI.intent !== "indefinido") {
-    parsedByAI.paymentMethod = parsedByAI.paymentMethod || parsedByRules.paymentMethod || detectPaymentMethod(content);
-    parsedByAI.accountType = parsedByAI.accountType || parsedByRules.accountType || detectAccountType(content);
-    return parsedByAI;
-  }
-  
-  return parsedByRules;
+  return aiResult.transacoes.map(t => {
+    const parsedByAI = mapAIResultToParsed(t);
+    if (parsedByAI.intent !== "indefinido") {
+      parsedByAI.paymentMethod = parsedByAI.paymentMethod || parsedByRules.paymentMethod || detectPaymentMethod(content);
+      parsedByAI.accountType = parsedByAI.accountType || parsedByRules.accountType || detectAccountType(content);
+      return parsedByAI;
+    }
+    return parsedByRules;
+  });
 }
 
 async function applyReplyPrompt(reply: string) {
@@ -1422,7 +1422,8 @@ export async function previewBotMessage(input: {
      return { scenario: "unregistered", blocked: true, parsed: { intent: "ajuda" }, reply: "Usuário não encontrado." };
   }
 
-  const parsed = await interpretMessage(input.message);
+  const parsedBatch = await interpretMessage(input.message);
+  const parsed = parsedBatch[0] || { intent: "indefinido" };
   let { reply, isMissingInfo } = await saveParsedAction(identity, parsed, {
     phone: identity.user.phone,
     content: input.message,
@@ -1495,7 +1496,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   const pendingDecision = await getPendingDecision(identity);
 
   let parsed: ParsedMessage;
-  let reply: string;
+  let reply = "";
   let isMissingInfo: boolean | undefined = false;
 
   if (pendingDecision) {
@@ -1511,7 +1512,8 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
 
     if (pendingDecision.kind === "missing_info") {
       finalContentForPendency = `${pendingPayload.originalContent} . ${input.content}`;
-      const newlyParsed = await interpretMessage(finalContentForPendency);
+      const newlyParsedBatch = await interpretMessage(finalContentForPendency);
+      const newlyParsed = newlyParsedBatch[0] || { intent: "indefinido" };
 
       parsed = { ...pendingPayload.parsed };
 
@@ -1553,23 +1555,58 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       }
     }
   } else {
-    parsed = await interpretMessage(input.content);
+    const parsedBatch = await interpretMessage(input.content);
+    let finalReplies: string[] = [];
+    let anyMissingInfo = false;
 
-    if (needsVisibilityDecision(identity, parsed, input.content)) {
-      const kind = parsed.intent as PendingKind;
-      reply = replyForPendingQuestion(kind);
-      await createPendingDecision(identity, kind, reply, {
-        parsed,
-        originalContent: input.content,
-        source: input.source,
-        messageType: input.messageType,
-      });
-    } else if (parsed.intent === "indefinido" || parsed.intent === "ajuda") {
-      const faqReply = await answerFAQWithOpenAI(input.content, identity.user.name);
-      reply = faqReply || getHelpText();
-    } else {
-      ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, input));
+    // Manter referência de parsed para o log de conversas posterior
+    parsed = parsedBatch[0] || { intent: "indefinido" };
+
+    for (const p of parsedBatch) {
+      if (needsVisibilityDecision(identity, p, input.content)) {
+        if (!anyMissingInfo) {
+          anyMissingInfo = true;
+          isMissingInfo = true;
+          parsed = p;
+          const kind = p.intent as PendingKind;
+          reply = replyForPendingQuestion(kind);
+        } else {
+          finalReplies.push(`⚠️ Ignorei um lançamento porque faltaram dados que não consigo tratar agora.`);
+        }
+        continue;
+      }
+
+      if (p.intent === "indefinido" || p.intent === "ajuda") {
+        if (parsedBatch.length === 1) {
+          const faqReply = await answerFAQWithOpenAI(input.content, identity.user.name);
+          finalReplies.push(faqReply || getHelpText());
+          parsed = p;
+        }
+        continue;
+      }
+
+      // Processamento Core da Transação Única do Loop
+      const result = await saveParsedAction(identity, p, input);
+      if (result.isMissingInfo) {
+        if (!anyMissingInfo) {
+          anyMissingInfo = true;
+          isMissingInfo = true;
+          parsed = p;
+          reply = result.reply;
+        } else {
+          finalReplies.push(`⚠️ Tive que descartar o registro de '${p.description || p.category}' porque faltaram dados. Mande ele separado depois!`);
+        }
+      } else {
+        finalReplies.push(result.reply);
+        parsed = p; // Atualiza para assegurar log da última ação exitosa
+      }
     }
+
+    if (anyMissingInfo && reply) {
+      finalReplies.push(`❗ *${reply}*`);
+    }
+
+    reply = finalReplies.length > 0 ? finalReplies.join("\n\n---\n\n") : reply;
   }
 
   if (isMissingInfo) {
