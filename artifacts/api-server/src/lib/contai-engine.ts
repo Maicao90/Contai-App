@@ -1084,8 +1084,10 @@ async function saveParsedAction(
       const icon = parsed.intent === "registrar_gasto" ? "💸" : "💰";
       const actionText = parsed.intent === "registrar_gasto" ? "gastou com" : "recebeu de";
       const statusText = parsed.intent === "registrar_gasto" ? "Pago" : "Recebido";
-      const typeLabel = accountType === "house" ? "🏠 Tipo: Gasto da casa" : "👤 Tipo: Pessoal";
-
+      const isExpense = parsed.intent === "registrar_gasto";
+      const typeLabel = accountType === "house" 
+        ? `🏠 Tipo: ${isExpense ? "Gasto da casa" : "Receita da casa"}` 
+        : `👤 Tipo: Pessoal`;
       const response = [
         `Anotei os ${formatCurrency(amount)} que você ${actionText} ${description} hoje, ${firstName}. Tudo já está organizado para você.`,
         "",
