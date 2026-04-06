@@ -978,7 +978,11 @@ async function saveParsedAction(
         return { reply: "Me fala só mais uma coisa pra organizar certo: esse registro é da sua *conta pessoal* ou da *conta da casa*?", isMissingInfo: true };
       }
       if (!parsed.paymentMethod) {
-        return { reply: "E qual foi a forma de pagamento? (débito, crédito, pix, dinheiro ou boleto)", isMissingInfo: true };
+        if (parsed.intent === "registrar_receita") {
+          parsed.paymentMethod = "pix";
+        } else {
+          return { reply: "E qual foi a forma de pagamento? (débito, crédito, pix, dinheiro ou boleto)", isMissingInfo: true };
+        }
       }
 
       const accountType = parsed.accountType || "personal";
