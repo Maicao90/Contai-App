@@ -1505,7 +1505,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
 
     if (pendingDecision.kind === "missing_info") {
       finalContentForPendency = `${pendingPayload.originalContent} . ${input.content}`;
-      const newlyParsed = await interpretMessage(input.content);
+      const newlyParsed = await interpretMessage(finalContentForPendency);
 
       parsed = { ...pendingPayload.parsed };
 
