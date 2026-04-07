@@ -24,6 +24,11 @@ export const householdsTable = pgTable("households", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const processedWebhooksTable = pgTable("processed_webhooks", {
+  messageId: text("message_id").primaryKey(),
+  processedAt: timestamp("processed_at").notNull().defaultNow(),
+});
+
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   householdId: integer("household_id").references(() => householdsTable.id, {
@@ -96,6 +101,8 @@ export const transactionsTable = pgTable("transactions", {
   accountType: text("account_type").notNull().default("personal"),
   paymentMethod: text("payment_method").notNull().default("pix"),
   status: text("status").notNull().default("paid"),
+  reversalReason: text("reversal_reason"),
+  canceledAt: timestamp("canceled_at"),
   transactionDate: timestamp("transaction_date").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -218,6 +225,8 @@ export const pendingDecisionsTable = pgTable("pending_decisions", {
   kind: text("kind").notNull(),
   question: text("question").notNull(),
   payload: jsonb("payload").notNull(),
+  step: integer("step").notNull().default(0),
+  accumulatedData: jsonb("accumulated_data").notNull().default({}),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -371,6 +380,7 @@ export type ReferralCampaign = typeof referralCampaignsTable.$inferSelect;
 export type Referral = typeof referralsTable.$inferSelect;
 export type ReferralEvent = typeof referralEventsTable.$inferSelect;
 export type AdminAuditLog = typeof adminAuditLogsTable.$inferSelect;
+export type ProcessedWebhook = typeof processedWebhooksTable.$inferSelect;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;

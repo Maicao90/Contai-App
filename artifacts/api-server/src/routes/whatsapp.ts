@@ -15,6 +15,7 @@ function extractIncomingMessage(body: any) {
   }
 
   return {
+    messageId: message.id,
     phone: String(message.from ?? ""),
     userName: contact?.profile?.name,
     messageType: message.type ?? "text",
@@ -46,6 +47,25 @@ router.post("/whatsapp/webhook", async (req, res, next) => {
     if (!incoming) {
       res.sendStatus(200);
       return;
+    }
+
+    if (incoming.messageId) {
+      try {
+        const { db, processedWebhooksTable } = await import("@workspace/db");
+        const insertResult = await db
+          .insert(processedWebhooksTable)
+          .values({ messageId: incoming.messageId })
+          .onConflictDoNothing()
+          .returning();
+
+        if (insertResult.length === 0) {
+          logger.info(`[Idempotência] Ignorando webhook Meta repetido: ${incoming.messageId}`);
+          res.sendStatus(200);
+          return;
+        }
+      } catch (dbError) {
+        logger.error({ err: dbError }, "[Idempotência] Falha no lock de webhook");
+      }
     }
 
     const normalized = await normalizeInboundContent({

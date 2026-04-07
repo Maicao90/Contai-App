@@ -186,6 +186,14 @@ async function ensureSchema() {
   `));
 
   await db.execute(sql.raw(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reversal_reason TEXT;
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS canceled_at TIMESTAMP;
+  `));
+
+  await db.execute(sql.raw(`
     CREATE TABLE IF NOT EXISTS bills (
       id SERIAL PRIMARY KEY,
       household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
@@ -281,8 +289,20 @@ async function ensureSchema() {
       kind TEXT NOT NULL,
       question TEXT NOT NULL,
       payload JSONB NOT NULL,
+      step INTEGER NOT NULL DEFAULT 0,
+      accumulated_data JSONB NOT NULL DEFAULT '{}',
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE pending_decisions
+    ADD COLUMN IF NOT EXISTS step INTEGER NOT NULL DEFAULT 0;
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE pending_decisions
+    ADD COLUMN IF NOT EXISTS accumulated_data JSONB NOT NULL DEFAULT '{}';
   `));
 
   await db.execute(sql.raw(`
@@ -393,6 +413,13 @@ async function ensureSchema() {
       details JSONB,
       ip TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `));
+
+  await db.execute(sql.raw(`
+    CREATE TABLE IF NOT EXISTS processed_webhooks (
+      message_id TEXT PRIMARY KEY,
+      processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `));
 }

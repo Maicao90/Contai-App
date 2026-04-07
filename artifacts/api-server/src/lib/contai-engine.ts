@@ -26,6 +26,8 @@ import { queueNotificationEvent } from "./notifications";
 import { expandBrazilPhoneVariants, normalizeBrazilPhone } from "./phone";
 import { markReferralActiveFromRealUse } from "./referrals";
 import { systemSettings } from "./system-settings";
+import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz";
+import { startOfDay as fnsStartOfDay, endOfDay as fnsEndOfDay, startOfMonth as fnsStartOfMonth, endOfMonth as fnsEndOfMonth, addDays, getDay } from "date-fns";
 
 type MessageKind = "text" | "audio" | "image";
 type Visibility = "shared" | "personal";
@@ -120,20 +122,24 @@ const WEEKDAY_MAP: Record<string, number> = {
   sábado: 6,
 };
 
-export function startOfMonth(date = new Date()) {
-  return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+export function startOfMonth(date = new Date(), tz = "America/Sao_Paulo") {
+  const zoned = toZonedTime(date, tz);
+  return fromZonedTime(fnsStartOfMonth(zoned), tz);
 }
 
-export function endOfMonth(date = new Date()) {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+export function endOfMonth(date = new Date(), tz = "America/Sao_Paulo") {
+  const zoned = toZonedTime(date, tz);
+  return fromZonedTime(fnsEndOfMonth(zoned), tz);
 }
 
-export function startOfDay(date = new Date()) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+export function startOfDay(date = new Date(), tz = "America/Sao_Paulo") {
+  const zoned = toZonedTime(date, tz);
+  return fromZonedTime(fnsStartOfDay(zoned), tz);
 }
 
-export function endOfDay(date = new Date()) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+export function endOfDay(date = new Date(), tz = "America/Sao_Paulo") {
+  const zoned = toZonedTime(date, tz);
+  return fromZonedTime(fnsEndOfDay(zoned), tz);
 }
 
 export function formatCurrency(value: number) {
@@ -265,46 +271,47 @@ function cleanDescription(text: string) {
     .trim();
 }
 
-function parseDateTime(text: string, now = new Date()) {
+function parseDateTime(text: string, nowParam = new Date(), tz = "America/Sao_Paulo") {
   const normalized = normalizeText(text);
   const hourMatch = normalized.match(/(\d{1,2})(?::(\d{2}))?\s*h?/);
   const hour = hourMatch ? Number(hourMatch[1]) : 9;
   const minute = hourMatch?.[2] ? Number(hourMatch[2]) : 0;
 
+  const now = toZonedTime(nowParam, tz);
+
   if (normalized.includes("amanha")) {
-    const date = new Date(now);
-    date.setDate(date.getDate() + 1);
-    date.setHours(hour, minute, 0, 0);
-    return date;
+    const tomorrow = addDays(now, 1);
+    tomorrow.setHours(hour, minute, 0, 0);
+    return fromZonedTime(tomorrow, tz);
   }
 
   if (normalized.includes("hoje")) {
-    const date = new Date(now);
-    date.setHours(hour, minute, 0, 0);
-    return date;
+    const today = new Date(now.getTime());
+    today.setHours(hour, minute, 0, 0);
+    return fromZonedTime(today, tz);
   }
 
   const weekdayEntry = Object.entries(WEEKDAY_MAP).find(([label]) =>
     normalized.includes(label),
   );
   if (weekdayEntry) {
-    const date = new Date(now);
-    const distance = (weekdayEntry[1] - date.getDay() + 7) % 7 || 7;
-    date.setDate(date.getDate() + distance);
-    date.setHours(hour, minute, 0, 0);
-    return date;
+    const date = new Date(now.getTime());
+    const distance = (weekdayEntry[1] - getDay(date) + 7) % 7 || 7;
+    const future = addDays(date, distance);
+    future.setHours(hour, minute, 0, 0);
+    return fromZonedTime(future, tz);
   }
 
   const dayOfMonthMatch = normalized.match(/\bdia\s+(\d{1,2})\b/);
   if (dayOfMonthMatch) {
-    const date = new Date(now);
+    const date = new Date(now.getTime());
     const day = Number(dayOfMonthMatch[1]);
     if (day < date.getDate()) {
       date.setMonth(date.getMonth() + 1);
     }
     date.setDate(day);
     date.setHours(hour, minute, 0, 0);
-    return date;
+    return fromZonedTime(date, tz);
   }
 
   return undefined;
@@ -384,7 +391,7 @@ function buildGoogleCalendarConnectionReply() {
   ].join("\n");
 }
 
-function parseMessageByRules(content: string): ParsedMessage {
+function parseMessageByRules(content: string, tz = "America/Sao_Paulo"): ParsedMessage {
   const normalized = normalizeText(content);
   if (!normalized) return { intent: "indefinido" };
 
@@ -431,7 +438,7 @@ function parseMessageByRules(content: string): ParsedMessage {
     return {
       intent: "registrar_lembrete",
       title: content.replace(/me lembra de|lembrar de/gi, "").trim(),
-      when: parseDateTime(content),
+      when: parseDateTime(content, undefined, tz),
       visibility: "personal",
     };
   }
@@ -442,7 +449,7 @@ function parseMessageByRules(content: string): ParsedMessage {
       title: cleanDescription(content) || "Conta",
       amount: parseAmount(content),
       category: inferCategory(content, "expense"),
-      when: parseDateTime(content),
+      when: parseDateTime(content, undefined, tz),
     };
   }
 
@@ -460,7 +467,7 @@ function parseMessageByRules(content: string): ParsedMessage {
           /\b(amanha|hoje|segunda|terça|terca|quarta|quinta|sexta|sabado|sábado|domingo)\b.*$/i,
           "",
         ).trim() || "Compromisso",
-      when: parseDateTime(content),
+      when: parseDateTime(content, undefined, tz),
       visibility: detectExplicitVisibility(content),
     };
   }
@@ -528,8 +535,8 @@ function hasEnoughRuleConfidence(parsed: ParsedMessage) {
   return true;
 }
 
-function mapAIResultToParsed(ai: AIParsedMessage): ParsedMessage {
-  const parsedDate = ai.data ? parseDateTime(ai.data) ?? new Date(ai.data) : undefined;
+function mapAIResultToParsed(ai: AIParsedMessage, tz = "America/Sao_Paulo"): ParsedMessage {
+  const parsedDate = ai.data ? parseDateTime(ai.data, undefined, tz) ?? new Date(ai.data) : undefined;
   return {
     intent: ai.intent as ParsedIntent,
     amount: ai.valor ?? undefined,
@@ -545,15 +552,15 @@ function mapAIResultToParsed(ai: AIParsedMessage): ParsedMessage {
   };
 }
 
-async function interpretMessage(content: string) {
-  const parsedByRules = parseMessageByRules(content);
+async function interpretMessage(content: string, tz = "America/Sao_Paulo") {
+  const parsedByRules = parseMessageByRules(content, tz);
   if (hasEnoughRuleConfidence(parsedByRules)) return [parsedByRules];
 
   const aiResult = await interpretTextWithOpenAI(content, new Date().toISOString());
   if (!aiResult || !aiResult.transacoes || aiResult.transacoes.length === 0) return [parsedByRules];
 
   return aiResult.transacoes.map(t => {
-    const parsedByAI = mapAIResultToParsed(t);
+    const parsedByAI = mapAIResultToParsed(t, tz);
     if (parsedByAI.intent !== "indefinido") {
       parsedByAI.paymentMethod = parsedByAI.paymentMethod || parsedByRules.paymentMethod || detectPaymentMethod(content);
       parsedByAI.accountType = parsedByAI.accountType || parsedByRules.accountType || detectAccountType(content);
@@ -767,12 +774,16 @@ async function buildMonthlySummary(
   category?: string,
   visibility?: Visibility,
   memberId?: number,
+  tz = "America/Sao_Paulo",
 ) {
+  const start = startOfMonth(undefined, tz);
+  const end = endOfMonth(undefined, tz);
   const conditions = [
     eq(transactionsTable.householdId, householdId),
-    gte(transactionsTable.transactionDate, startOfMonth()),
-    lte(transactionsTable.transactionDate, endOfMonth()),
+    gte(transactionsTable.transactionDate, start),
+    lte(transactionsTable.transactionDate, end),
     eq(transactionsTable.type, "expense"),
+    eq(transactionsTable.status, "paid"),
   ];
   if (category) conditions.push(ilike(transactionsTable.category, category));
   if (visibility) conditions.push(eq(transactionsTable.visibility, visibility));
@@ -841,9 +852,9 @@ async function getPendingDecision(identity: Identity) {
   const decision = rows[0] ?? null;
   if (!decision) return null;
 
-  // Timeout de Expiração (Filtro Anti-Amnésia) - 30 minutos de validade do contexto
-  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-  if (decision.createdAt < thirtyMinutesAgo) {
+  // Timeout de Expiração (Filtro Anti-Amnésia) - 5 minutos de validade do contexto
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+  if (decision.createdAt < fiveMinutesAgo) {
     await clearPendingDecision(decision.id);
     return null;
   }
@@ -856,6 +867,8 @@ async function createPendingDecision(
   kind: PendingKind,
   question: string,
   payload: PendingPayload,
+  stepArg: number = 0,
+  accumulatedDataArg: any = {}
 ) {
   // Limpa as pendências antigas para não criar uma "fila de amnésia" em que o robô
   // pergunta coisas de contextos diferentes pro usuário.
@@ -878,6 +891,8 @@ async function createPendingDecision(
     kind,
     question,
     payload,
+    step: stepArg,
+    accumulatedData: accumulatedDataArg,
   });
 }
 
@@ -893,8 +908,8 @@ function replyForPendingQuestion(kind: PendingKind) {
 }
 
 async function getAccumulatedCreditSpend(identity: Identity) {
-  const start = startOfMonth();
-  const end = endOfMonth();
+  const start = startOfMonth(undefined, identity.user.timezone);
+  const end = endOfMonth(undefined, identity.user.timezone);
 
   const [row] = await db
     .select({ total: sql<string>`sum(${transactionsTable.amount})` })
@@ -904,6 +919,7 @@ async function getAccumulatedCreditSpend(identity: Identity) {
         eq(transactionsTable.householdId, identity.household.id),
         eq(transactionsTable.paymentMethod, "credito"),
         eq(transactionsTable.type, "expense"),
+        eq(transactionsTable.status, "paid"),
         gte(transactionsTable.transactionDate, start),
         lte(transactionsTable.transactionDate, end),
         identity.member?.id 
@@ -917,8 +933,8 @@ async function getAccumulatedCreditSpend(identity: Identity) {
 
 async function checkBudgetAlerts(identity: Identity, categoryName: string, amount: number) {
   const alerts: string[] = [];
-  const start = startOfMonth();
-  const end = endOfMonth();
+  const start = startOfMonth(undefined, identity.user.timezone);
+  const end = endOfMonth(undefined, identity.user.timezone);
 
   // 1. Alerta por Categoria
   const [category] = await db
@@ -929,7 +945,7 @@ async function checkBudgetAlerts(identity: Identity, categoryName: string, amoun
 
   if (category && category.monthlyLimit) {
     const limit = toAmountNumber(category.monthlyLimit);
-    const summary = await buildMonthlySummary(identity.household.id, categoryName);
+    const summary = await buildMonthlySummary(identity.household.id, categoryName, undefined, undefined, identity.user.timezone);
     const totalWithThis = summary.total + amount;
 
     if (totalWithThis >= limit) {
@@ -949,6 +965,7 @@ async function checkBudgetAlerts(identity: Identity, categoryName: string, amoun
         eq(transactionsTable.householdId, identity.household.id),
         eq(transactionsTable.type, "expense"),
         eq(transactionsTable.accountType, "house"),
+        eq(transactionsTable.status, "paid"),
         gte(transactionsTable.transactionDate, start),
         lte(transactionsTable.transactionDate, end)
       ));
@@ -980,6 +997,7 @@ async function getHistoricalSpendingSummary(householdId: number, months = 6) {
     .where(and(
       eq(transactionsTable.householdId, householdId),
       eq(transactionsTable.type, "expense"),
+      eq(transactionsTable.status, "paid"),
       gte(transactionsTable.transactionDate, startDate),
       lte(transactionsTable.transactionDate, endDate)
     ))
@@ -990,6 +1008,9 @@ async function getHistoricalSpendingSummary(householdId: number, months = 6) {
 
   return rows.map(r => `[${r.month}] ${r.category}: ${formatCurrency(toAmountNumber(r.total))}`).join("\n");
 }
+
+import { checkEscapeCommand } from "./engine/middleware/escapeCommands";
+import { processContextualResponse, initializeFlowState } from "./engine/contextManager";
 
 async function saveParsedAction(
   identity: Identity,
@@ -1257,7 +1278,7 @@ async function saveParsedAction(
     }
 
     case "consulta_categoria": {
-      const summary = await buildMonthlySummary(identity.household.id, parsed.category);
+      const summary = await buildMonthlySummary(identity.household.id, parsed.category, undefined, undefined, identity.user.timezone);
       return { reply: `📊 Neste mês vocês gastaram ${formatCurrency(summary.total)} com ${parsed.category}.` };
     }
 
@@ -1265,7 +1286,7 @@ async function saveParsedAction(
       const rows = await db
         .select()
         .from(transactionsTable)
-        .where(eq(transactionsTable.householdId, identity.household.id))
+        .where(and(eq(transactionsTable.householdId, identity.household.id), eq(transactionsTable.status, "paid")))
         .orderBy(desc(transactionsTable.transactionDate))
         .limit(4);
 
@@ -1460,9 +1481,9 @@ async function checkHouseholdAlerts(identity: Identity) {
 async function checkBudgetLimits(identity: Identity, amount: number, categoryName: string) {
   let budgetAlert = "";
   try {
-    const start = startOfMonth();
-    const end = endOfMonth();
-    const now = new Date();
+    const start = startOfMonth(undefined, identity.user.timezone);
+    const end = endOfMonth(undefined, identity.user.timezone);
+    const now = toZonedTime(new Date(), identity.user.timezone);
     const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const currentDayOfMonth = now.getDate();
 
@@ -1486,6 +1507,7 @@ async function checkBudgetLimits(identity: Identity, amount: number, categoryNam
           and(
             eq(transactionsTable.householdId, identity.household.id),
             eq(transactionsTable.category, categoryName),
+            eq(transactionsTable.status, "paid"),
             gte(transactionsTable.transactionDate, start),
             lte(transactionsTable.transactionDate, end)
           )
@@ -1533,7 +1555,7 @@ export async function previewBotMessage(input: {
      return { scenario: "unregistered", blocked: true, parsed: { intent: "ajuda" }, reply: "Usuário não encontrado." };
   }
 
-  const parsedBatch = await interpretMessage(input.message);
+  const parsedBatch = await interpretMessage(input.message, identity.user.timezone);
   const parsed = parsedBatch[0] || { intent: "indefinido" };
   let { reply, isMissingInfo } = await saveParsedAction(identity, parsed, {
     phone: identity.user.phone,
@@ -1606,66 +1628,45 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   const identity = access.identity;
   const pendingDecision = await getPendingDecision(identity);
 
-  let parsed: ParsedMessage;
+  let parsed: ParsedMessage = { intent: "indefinido" };
   let reply = "";
   let isMissingInfo: boolean | undefined = false;
+  let didBypassAI = false;
 
-  if (pendingDecision) {
-    const pendingPayload = pendingDecision.payload as PendingPayload;
-
-    // Ação explícita de Cancelamento / Escape do amnesia loop
-    const lowInput = input.content.toLowerCase().trim();
-    if (lowInput === "cancelar" || lowInput === "ignorar" || lowInput === "esquece" || lowInput === "deixa pra la" || lowInput === "deixa pra lá") {
+  if (pendingDecision && pendingDecision.question) {
+    if (checkEscapeCommand(input.content)) {
       await clearPendingDecision(pendingDecision.id);
-      const rep = await applyReplyPrompt("Tudo bem, esqueci o último registro que estávamos fazendo. Quer anotar algo novo?");
+      const rep = await applyReplyPrompt("✅ Operação cancelada! Tudo bem, esqueci o último registro. O que quer fazer?");
       return { user: identity.user, member: identity.member, household: identity.household, subscription: identity.subscription, parsed: { intent: "indefinido" }, reply: rep };
     }
 
-    if (pendingDecision.kind === "missing_info") {
-      finalContentForPendency = `${pendingPayload.originalContent} . ${input.content}`;
-      const newlyParsedBatch = await interpretMessage(finalContentForPendency);
-      const newlyParsed = newlyParsedBatch[0] || { intent: "indefinido" };
-
-      parsed = { ...pendingPayload.parsed };
-
-      if (newlyParsed.intent !== "indefinido" && newlyParsed.intent !== "ajuda" && newlyParsed.intent !== "saudacao") {
-        if (newlyParsed.amount) parsed.amount = newlyParsed.amount;
-        if (newlyParsed.category) parsed.category = newlyParsed.category;
-        if (newlyParsed.description) parsed.description = newlyParsed.description;
-        if (newlyParsed.paymentMethod) parsed.paymentMethod = newlyParsed.paymentMethod;
-        if (newlyParsed.accountType) parsed.accountType = newlyParsed.accountType;
-        if (newlyParsed.when) parsed.when = newlyParsed.when;
-        if (newlyParsed.installments) parsed.installments = newlyParsed.installments;
-      } else {
-        if (!parsed.amount) parsed.amount = parseAmount(input.content);
-        if (!parsed.paymentMethod) parsed.paymentMethod = detectPaymentMethod(input.content);
-        if (!parsed.accountType && identity.household.type !== "individual") parsed.accountType = detectAccountType(input.content);
-        if (!parsed.description && parsed.intent === "registrar_gasto") parsed.description = cleanDescription(input.content) || input.content;
-        if (!parsed.when) parsed.when = parseDateTime(input.content);
-      }
-
-      await clearPendingDecision(pendingDecision.id);
-      ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, input));
+    if (pendingDecision.kind !== "missing_info") {
+       // Support old behaviors for unstructured things if any
+       await clearPendingDecision(pendingDecision.id);
     } else {
-      const chosenVisibility = detectExplicitVisibility(input.content);
-      if (!chosenVisibility) {
-        parsed = { intent: "indefinido" };
-        reply = pendingDecision.question;
-      } else {
-        parsed = {
-          ...pendingPayload.parsed,
-          visibility: chosenVisibility,
-        };
-        await clearPendingDecision(pendingDecision.id);
-        ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, {
-          ...input,
-          content: pendingPayload.originalContent,
-          source: pendingPayload.source ?? input.source,
-          messageType: pendingPayload.messageType ?? input.messageType,
-        }));
-      }
+       // Let's hook the explicit structure!
+       // But wait: pending.action is part of our requested structure. If it's missing, fallback to parsing.
+       didBypassAI = true;
+       const actionType = (pendingDecision.payload as any).action || "register_expense";
+       const structPending = { ...pendingDecision, action: actionType };
+
+       const ctxResponse = await processContextualResponse(identity as any, input.content, structPending);
+       
+       if (!ctxResponse.resolved) {
+          return { user: identity.user, member: identity.member, household: identity.household, subscription: identity.subscription, parsed: { intent: "indefinido" }, reply: ctxResponse.reply || "Não consegui processar." };
+       }
+
+       await clearPendingDecision(pendingDecision.id);
+       const intent = actionType === "register_expense" ? "registrar_gasto" : "registrar_receita";
+       parsed = {
+          intent: intent,
+          ...ctxResponse.parsedData
+       };
+       ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, input));
     }
-  } else {
+  }
+
+  if (!didBypassAI) {
     const parsedBatch = await interpretMessage(input.content);
     let finalReplies: string[] = [];
     let anyMissingInfo = false;
@@ -1721,12 +1722,15 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   }
 
   if (isMissingInfo) {
+    const actionStr = parsed.intent === "registrar_gasto" ? "register_expense" : "register_income";
+    const flow = initializeFlowState(actionStr, parsed);
     await createPendingDecision(identity, "missing_info", reply, {
       parsed,
       originalContent: finalContentForPendency,
       source: input.source,
       messageType: input.messageType,
-    });
+      action: actionStr
+    }, flow.step, flow.accumulatedData);
   }
 
   if (
@@ -1840,8 +1844,9 @@ export async function getDashboardData(userId: number) {
     .where(
       and(
         eq(transactionsTable.householdId, household.id),
-        gte(transactionsTable.transactionDate, startOfMonth()),
-        lte(transactionsTable.transactionDate, endOfMonth()),
+        eq(transactionsTable.status, "paid"),
+        gte(transactionsTable.transactionDate, startOfMonth(undefined, user.timezone)),
+        lte(transactionsTable.transactionDate, endOfMonth(undefined, user.timezone)),
       ),
     )
     .orderBy(desc(transactionsTable.transactionDate));
@@ -1852,7 +1857,7 @@ export async function getDashboardData(userId: number) {
     .where(
       and(
         eq(commitmentsTable.householdId, household.id),
-        gte(commitmentsTable.commitmentDate, startOfDay()),
+        gte(commitmentsTable.commitmentDate, startOfDay(undefined, user.timezone)),
       ),
     )
     .orderBy(commitmentsTable.commitmentDate)
@@ -1861,14 +1866,14 @@ export async function getDashboardData(userId: number) {
   const reminders = await db
     .select()
     .from(remindersTable)
-    .where(and(eq(remindersTable.householdId, household.id), gte(remindersTable.reminderDate, startOfDay())))
+    .where(and(eq(remindersTable.householdId, household.id), gte(remindersTable.reminderDate, startOfDay(undefined, user.timezone))))
     .orderBy(remindersTable.reminderDate)
     .limit(5);
 
   const bills = await db
     .select()
     .from(billsTable)
-    .where(and(eq(billsTable.householdId, household.id), gte(billsTable.dueDate, startOfDay())))
+    .where(and(eq(billsTable.householdId, household.id), gte(billsTable.dueDate, startOfDay(undefined, user.timezone))))
     .orderBy(billsTable.dueDate)
     .limit(5);
 
@@ -1925,7 +1930,7 @@ export async function getDashboardData(userId: number) {
       totalExpenses: byMember.get(item.id) ?? 0,
     })),
     todayCommitments: commitments.filter(
-      (item) => item.commitmentDate >= startOfDay() && item.commitmentDate <= endOfDay(),
+      (item) => item.commitmentDate >= startOfDay(undefined, user.timezone) && item.commitmentDate <= endOfDay(undefined, user.timezone),
     ),
     categoryBreakdown: [...categoryMap.entries()]
       .sort((a, b) => b[1] - a[1])

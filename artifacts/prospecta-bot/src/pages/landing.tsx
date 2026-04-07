@@ -46,6 +46,7 @@ import { Header } from "@/components/ui/header-2";
 import { HandWrittenTitle } from "@/components/ui/hand-writing-text";
 import * as PricingCard from "@/components/ui/pricing-card";
 import { TechnologyAuthoritySection } from "@/components/technology-authority-section";
+import { FounderSection } from "@/components/founder-section";
 
 const chatMessages = [
   { from: "user", text: "gastei 200 no mercado" },
@@ -591,7 +592,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-
+        <FounderSection />
 
         <section id="preco" className="bg-[linear-gradient(180deg,rgba(7,24,22,0.36)_0%,rgba(5,11,18,0)_100%)] px-4 py-9 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
           <div className="mx-auto max-w-5xl">
