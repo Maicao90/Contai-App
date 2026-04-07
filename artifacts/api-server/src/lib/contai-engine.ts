@@ -881,6 +881,29 @@ function replyForPendingQuestion(kind: PendingKind) {
   return "É da casa ou só seu?";
 }
 
+async function getAccumulatedCreditSpend(identity: Identity) {
+  const start = startOfMonth();
+  const end = endOfMonth();
+
+  const [row] = await db
+    .select({ total: sql<string>`sum(${transactionsTable.amount})` })
+    .from(transactionsTable)
+    .where(
+      and(
+        eq(transactionsTable.householdId, identity.household.id),
+        eq(transactionsTable.paymentMethod, "credito"),
+        eq(transactionsTable.type, "expense"),
+        gte(transactionsTable.transactionDate, start),
+        lte(transactionsTable.transactionDate, end),
+        identity.member?.id 
+          ? eq(transactionsTable.memberId, identity.member.id)
+          : eq(transactionsTable.accountType, "personal")
+      )
+    );
+
+  return toAmountNumber(row?.total || "0");
+}
+
 async function checkBudgetAlerts(identity: Identity, categoryName: string, amount: number) {
   const alerts: string[] = [];
   const start = startOfMonth();
@@ -1017,11 +1040,14 @@ async function saveParsedAction(
           newTotalHouseBalance += currentAmount;
         }
       } else {
-        if (accountType === "personal") {
-          newPersonalBalance -= currentAmount;
-        } else {
-          newUserHouseBalance -= currentAmount;
-          newTotalHouseBalance -= currentAmount;
+        // Regra do Maicon: Se for Crédito, NÃO desconta do saldo agora (Fluxo de Caixa)
+        if (paymentMethod !== "credito") {
+          if (accountType === "personal") {
+            newPersonalBalance -= currentAmount;
+          } else {
+            newUserHouseBalance -= currentAmount;
+            newTotalHouseBalance -= currentAmount;
+          }
         }
       }
 
@@ -1102,6 +1128,16 @@ async function saveParsedAction(
         accountType === "house" ? `👤 *Lançado por:* ${firstName}` : "",
         "",
       ];
+
+      // Alerta de Fatura de Cartão de Crédito
+      if (paymentMethod === "credito" && parsed.intent === "registrar_gasto") {
+        const accumulatedCredit = await getAccumulatedCreditSpend(identity);
+        const warning = accumulatedCredit > 1000 ? "⚠️ *Cuidado:* Sua fatura tá ficando alta!" : "Tudo sob controle.";
+        response.push(`💳 *Obs:* Por ser no crédito, seu saldo imediato não mudou.`);
+        response.push(`📉 *Fatura acumulada para o mês:* ${formatCurrency(accumulatedCredit)}`);
+        response.push(warning);
+        response.push("");
+      }
 
       if (installments > 1) {
         response.splice(1, 0, `*Aviso:* A sua 1ª parcela tá nas transações de hoje. Lancei e organizei as outras ${installments - 1} parcelas na sua aba de Contas a Pagar dos próximos meses!`);
