@@ -14,6 +14,7 @@ type AIParsedIntent =
   | "reset_dados"
   | "registrar_meta"
   | "analise_financeira"
+  | "registrar_pagamento_fatura"
   | "indefinido";
 
 export type AIParsedMessage = {
@@ -78,6 +79,7 @@ const TEXT_SYSTEM_PROMPT = [
   "- reset_dados: pedido para zerar as contas, limpar todos os dados, resetar o histórico ou apagar tudo para começar de novo.",
   "- registrar_meta: definir um limite mensal de gastos para uma categoria. Ex: 'minha meta de mercado é 1000 reais', 'limite de 200 pra lazer'.",
   "- analise_financeira: pedido de analise de historico, sugestao de economia ou como poupar dinheiro.",
+  "- registrar_pagamento_fatura: comando para avisar que pagou a fatura do cartao de credito, liquidar gastos de cartao ou zerar divida de credito.",
   "- indefinido: quando realmente nao der para classificar.",
   "Regras de extracao:",
   "- valor deve ser numero em reais, usando ponto decimal. Atenção: converta virgulas (, ) para ponto decimal (.) em sua extração de números.",
@@ -213,6 +215,7 @@ export async function interpretTextWithOpenAI(
                       "reset_dados",
                       "registrar_meta",
                       "analise_financeira",
+                      "registrar_pagamento_fatura",
                       "indefinido",
                     ],
                   },

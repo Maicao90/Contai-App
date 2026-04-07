@@ -43,6 +43,7 @@ type ParsedIntent =
   | "reset_dados"
   | "registrar_meta"
   | "analise_financeira"
+  | "registrar_pagamento_fatura"
   | "indefinido";
 
 type ProcessIncomingMessageInput = {
@@ -497,6 +498,16 @@ function parseMessageByRules(content: string): ParsedMessage {
     normalized.includes("começar do zero")
   ) {
     return { intent: "reset_dados" };
+  }
+
+  if (
+    normalized.includes("paguei o cartao") ||
+    normalized.includes("paguei a fatura") ||
+    normalized.includes("liquidar fatura") ||
+    normalized.includes("fatura paga") ||
+    normalized.includes("fatura do cartao paga")
+  ) {
+    return { intent: "registrar_pagamento_fatura" };
   }
 
   return { intent: "indefinido" };
@@ -1162,7 +1173,71 @@ async function saveParsedAction(
         response.push("", ...budgetAlerts);
       }
 
+      if (parsed.intent === "registrar_receita") {
+        const accumulatedCredit = await getAccumulatedCreditSpend(identity);
+        if (accumulatedCredit > 0) {
+          const freeBalance = (accountType === "house" ? newUserHouseBalance : newPersonalBalance) - accumulatedCredit;
+          response.push("");
+          response.push(`⚠️ *Lembrete de Fatura:* Você já comprometeu *${formatCurrency(accumulatedCredit)}* no crédito.`);
+          response.push(`✨ *Saldo 'Livre' Projetado:* ${formatCurrency(freeBalance)}`);
+        }
+      }
+
       return { reply: response.filter(l => l !== undefined).join("\n") };
+    }
+
+    case "registrar_pagamento_fatura": {
+      const accumulatedCredit = await getAccumulatedCreditSpend(identity);
+      if (accumulatedCredit <= 0) {
+        return { reply: "Não encontrei nenhuma fatura acumulada no crédito para liquidar agora! Seu saldo está limpo. ✅" };
+      }
+
+      const oldPersonalBalance = toAmountNumber(identity.user.personalBalance);
+      const oldUserHouseBalance = toAmountNumber(identity.member?.householdBalance);
+      const oldTotalHouseBalance = toAmountNumber(identity.household.totalHouseBalance);
+
+      // Por padrão, liquida da conta pessoal (ou da casa se for contexto de casa)
+      // Para simplificar, vamos descontar de onde o usuário tem saldo
+      let target = "pessoal";
+      let newPersonal = oldPersonalBalance;
+      let newHouseMember = oldUserHouseBalance;
+      let newHouseTotal = oldTotalHouseBalance;
+
+      if (oldPersonalBalance >= accumulatedCredit) {
+        newPersonal -= accumulatedCredit;
+        target = "pessoal";
+      } else if (oldUserHouseBalance >= accumulatedCredit) {
+        newHouseMember -= accumulatedCredit;
+        newHouseTotal -= accumulatedCredit;
+        target = "da casa";
+      } else {
+        return { reply: `Você precisa ter pelo menos ${formatCurrency(accumulatedCredit)} em algum dos saldos para eu liquidar a fatura automaticamente. Recarregue seu saldo primeiro!` };
+      }
+
+      if (!previewOnly) {
+        await db.update(usersTable).set({ personalBalance: newPersonal.toFixed(2) }).where(eq(usersTable.id, identity.user.id));
+        if (identity.member) {
+          await db.update(householdMembersTable).set({ householdBalance: newHouseMember.toFixed(2) }).where(eq(householdMembersTable.id, identity.member.id));
+        }
+        await db.update(householdsTable).set({ totalHouseBalance: newHouseTotal.toFixed(2) }).where(eq(householdsTable.id, identity.household.id));
+      
+        // Registrar a transação de ajuste de liquidação para histórico
+        await db.insert(transactionsTable).values({
+          householdId: identity.household.id,
+          memberId: identity.member?.id ?? null,
+          type: "expense",
+          amount: accumulatedCredit.toFixed(2),
+          category: "Cartão de Crédito",
+          description: "Liquidação de Fatura Acumulada",
+          visibility: target === "da casa" ? "shared" : "personal",
+          accountType: target === "da casa" ? "house" : "personal",
+          paymentMethod: "debito", // Foi pago agora, sai o cash
+          transactionDate: replyDate,
+          createdBy: "Sistema Contai",
+        });
+      }
+
+      return { reply: `✅ *Fatura Liquidada!* Descontei ${formatCurrency(accumulatedCredit)} do seu saldo ${target}. Agora você está em dia! 🚀` };
     }
 
     case "consulta_resumo": {
