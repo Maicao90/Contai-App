@@ -23,6 +23,7 @@ import {
   syncReminderForUser,
 } from "./google-calendar";
 import { queueNotificationEvent } from "./notifications";
+import { logger } from "./logger";
 import { expandBrazilPhoneVariants, normalizeBrazilPhone } from "./phone";
 import { markReferralActiveFromRealUse } from "./referrals";
 import { systemSettings } from "./system-settings";
@@ -1012,12 +1013,49 @@ async function getHistoricalSpendingSummary(householdId: number, months = 6) {
 import { checkEscapeCommand } from "./engine/middleware/escapeCommands";
 import { processContextualResponse, initializeFlowState } from "./engine/contextManager";
 
+async function predictCategory(householdId: number, description: string, intent: string): Promise<string> {
+  const defaultCategory = intent === "registrar_gasto" ? "Outros" : "Freela";
+  if (!description) return defaultCategory;
+  
+  // Clean description and extract keywords
+  const words = description.toLowerCase().split(/\\s+/).filter(w => w.trim().length > 3);
+  if (words.length === 0) return defaultCategory;
+  
+  try {
+    const type = intent === "registrar_gasto" ? "expense" : "income";
+    
+    const conditions = [
+       eq(transactionsTable.householdId, householdId),
+       eq(transactionsTable.type, type),
+       sql`(${sql.join(words.map(w => ilike(transactionsTable.description, `%${w}%`)), sql` OR `)})`
+    ];
+
+    const rows = await db
+      .select({ 
+         category: transactionsTable.category, 
+         count: sql<number>`count(*)`.as("cnt")
+      })
+      .from(transactionsTable)
+      .where(and(...conditions))
+      .groupBy(transactionsTable.category)
+      .orderBy(sql`count(*) desc`)
+      .limit(1);
+
+    if (rows && rows.length > 0 && rows[0].category) {
+       return rows[0].category;
+    }
+  } catch (error) {
+     logger.error({ error }, "Failed to predict category from history.");
+  }
+  return defaultCategory;
+}
+
 async function saveParsedAction(
   identity: Identity,
   parsed: ParsedMessage,
   input: ProcessIncomingMessageInput,
-  options: SaveParsedActionOptions = {},
-): Promise<{ reply: string; isMissingInfo?: boolean }> {
+  options: SaveParsedActionOptions & { confirmedHighValue?: boolean } = {},
+): Promise<{ reply: string; isMissingInfo?: boolean; triggerHighValueConfirmation?: boolean }> {
   const previewOnly = options.previewOnly === true;
   const replyDate = new Date();
   const appBaseUrl = getAppBaseUrl();
@@ -1043,14 +1081,24 @@ async function saveParsedAction(
       const accountType = parsed.accountType || "personal";
       const paymentMethod = parsed.paymentMethod!;
       const amount = parsed.amount;
-      const category = parsed.category || (parsed.intent === "registrar_gasto" ? "Outros" : "Freela");
       const description = parsed.description || "Entrada";
+      let category = parsed.category;
+      if (!category) {
+        category = await predictCategory(identity.household.id, description, parsed.intent);
+      }
       const visibility = accountType === "house" ? "shared" : "personal";
 
-      // 2. Capturar saldos anteriores
       const oldPersonalBalance = toAmountNumber(identity.user.personalBalance);
       const oldUserHouseBalance = toAmountNumber(identity.member?.householdBalance);
       const oldTotalHouseBalance = toAmountNumber(identity.household.totalHouseBalance);
+
+      if (amount && amount >= 1000 && !options.confirmedHighValue) {
+        return {
+           reply: `⚠️ *Transação Elevada Detectada!*\nVocê está querendo registrar *${formatCurrency(amount)}*.\nTem certeza que quer confirmar esse lançamento?\n\nResponda "Sim" para continuar ou "Não" para cancelar.`,
+           isMissingInfo: true,
+           triggerHighValueConfirmation: true
+        };
+      }
 
       let newPersonalBalance = oldPersonalBalance;
       let newUserHouseBalance = oldUserHouseBalance;
@@ -1632,6 +1680,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   let reply = "";
   let isMissingInfo: boolean | undefined = false;
   let didBypassAI = false;
+  let triggerHighValueConfirmation = false;
 
   if (pendingDecision && pendingDecision.question) {
     if (checkEscapeCommand(input.content)) {
@@ -1657,12 +1706,28 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
        }
 
        await clearPendingDecision(pendingDecision.id);
-       const intent = actionType === "register_expense" ? "registrar_gasto" : "registrar_receita";
-       parsed = {
-          intent: intent,
-          ...ctxResponse.parsedData
-       };
-       ({ reply, isMissingInfo } = await saveParsedAction(identity, parsed, input));
+       
+       if (actionType === "confirm_high_value") {
+          if (ctxResponse.parsedData.confirmed === true) {
+             parsed = { ...(pendingDecision.payload as any).transactionParsed };
+             const result = await saveParsedAction(identity, parsed, input, { confirmedHighValue: true });
+             reply = result.reply;
+             isMissingInfo = result.isMissingInfo;
+             triggerHighValueConfirmation = result.triggerHighValueConfirmation ?? false;
+          } else {
+             return { user: identity.user, member: identity.member, household: identity.household, subscription: identity.subscription, parsed: { intent: "indefinido" }, reply: "Lançamento cancelado. Se quiser anotar outra coisa, me mande!" };
+          }
+       } else {
+          const intent = actionType === "register_expense" ? "registrar_gasto" : "registrar_receita";
+          parsed = {
+              intent: intent,
+              ...ctxResponse.parsedData
+          };
+          const result = await saveParsedAction(identity, parsed, input);
+          reply = result.reply;
+          isMissingInfo = result.isMissingInfo;
+          triggerHighValueConfirmation = result.triggerHighValueConfirmation ?? false;
+       }
     }
   }
 
@@ -1703,6 +1768,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
         if (!anyMissingInfo) {
           anyMissingInfo = true;
           isMissingInfo = true;
+          triggerHighValueConfirmation = result.triggerHighValueConfirmation ?? false;
           parsed = p;
           reply = result.reply;
         } else {
@@ -1722,15 +1788,18 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   }
 
   if (isMissingInfo) {
-    const actionStr = parsed.intent === "registrar_gasto" ? "register_expense" : "register_income";
-    const flow = initializeFlowState(actionStr, parsed);
-    await createPendingDecision(identity, "missing_info", reply, {
+    const actionStr = triggerHighValueConfirmation ? "confirm_high_value" : (parsed.intent === "registrar_gasto" ? "register_expense" : "register_income");
+    const flow = triggerHighValueConfirmation ? { step: 0, accumulatedData: {} } : initializeFlowState(actionStr, parsed);
+    const pendPayload: any = {
       parsed,
       originalContent: finalContentForPendency,
       source: input.source,
       messageType: input.messageType,
       action: actionStr
-    }, flow.step, flow.accumulatedData);
+    };
+    if (triggerHighValueConfirmation) pendPayload.transactionParsed = parsed;
+    
+    await createPendingDecision(identity, "missing_info", reply, pendPayload, flow.step, flow.accumulatedData);
   }
 
   if (

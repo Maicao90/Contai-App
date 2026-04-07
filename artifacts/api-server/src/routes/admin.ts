@@ -23,6 +23,7 @@ import {
   ensurePermanentAdminUser,
   categoriesTable,
   conversationsTable,
+  processedWebhooksTable
 } from "@workspace/db";
 import { addDays } from "date-fns";
 import { getSession, hashPassword, requireAdmin } from "../lib/auth";
@@ -470,6 +471,24 @@ function buildIntegrationHints(key: IntegrationKey) {
 }
 
 router.use("/admin", requireAdmin);
+
+router.get("/admin/observability", async (req, res, next) => {
+  try {
+     const [processed, logsCount, pendingCount] = await Promise.all([
+        db.select({ count: sql<number>`count(*)` }).from(processedWebhooksTable),
+        db.select({ count: sql<number>`count(*)` }).from(conversationLogsTable),
+        db.select({ count: sql<number>`count(*)` }).from(pendingDecisionsTable)
+     ]);
+
+     res.json({
+        webhooksInterceptadosIdempotencia: processed[0]?.count ?? 0,
+        conversasProcessadas: logsCount[0]?.count ?? 0,
+        contextosPendentesAtivos: pendingCount[0]?.count ?? 0
+     });
+  } catch (err) {
+     next(err);
+  }
+});
 
 function normalizeStatus(status?: string | null) {
   if (!status) return "trial";

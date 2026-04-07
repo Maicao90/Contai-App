@@ -63,6 +63,35 @@ type AdminMetrics = {
 
 // Eliminamos o componente MiniBars antigo para usar Recharts profissional
 
+function WebhookObservabilityCard() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-observability"],
+    queryFn: () => getJson<{ webhooksInterceptadosIdempotencia: number; conversasProcessadas: number; contextosPendentesAtivos: number }>("/admin/observability"),
+  });
+
+  return (
+    <Card className="border-white/70 bg-white/92 shadow-[0_10px_30px_rgba(15,23,42,0.04)] col-span-full">
+      <CardHeader>
+        <CardTitle>Observabilidade do Sistema Edge</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-[22px] border border-emerald-100 bg-emerald-50 px-4 py-4 sm:px-5">
+          <p className="text-sm text-emerald-700">Duplicatas da Meta Bloqueadas (Idempotência)</p>
+          <p className="mt-2 text-2xl font-semibold text-emerald-950">{isLoading ? "..." : data?.webhooksInterceptadosIdempotencia ?? 0}</p>
+        </div>
+        <div className="rounded-[22px] border border-blue-100 bg-blue-50 px-4 py-4 sm:px-5">
+          <p className="text-sm text-blue-700">Fluxos Multi-etapas Logados</p>
+          <p className="mt-2 text-2xl font-semibold text-blue-950">{isLoading ? "..." : data?.conversasProcessadas ?? 0}</p>
+        </div>
+        <div className="rounded-[22px] border border-amber-100 bg-amber-50 px-4 py-4 sm:px-5">
+          <p className="text-sm text-amber-700">Fluxos Abandonados na RAM (State Machine)</p>
+          <p className="mt-2 text-2xl font-semibold text-amber-950">{isLoading ? "..." : data?.contextosPendentesAtivos ?? 0}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AdminDashboardPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-metrics"],
@@ -138,6 +167,10 @@ export default function AdminDashboardPage() {
               )}
             </CardContent>
           </Card>
+        </section>
+
+        <section className="grid gap-4">
+           <WebhookObservabilityCard />
         </section>
 
         <section className="grid gap-4 xl:grid-cols-3">

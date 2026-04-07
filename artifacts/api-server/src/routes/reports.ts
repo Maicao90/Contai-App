@@ -516,40 +516,45 @@ router.post("/reports/monthly-email-batch", requireAdmin, async (req, res, next)
   try {
     const month = String(req.body.month ?? "");
     const users = await listEligibleMonthlyReportUsers();
-    const events = [];
-
-    for (const user of users) {
-      const report = await buildMonthlyReport(user.id, month);
-      if (!report) continue;
-
-      const event = await queueNotificationEvent({
-        template: "monthly_report",
-        user,
-        payload: {
-          month: report.period.key,
-          monthLabel: report.period.label,
-          summary: buildMonthlyEmailSummary({
-            monthLabel: report.period.label,
-            income: report.metrics.income,
-            expenses: report.metrics.expenses,
-            balance: report.metrics.balance,
-            topCategory: report.metrics.topCategory,
-            billsCount: report.metrics.billsCount,
-            remindersCount: report.metrics.remindersCount,
-            commitmentsCount: report.metrics.commitmentsCount,
-          }),
-          categoryBreakdown: report.categoryBreakdown,
-        },
-      });
-
-      events.push(event);
-    }
-
+    
+    // Libera a requisição da Dashboard imediatamente (Impede gargalo de N+1 travando a API do admin)
     res.json({
       ok: true,
-      queued: events.length,
-      events,
+      queued: users.length,
+      message: "O envio de e-mails em lote foi iniciado em background processando os relatórios.",
     });
+
+    (async () => {
+      for (const user of users) {
+        try {
+          const report = await buildMonthlyReport(user.id, month);
+          if (!report) continue;
+
+          await queueNotificationEvent({
+            template: "monthly_report",
+            user,
+            payload: {
+              month: report.period.key,
+              monthLabel: report.period.label,
+              summary: buildMonthlyEmailSummary({
+                monthLabel: report.period.label,
+                income: report.metrics.income,
+                expenses: report.metrics.expenses,
+                balance: report.metrics.balance,
+                topCategory: report.metrics.topCategory,
+                billsCount: report.metrics.billsCount,
+                remindersCount: report.metrics.remindersCount,
+                commitmentsCount: report.metrics.commitmentsCount,
+              }),
+              categoryBreakdown: report.categoryBreakdown,
+            },
+          });
+        } catch (e) {
+          console.error({ error: e, userId: user.id }, "Faulting on monthly email generation loop");
+        }
+      }
+    })();
+
   } catch (error) {
     next(error);
   }
