@@ -15,6 +15,7 @@ type AIParsedIntent =
   | "registrar_meta"
   | "analise_financeira"
   | "registrar_pagamento_fatura"
+  | "transferencia"
   | "indefinido";
 
 export type AIParsedMessage = {
@@ -27,6 +28,8 @@ export type AIParsedMessage = {
   observacoes?: string | null;
   visibilidade?: "shared" | "personal" | null;
   parcelas?: number | null;
+  conta?: string | null;
+  conta_destino?: string | null;
 };
 
 export type AIParsedBatch = {
@@ -80,6 +83,7 @@ const TEXT_SYSTEM_PROMPT = [
   "- registrar_meta: definir um limite mensal de gastos para uma categoria. Ex: 'minha meta de mercado é 1000 reais', 'limite de 200 pra lazer'.",
   "- analise_financeira: pedido de analise de historico, sugestao de economia ou como poupar dinheiro.",
   "- registrar_pagamento_fatura: comando para avisar que pagou a fatura do cartao de credito, liquidar gastos de cartao ou zerar divida de credito.",
+  "- transferencia: mover dinheiro de uma conta para outra, como 'transferi 100 do nubank para o itau', 'mandei 50 da corrente pra poupanca'.",
   "- indefinido: quando realmente nao der para classificar.",
   "Regras de extracao:",
   "- valor deve ser numero em reais, usando ponto decimal. Atenção: converta virgulas (, ) para ponto decimal (.) em sua extração de números.",
@@ -90,6 +94,8 @@ const TEXT_SYSTEM_PROMPT = [
   "- observacoes deve guardar contexto util que nao cabe nos outros campos.",
   "- visibilidade so deve ser shared ou personal quando isso estiver claro na mensagem. Se nao estiver claro, retorne null.",
   "- parcelas se o texto sugerir parcelamento explicitamente (ex: 'parcelei em 6x', '5 vezes', 'em 10x'), retorne o numero exato de parcelas. Caso contrario, retorne null. Nao inclua a palavra vezes.",
+  "- conta: nome do banco, instituicao ou conta mencionada (ex: Nubank, Itau, Bradesco, Carteira, Dinheiro, Poupanca).",
+  "- conta_destino: em caso de transferencia, o nome da conta que recebeu o dinheiro.",
   "Regras de negocio do Contai:",
   "- se a mensagem mencionar casa, casal, familia, nosso, nossa, compartilhado, compartilhada ou da casa, isso pode indicar shared.",
   "- se a mensagem mencionar pessoal, individual, so meu, so minha, sozinho ou sozinha, isso pode indicar personal.",
@@ -181,7 +187,7 @@ async function openAIJsonRequest<T>(
 export async function interpretTextWithOpenAI(
   text: string,
   referenceDate: string,
-): Promise<AIParsedBatch | null> {
+): Promise<{ data: AIParsedBatch | null; usage?: any }> {
   const payload = {
     model: CHAT_MODEL,
     temperature: 0,
@@ -216,6 +222,7 @@ export async function interpretTextWithOpenAI(
                       "registrar_meta",
                       "analise_financeira",
                       "registrar_pagamento_fatura",
+                      "transferencia",
                       "indefinido",
                     ],
                   },
@@ -230,6 +237,8 @@ export async function interpretTextWithOpenAI(
                     enum: ["shared", "personal", null],
                   },
                   parcelas: { type: ["number", "null"] },
+                  conta: { type: ["string", "null"] },
+                  conta_destino: { type: ["string", "null"] },
                 },
                 required: [
                   "intent",
@@ -241,6 +250,8 @@ export async function interpretTextWithOpenAI(
                   "observacoes",
                   "visibilidade",
                   "parcelas",
+                  "conta",
+                  "conta_destino",
                 ],
               },
             },
@@ -269,6 +280,7 @@ export async function interpretTextWithOpenAI(
 
   const json = await openAIJsonRequest<{
     choices?: Array<{ message?: { content?: string } }>;
+    usage?: any;
   }>(
     "/chat/completions",
     JSON.stringify(payload),
@@ -279,20 +291,23 @@ export async function interpretTextWithOpenAI(
 
   const raw = json?.choices?.[0]?.message?.content;
   if (!raw) {
-    return null;
+    return { data: null };
   }
 
   try {
-    return JSON.parse(raw) as AIParsedBatch;
+    return {
+      data: JSON.parse(raw) as AIParsedBatch,
+      usage: json?.usage,
+    };
   } catch {
-    return null;
+    return { data: null };
   }
 }
 
 export async function rewriteReplyWithOpenAI(
   draftReply: string,
   replyPrompt: string,
-): Promise<string | null> {
+): Promise<{ reply: string | null; usage?: any }> {
   const payload = {
     model: CHAT_MODEL,
     temperature: 0.2,
@@ -322,6 +337,7 @@ export async function rewriteReplyWithOpenAI(
 
   const json = await openAIJsonRequest<{
     choices?: Array<{ message?: { content?: string } }>;
+    usage?: any,
   }>(
     "/chat/completions",
     JSON.stringify(payload),
@@ -331,13 +347,16 @@ export async function rewriteReplyWithOpenAI(
   );
 
   const rewritten = json?.choices?.[0]?.message?.content?.trim() || null;
-  return rewritten ? sanitizeReplyForWhatsApp(rewritten) : null;
+  return {
+    reply: rewritten ? sanitizeReplyForWhatsApp(rewritten) : null,
+    usage: json?.usage,
+  };
 }
 
 export async function answerFAQWithOpenAI(
   userMessage: string,
   userName: string,
-): Promise<string | null> {
+): Promise<{ reply: string | null; usage?: any }> {
   const payload = {
     model: CHAT_MODEL,
     temperature: 0.5,
@@ -364,6 +383,7 @@ export async function answerFAQWithOpenAI(
 
   const json = await openAIJsonRequest<{
     choices?: Array<{ message?: { content?: string } }>;
+    usage?: any;
   }>(
     "/chat/completions",
     JSON.stringify(payload),
@@ -373,9 +393,10 @@ export async function answerFAQWithOpenAI(
   );
 
   const raw = json?.choices?.[0]?.message?.content;
-  if (!raw) return null;
-  
-  return sanitizeReplyForWhatsApp(raw);
+  return {
+    reply: raw ? sanitizeReplyForWhatsApp(raw) : null,
+    usage: json?.usage,
+  };
 }
 
 export async function transcribeAudioWithOpenAI(
@@ -420,7 +441,7 @@ export async function transcribeAudioWithOpenAI(
 export async function analyzeImageWithOpenAI(
   base64: string,
   mimeType: string,
-): Promise<ImageExtractionResult | null> {
+): Promise<{ data: ImageExtractionResult | null; usage?: any }> {
   const payload = {
     model: VISION_MODEL,
     temperature: 0,
@@ -469,6 +490,7 @@ export async function analyzeImageWithOpenAI(
 
   const json = await openAIJsonRequest<{
     choices?: Array<{ message?: { content?: string } }>;
+    usage?: any;
   }>(
     "/chat/completions",
     JSON.stringify(payload),
@@ -479,19 +501,22 @@ export async function analyzeImageWithOpenAI(
 
   const raw = json?.choices?.[0]?.message?.content;
   if (!raw) {
-    return null;
+    return { data: null };
   }
 
   try {
-    return JSON.parse(raw) as ImageExtractionResult;
+    return {
+      data: JSON.parse(raw) as ImageExtractionResult,
+      usage: json?.usage,
+    };
   } catch {
-    return null;
+    return { data: null };
   }
 }
 
 export async function generateFinancialInsights(
   historyContext: string,
-): Promise<string | null> {
+): Promise<{ reply: string | null; usage?: any }> {
   const payload = {
     model: CHAT_MODEL,
     temperature: 0.7,
@@ -516,6 +541,7 @@ export async function generateFinancialInsights(
 
   const json = await openAIJsonRequest<{
     choices?: Array<{ message?: { content?: string } }>;
+    usage?: any;
   }>(
     "/chat/completions",
     JSON.stringify(payload),
@@ -525,5 +551,8 @@ export async function generateFinancialInsights(
   );
 
   const analysis = json?.choices?.[0]?.message?.content?.trim() || null;
-  return analysis ? sanitizeReplyForWhatsApp(analysis) : null;
+  return {
+    reply: analysis ? sanitizeReplyForWhatsApp(analysis) : null,
+    usage: json?.usage,
+  };
 }

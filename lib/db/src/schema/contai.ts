@@ -62,6 +62,21 @@ export const householdMembersTable = pgTable("household_members", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const accountsTable = pgTable("accounts", {
+  id: serial("id").primaryKey(),
+  householdId: integer("household_id").notNull().references(() => householdsTable.id, {
+    onDelete: "cascade",
+  }),
+  ownerUserId: integer("owner_user_id").references(() => usersTable.id, {
+    onDelete: "set null",
+  }),
+  name: text("name").notNull(),
+  type: text("type").notNull().default("checking"),
+  isActive: boolean("is_active").notNull().default(true),
+  balance: numeric("balance", { precision: 12, scale: 2 }).notNull().default("0"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const categoriesTable = pgTable("categories", {
   id: serial("id").primaryKey(),
   householdId: integer("household_id").notNull().references(() => householdsTable.id, {
@@ -88,6 +103,12 @@ export const transactionsTable = pgTable("transactions", {
   }),
   type: text("type").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  accountId: integer("account_id").references(() => accountsTable.id, {
+    onDelete: "set null",
+  }),
+  destinationAccountId: integer("destination_account_id").references(() => accountsTable.id, {
+    onDelete: "set null",
+  }),
   categoryId: integer("category_id").references(() => categoriesTable.id, {
     onDelete: "set null",
   }),
@@ -227,6 +248,22 @@ export const pendingDecisionsTable = pgTable("pending_decisions", {
   payload: jsonb("payload").notNull(),
   step: integer("step").notNull().default(0),
   accumulatedData: jsonb("accumulated_data").notNull().default({}),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const aiLogsTable = pgTable("ai_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => usersTable.id, {
+    onDelete: "set null",
+  }),
+  householdId: integer("household_id").references(() => householdsTable.id, {
+    onDelete: "set null",
+  }),
+  modelUsed: text("model_used").notNull(),
+  promptVersion: text("prompt_version"),
+  input: text("input").notNull(),
+  output: text("output"),
+  tokens: integer("tokens"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

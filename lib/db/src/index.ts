@@ -149,8 +149,22 @@ async function ensureSchema() {
   `));
 
   await db.execute(sql.raw(`
+
     ALTER TABLE categories
     ADD COLUMN IF NOT EXISTS monthly_limit NUMERIC(12, 2);
+  `));
+
+  await db.execute(sql.raw(`
+    CREATE TABLE IF NOT EXISTS accounts (
+      id SERIAL PRIMARY KEY,
+      household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+      owner_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL DEFAULT 'checking',
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
   `));
 
   await db.execute(sql.raw(`
@@ -191,6 +205,14 @@ async function ensureSchema() {
 
   await db.execute(sql.raw(`
     ALTER TABLE transactions ADD COLUMN IF NOT EXISTS canceled_at TIMESTAMP;
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS account_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL;
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS destination_account_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL;
   `));
 
   await db.execute(sql.raw(`
@@ -333,6 +355,20 @@ async function ensureSchema() {
       access_token TEXT,
       refresh_token TEXT,
       status TEXT NOT NULL DEFAULT 'disconnected',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `));
+
+  await db.execute(sql.raw(`
+    CREATE TABLE IF NOT EXISTS ai_logs (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      household_id INTEGER REFERENCES households(id) ON DELETE SET NULL,
+      model_used TEXT NOT NULL,
+      prompt_version TEXT,
+      input TEXT NOT NULL,
+      output TEXT,
+      tokens INTEGER,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `));

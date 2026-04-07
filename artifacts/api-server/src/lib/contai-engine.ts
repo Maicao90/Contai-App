@@ -1,4 +1,6 @@
 import {
+  accountsTable,
+  aiLogsTable,
   billsTable,
   categoriesTable,
   commitmentsTable,
@@ -29,6 +31,66 @@ import { markReferralActiveFromRealUse } from "./referrals";
 import { systemSettings } from "./system-settings";
 import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz";
 import { startOfDay as fnsStartOfDay, endOfDay as fnsEndOfDay, startOfMonth as fnsStartOfMonth, endOfMonth as fnsEndOfMonth, addDays, getDay } from "date-fns";
+
+/** 
+ * V5: Observabilidade de IA 
+ */
+async function logAiAction(params: {
+  userId?: number;
+  householdId: number;
+  model: string;
+  input: string;
+  output?: string;
+  tokens?: number;
+  promptVersion?: string;
+}) {
+  try {
+    await db.insert(aiLogsTable).values({
+      userId: params.userId ?? null,
+      householdId: params.householdId,
+      modelUsed: params.model,
+      input: params.input,
+      output: params.output ?? null,
+      tokens: params.tokens ?? null,
+      promptVersion: params.promptVersion ?? "v5-std",
+    });
+  } catch (err) {
+    logger.error("Falha ao salvar log de IA:", err as any);
+  }
+}
+
+/**
+ * V5: Provisionamento de Contas Padrão
+ */
+async function ensureDefaultAccounts(householdId: number, userId?: number) {
+  const existing = await db.select().from(accountsTable).where(eq(accountsTable.householdId, householdId));
+  
+  if (existing.length === 0) {
+    await db.insert(accountsTable).values([
+      { householdId, name: "Conta Corrente", type: "checking", isActive: true },
+      { householdId, name: "Cartão de Crédito", type: "credit", isActive: true },
+      { householdId, name: "Dinheiro (Caixa)", type: "cash", isActive: true },
+    ]);
+    return await db.select().from(accountsTable).where(eq(accountsTable.householdId, householdId));
+  }
+  return existing;
+}
+
+/**
+ * V5: Localização Inteligente de Conta
+ */
+async function findAccount(householdId: number, name?: string | null, typeHint: string = "checking") {
+  const accounts = await db.select().from(accountsTable).where(eq(accountsTable.householdId, householdId));
+  
+  if (!name) {
+    return accounts.find(a => a.type === typeHint) || accounts[0];
+  }
+
+  const normalized = name.toLowerCase();
+  const match = accounts.find(a => a.name.toLowerCase().includes(normalized) || normalized.includes(a.name.toLowerCase()));
+  
+  return match || accounts.find(a => a.type === typeHint) || accounts[0];
+}
 
 type MessageKind = "text" | "audio" | "image";
 type Visibility = "shared" | "personal";
@@ -67,7 +129,9 @@ type ParsedMessage = {
   recurrence?: string | null;
   notes?: string | null;
   visibility?: Visibility;
-  accountType?: "personal" | "house";
+  accountType?: "house" | "personal";
+  conta?: string;
+  contaDestino?: string;
   paymentMethod?: "debito" | "credito" | "pix" | "dinheiro" | "boleto";
   installments?: number;
 };
@@ -550,14 +614,27 @@ function mapAIResultToParsed(ai: AIParsedMessage, tz = "America/Sao_Paulo"): Par
       ? ai.visibilidade
       : undefined,
     installments: ai.parcelas ?? undefined,
+    conta: ai.conta ?? undefined,
+    contaDestino: ai.conta_destino ?? undefined,
   };
 }
 
-async function interpretMessage(content: string, tz = "America/Sao_Paulo") {
+async function interpretMessage(content: string, identity: Identity, tz = "America/Sao_Paulo") {
   const parsedByRules = parseMessageByRules(content, tz);
   if (hasEnoughRuleConfidence(parsedByRules)) return [parsedByRules];
 
-  const aiResult = await interpretTextWithOpenAI(content, new Date().toISOString());
+  const { data: aiResult, usage } = await interpretTextWithOpenAI(content, new Date().toISOString());
+  
+  await logAiAction({
+    userId: identity.user.id,
+    householdId: identity.household.id,
+    model: "gpt-4o-mini",
+    input: content,
+    output: JSON.stringify(aiResult),
+    tokens: usage?.total_tokens,
+    promptVersion: "v5-interpreter"
+  });
+
   if (!aiResult || !aiResult.transacoes || aiResult.transacoes.length === 0) return [parsedByRules];
 
   return aiResult.transacoes.map(t => {
@@ -571,13 +648,24 @@ async function interpretMessage(content: string, tz = "America/Sao_Paulo") {
   });
 }
 
-async function applyReplyPrompt(reply: string) {
+async function applyReplyPrompt(reply: string, identity: Identity) {
   const prompt = systemSettings.botReplyPrompt?.trim();
   if (!prompt) {
     return reply;
   }
 
-  const rewritten = await rewriteReplyWithOpenAI(reply, prompt);
+  const { reply: rewritten, usage } = await rewriteReplyWithOpenAI(reply, prompt);
+  
+  await logAiAction({
+    userId: identity.user.id,
+    householdId: identity.household.id,
+    model: "gpt-4o-mini",
+    input: reply,
+    output: rewritten ?? undefined,
+    tokens: usage?.total_tokens,
+    promptVersion: "v5-rewriter"
+  });
+
   return rewritten || reply;
 }
 
@@ -1104,12 +1192,14 @@ async function saveParsedAction(
       let newUserHouseBalance = oldUserHouseBalance;
       let newTotalHouseBalance = oldTotalHouseBalance;
 
+      // V5: Account Selection
+      const account = await findAccount(identity.household.id, parsed.conta, paymentMethod === "credito" ? "credit" : "checking");
+      const accountId = account.id;
+
       // Logic for Multi-installments (Parcelas)
       const installments = parsed.installments && parsed.installments > 1 ? parsed.installments : 1;
       const parsedAmount = amount;
       
-      // Assume o valor passado já era a parcela correta. (Se passou '10 vezes de 110', a IA dá 110).
-      // Se fosse total, IA deve ser calibrada pelo GPT. Vamos trabalhar com unitário de lançamento.
       const currentAmount = parsedAmount;
 
       if (parsed.intent === "registrar_receita") {
@@ -1119,15 +1209,29 @@ async function saveParsedAction(
           newUserHouseBalance += currentAmount;
           newTotalHouseBalance += currentAmount;
         }
+        
+        // Update Account Balance
+        if (!previewOnly) {
+          await db.update(accountsTable)
+            .set({ balance: (toAmountNumber(account.balance) + currentAmount).toFixed(2) })
+            .where(eq(accountsTable.id, accountId));
+        }
       } else {
         // Regra do Maicon: Se for Crédito, NÃO desconta do saldo agora (Fluxo de Caixa)
-        if (paymentMethod !== "credito") {
+        if (account.type !== "credit") {
           if (accountType === "personal") {
             newPersonalBalance -= currentAmount;
           } else {
             newUserHouseBalance -= currentAmount;
             newTotalHouseBalance -= currentAmount;
           }
+        }
+        
+        // Update Account Balance
+        if (!previewOnly) {
+           await db.update(accountsTable)
+            .set({ balance: (toAmountNumber(account.balance) - currentAmount).toFixed(2) })
+            .where(eq(accountsTable.id, accountId));
         }
       }
 
@@ -1140,6 +1244,7 @@ async function saveParsedAction(
         await db.insert(transactionsTable).values({
           householdId: identity.household.id,
           memberId: identity.member?.id ?? null,
+          accountId: accountId,
           type: parsed.intent === "registrar_gasto" ? "expense" : "income",
           amount: currentAmount.toFixed(2),
           category,
@@ -1221,6 +1326,12 @@ async function saveParsedAction(
 
       if (installments > 1) {
         response.splice(1, 0, `*Aviso:* A sua 1ª parcela tá nas transações de hoje. Lancei e organizei as outras ${installments - 1} parcelas na sua aba de Contas a Pagar dos próximos meses!`);
+      }
+
+      response.push(`🏦 *Conta:* ${account.name}`);
+      
+      if (account.type === "credit") {
+        response.push(`💳 *Obs:* Lançado no crédito, seu saldo imediato em conta não foi alterado.`);
       }
 
       if (accountType === "personal") {
@@ -1587,37 +1698,35 @@ async function checkBudgetLimits(identity: Identity, amount: number, categoryNam
 }
 
 export async function previewBotMessage(input: {
-  userId: number;
-  message: string;
-  scenario?: BotPreviewScenario;
-  messageType?: MessageKind;
-}) {
-  const scenario = input.scenario ?? "active";
-  if (scenario === "unregistered") {
-    const reply = await applyReplyPrompt(buildUnregisteredReply());
-    return { scenario, blocked: true, parsed: { intent: "ajuda" as ParsedIntent }, reply };
-  }
-
-  const identity = await getIdentityByUserId(input.userId);
-  if (!identity) {
-     return { scenario: "unregistered", blocked: true, parsed: { intent: "ajuda" }, reply: "Usuário não encontrado." };
-  }
-
-  const parsedBatch = await interpretMessage(input.message, identity.user.timezone);
+  scenario: BotPreviewScenario;
+  phone: string;
+  content: string;
+  source: string;
+  messageType: MessageKind;
+  identity: Identity;
+}, options: { previewOnly?: boolean } = {}) {
+  const { scenario, identity } = input;
+  let reply = "";
+  const tz = identity.user.timezone;
+  const parsedBatch = await interpretMessage(input.content, identity, tz);
   const parsed = parsedBatch[0] || { intent: "indefinido" };
-  let { reply, isMissingInfo } = await saveParsedAction(identity, parsed, {
-    phone: identity.user.phone,
-    content: input.message,
-    source: "admin-preview",
-    messageType: input.messageType ?? "text",
+  
+  const result = await saveParsedAction(identity, parsed, {
+    phone: input.phone,
+    content: input.content,
+    source: input.source,
+    messageType: input.messageType,
   }, { previewOnly: true });
+  
+  reply = result.reply;
 
   if (parsed.intent === "registrar_gasto" && parsed.amount) {
      const alert = await checkBudgetLimits(identity, parsed.amount, parsed.category || "Outros");
      reply += alert;
   }
 
-  reply = await applyReplyPrompt(reply);
+  const { reply: finalReply } = await applyReplyPrompt(reply, identity);
+  reply = finalReply || reply;
   return { scenario, blocked: false, parsed, reply };
 }
 
@@ -1627,7 +1736,10 @@ export async function validateBotPreview(input: { userId: number; message: strin
     return { scenario: "unregistered" as BotPreviewScenario, blocked: true, parsed: { intent: "ajuda" as ParsedIntent }, reply: buildUnregisteredReply() };
   }
   const scenario: BotPreviewScenario = user.billingStatus === "active" ? "active" : "inactive_plan";
-  return previewBotMessage({ ...input, scenario });
+  const identity = await getIdentityByUserId(input.userId);
+  if (!identity) return { scenario: "unregistered" as BotPreviewScenario, blocked: true, parsed: { intent: "ajuda" as ParsedIntent }, reply: buildUnregisteredReply() };
+  
+  return previewBotMessage({ ...input, scenario, identity, phone: identity.user.phone, content: input.message, source: "admin-preview", messageType: input.messageType ?? "text" });
 }
 
 export async function processIncomingMessage(input: ProcessIncomingMessageInput) {
@@ -1652,14 +1764,14 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       },
     });
 
-    const reply = await applyReplyPrompt(access.reply);
+    const { reply: accessReply } = await applyReplyPrompt(access.reply, access.identity!);
 
     await logConversation({
       householdId: null,
       memberId: null,
       userId: null,
-      originalContent: reply,
-      content: reply,
+      originalContent: accessReply,
+      content: accessReply,
       intent: access.intent,
       direction: "outbound",
       source: input.source,
@@ -1670,10 +1782,13 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       },
     });
 
-    return { user: null, member: null, household: null, subscription: null, parsed: { intent: access.intent }, reply };
+    return { user: null, member: null, household: null, subscription: null, parsed: { intent: access.intent }, reply: accessReply };
   }
 
-  const identity = access.identity;
+  const identity = access.identity!;
+  
+  // V5: Provisionamento Automático de Contas (Sempre verifica se existem contas)
+  await ensureDefaultAccounts(identity.household.id, identity.user.id);
   const pendingDecision = await getPendingDecision(identity);
 
   let parsed: ParsedMessage = { intent: "indefinido" };
@@ -1685,8 +1800,8 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   if (pendingDecision && pendingDecision.question) {
     if (checkEscapeCommand(input.content)) {
       await clearPendingDecision(pendingDecision.id);
-      const rep = await applyReplyPrompt("✅ Operação cancelada! Tudo bem, esqueci o último registro. O que quer fazer?");
-      return { user: identity.user, member: identity.member, household: identity.household, subscription: identity.subscription, parsed: { intent: "indefinido" }, reply: rep };
+      const { reply: rep } = await applyReplyPrompt("✅ Operação cancelada! Tudo bem, esqueci o último registro. O que quer fazer?", identity);
+      return { user: identity.user, member: identity.member, household: identity.household, subscription: identity.subscription, parsed: { intent: "indefinido" }, reply: rep || "Operação cancelada." };
     }
 
     if (pendingDecision.kind !== "missing_info") {
@@ -1732,7 +1847,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   }
 
   if (!didBypassAI) {
-    const parsedBatch = await interpretMessage(input.content);
+    const parsedBatch = await interpretMessage(input.content, identity);
     let finalReplies: string[] = [];
     let anyMissingInfo = false;
 
@@ -1745,8 +1860,9 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
           anyMissingInfo = true;
           isMissingInfo = true;
           parsed = p;
-          const kind = p.intent as PendingKind;
-          reply = replyForPendingQuestion(kind);
+          const kind = p.intent as any; // Cast to bypass strict PendingKind if needed, or use p.intent
+          const { reply: qReply } = await applyReplyPrompt(replyForPendingQuestion(kind), identity);
+          reply = qReply || replyForPendingQuestion(kind);
         } else {
           finalReplies.push(`⚠️ Ignorei um lançamento porque faltaram dados que não consigo tratar agora.`);
         }
@@ -1755,7 +1871,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
 
       if (p.intent === "indefinido" || p.intent === "ajuda") {
         if (parsedBatch.length === 1) {
-          const faqReply = await answerFAQWithOpenAI(input.content, identity.user.name);
+          const { reply: faqReply } = await answerFAQWithOpenAI(input.content, identity.user.name);
           finalReplies.push(faqReply || getHelpText());
           parsed = p;
         }

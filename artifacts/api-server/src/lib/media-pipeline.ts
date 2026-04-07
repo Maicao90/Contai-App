@@ -101,10 +101,10 @@ export async function normalizeInboundContent(
     };
   }
 
-  const extracted =
+  const { data: extracted, usage } =
     media && media.mimeType
       ? await analyzeImageWithOpenAI(media.base64, media.mimeType)
-      : null;
+      : { data: null };
 
   if (extracted?.valor != null && extracted.confianca >= 0.6) {
     const action = extracted.tipo === "receita" ? "recebi" : "gastei";
@@ -124,7 +124,7 @@ export async function normalizeInboundContent(
     kind: "image",
     normalizedText: payload.caption?.trim() ?? "",
     rawText: payload.caption?.trim() ?? "",
-    extracted,
+    extracted: extracted,
     needsUserInput: true,
     userPrompt: "Não consegui identificar o valor, quanto foi?",
   };
