@@ -19,6 +19,24 @@ function canAccessUser(sessionUserId: number | null, targetUserId: number) {
   return Boolean(sessionUserId && sessionUserId === targetUserId);
 }
 
+router.get("/google-calendar/callback", async (req, res) => {
+  const code = String(req.query.code ?? "");
+  const state = String(req.query.state ?? "");
+  const parsedState = parseGoogleState(state);
+
+  if (!code || !parsedState?.userId) {
+    res.redirect(buildGoogleCalendarErrorRedirect("invalid_callback"));
+    return;
+  }
+
+  try {
+    await connectGoogleCalendar(parsedState.userId, code);
+    res.redirect(buildGoogleCalendarSuccessRedirect());
+  } catch {
+    res.redirect(buildGoogleCalendarErrorRedirect("connect_failed"));
+  }
+});
+
 router.get("/google-calendar/:userId", requireSession, async (req, res, next) => {
   try {
     const session = getSession(req);
@@ -76,24 +94,6 @@ router.post("/google-calendar/:userId/quick-connect", requireSession, async (req
     });
   } catch (error) {
     next(error);
-  }
-});
-
-router.get("/google-calendar/callback", async (req, res) => {
-  const code = String(req.query.code ?? "");
-  const state = String(req.query.state ?? "");
-  const parsedState = parseGoogleState(state);
-
-  if (!code || !parsedState?.userId) {
-    res.redirect(buildGoogleCalendarErrorRedirect("invalid_callback"));
-    return;
-  }
-
-  try {
-    await connectGoogleCalendar(parsedState.userId, code);
-    res.redirect(buildGoogleCalendarSuccessRedirect());
-  } catch {
-    res.redirect(buildGoogleCalendarErrorRedirect("connect_failed"));
   }
 });
 
