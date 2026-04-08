@@ -50,10 +50,17 @@ function getGoogleClientSecret() {
 }
 
 function getGoogleRedirectUri() {
-  return (
-    process.env.GOOGLE_REDIRECT_URI?.trim() ??
-    "http://localhost:3001/api/google-calendar/callback"
-  );
+  if (process.env.GOOGLE_REDIRECT_URI?.trim()) {
+    return process.env.GOOGLE_REDIRECT_URI.trim();
+  }
+  
+  // Se rodando localmente no Mac/Windows sem variaveis
+  if (process.env.NODE_ENV !== "production" && !process.env.APP_BASE_URL) {
+    return "http://localhost:3001/api/google-calendar/callback";
+  }
+
+  // Em producao (VPS) cai para o BASE_URL
+  return `${getFrontendBaseUrl()}/api/google-calendar/callback`;
 }
 
 function getFrontendBaseUrl() {
