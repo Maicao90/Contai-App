@@ -146,10 +146,17 @@ function buildSessionFromIdentity(identity: NonNullable<Awaited<ReturnType<typeo
     identity.user.role === "admin" || (masterEmail && identity.user.email?.toLowerCase().trim() === masterEmail);
 
   const role: SessionRole = isAdmin ? "admin" : identity.user.role === "owner" ? "owner" : "user";
+ 
+  // Normalização agressiva para evitar "NONE"
+  const rawUserStatus = (identity.user.billingStatus || "").toString().toLowerCase().trim();
+  const rawHouseholdStatus = (identity.household?.billingStatus || "").toString().toLowerCase().trim();
+  
+  const isActive = rawUserStatus.includes("active") || 
+                   rawUserStatus.includes("ativ") || 
+                   rawHouseholdStatus.includes("active") || 
+                   rawHouseholdStatus.includes("ativ");
 
-  const userStatus = (identity.user.billingStatus || "").trim().toLowerCase();
-  const householdStatus = (identity.household?.billingStatus || "").trim().toLowerCase();
-  const mergedStatus = userStatus === "active" || householdStatus === "active" ? "active" : (userStatus || householdStatus || "pending");
+  const mergedStatus = isActive ? "active" : (rawUserStatus || rawHouseholdStatus || "pending");
 
   const session: SessionData = {
     token,
@@ -321,16 +328,26 @@ export async function attachSession(req: SessionRequest, res: Response, next: Ne
       return next();
     }
 
-    // Ghost Session Protection: Verificar se o usuário ainda existe no banco
-    if (session.userId) {
-      const [userExists] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId)).limit(1);
-      if (!userExists) {
+    // Ghost Session Protection & Real-time Status Sync
+    if (session.userId && session.role !== "admin") {
+      const identity = await getIdentityByUserId(session.userId);
+      if (!identity) {
         sessions.delete(token);
         persistSessions();
         res.clearCookie(SESSION_COOKIE, { path: "/" });
         req.session = null;
         return next();
       }
+
+      // Re-sync billing status in real-time
+      const rawUserStatus = (identity.user.billingStatus || "").toString().toLowerCase().trim();
+      const rawHouseholdStatus = (identity.household?.billingStatus || "").toString().toLowerCase().trim();
+      const isActive = rawUserStatus.includes("active") || 
+                       rawUserStatus.includes("ativ") || 
+                       rawHouseholdStatus.includes("active") || 
+                       rawHouseholdStatus.includes("ativ");
+
+      session.billingStatus = isActive ? "active" : (rawUserStatus || rawHouseholdStatus || "pending");
     }
 
     const refreshedSession = {
