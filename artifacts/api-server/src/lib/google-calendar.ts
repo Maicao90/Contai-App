@@ -51,7 +51,9 @@ function getGoogleClientSecret() {
 
 function getGoogleRedirectUri() {
   if (process.env.GOOGLE_REDIRECT_URI?.trim()) {
-    return process.env.GOOGLE_REDIRECT_URI.trim();
+    let uri = process.env.GOOGLE_REDIRECT_URI.trim();
+    if (uri.startsWith('ttps://')) uri = 'h' + uri;
+    return uri;
   }
   
   // Se rodando localmente no Mac/Windows sem variaveis
@@ -64,7 +66,9 @@ function getGoogleRedirectUri() {
 }
 
 function getFrontendBaseUrl() {
-  return process.env.APP_BASE_URL?.trim() ?? "https://contai.site";
+  let url = process.env.APP_BASE_URL?.trim() ?? "https://contai.site";
+  if (url.startsWith('ttps://')) url = 'h' + url;
+  return url;
 }
 
 export function isGoogleCalendarConfigured() {
