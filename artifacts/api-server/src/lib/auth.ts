@@ -144,31 +144,30 @@ function buildSessionFromIdentity(identity: NonNullable<Awaited<ReturnType<typeo
   const masterEmail = process.env.MASTER_ADMIN_EMAIL?.trim().toLowerCase();
   const isAdmin =
     identity.user.role === "admin" || (masterEmail && identity.user.email?.toLowerCase().trim() === masterEmail);
+  const role: SessionRole = isAdmin ? "admin" : (identity.member?.memberType === "owner" ? "owner" : "user");
 
-  const role: SessionRole = isAdmin ? "admin" : identity.user.role === "owner" ? "owner" : "user";
- 
-  // Normalização agressiva para evitar "NONE"
-  const rawUserStatus = (identity.user.billingStatus || "").toString().toLowerCase().trim();
-  const rawHouseholdStatus = (identity.household?.billingStatus || "").toString().toLowerCase().trim();
-  
-  const isActive = rawUserStatus.includes("active") || 
-                   rawUserStatus.includes("ativ") || 
-                   rawHouseholdStatus.includes("active") || 
-                   rawHouseholdStatus.includes("ativ");
+    // Recuperação tripla de status para evitar falhas de mapeamento Drizzle
+    const rawUserStatus = (identity.user.billingStatus || (identity.user as any).billing_status || "").toString().toLowerCase().trim();
+    const rawHouseholdStatus = (identity.household?.billingStatus || (identity.household as any)?.billing_status || "").toString().toLowerCase().trim();
+    
+    const isActive = rawUserStatus.includes("active") || 
+                     rawUserStatus.includes("ativ") || 
+                     rawHouseholdStatus.includes("active") || 
+                     rawHouseholdStatus.includes("ativ");
 
-  const mergedStatus = isActive ? "active" : (rawUserStatus || rawHouseholdStatus || "pending");
+    const mergedStatus = isActive ? "active" : (rawUserStatus || rawHouseholdStatus || "pending");
 
-  const session: SessionData = {
-    token,
-    role,
-    userId: identity.user.id,
-    householdId: identity.household?.id ?? null,
-    memberId: identity.member?.id ?? null,
-    name: identity.member?.displayName ?? identity.user.name,
-    email: identity.user.email ?? null,
-    billingStatus: mergedStatus,
-    expiresAt: buildSessionExpiry(role),
-  };
+    const session: SessionData = {
+      token,
+      role,
+      userId: identity.user.id,
+      householdId: identity.household?.id ?? null,
+      memberId: identity.member?.id ?? null,
+      name: identity.member?.displayName ?? identity.user.name,
+      email: identity.user.email ?? null,
+      billingStatus: mergedStatus,
+      expiresAt: buildSessionExpiry(role),
+    };
 
   return storeSession(session);
 }

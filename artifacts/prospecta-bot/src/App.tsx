@@ -71,12 +71,12 @@ function RedirectByRole() {
     }
     const status = (session.billingStatus || "").toLowerCase();
     
-    if (session.role === "admin") {
-      navigate("/admin/dashboard");
+    // Admin and Owners are never blocked from the dashboard
+    if (session.role === "admin" || session.role === "owner") {
+      navigate("/app/dashboard");
     } else if (status === "active") {
       navigate("/app/dashboard");
     } else {
-      // Evitar loop se já estivermos na assinatura
       if (!window.location.pathname.includes("/assinatura")) {
         navigate("/app/assinatura");
       }

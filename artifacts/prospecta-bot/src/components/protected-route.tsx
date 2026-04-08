@@ -25,8 +25,10 @@ export function ProtectedRoute({ allow, children }: ProtectedRouteProps) {
     const status = (session.billingStatus || "").toLowerCase();
 
     // Bloqueio de Assinatura (Paywall)
+    // Admin e Owner SEMPRE passam. 
     if (
       session.role !== "admin" && 
+      session.role !== "owner" &&
       status !== "active" && 
       !window.location.pathname.includes("/assinatura")
     ) {
