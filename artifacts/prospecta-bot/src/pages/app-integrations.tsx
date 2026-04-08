@@ -124,7 +124,12 @@ export default function AppIntegrationsPage() {
       quickConnectCalendar.mutate(customEmail);
       return;
     }
-    window.location.href = `${BASE_URL}/api/google-calendar/${userId}/connect`;
+    // Passa o e-mail como hint para o Google pré-selecionar a conta desejada
+    const hint = customEmail.trim();
+    const url = hint
+      ? `${BASE_URL}/api/google-calendar/${userId}/connect?hint=${encodeURIComponent(hint)}`
+      : `${BASE_URL}/api/google-calendar/${userId}/connect`;
+    window.location.href = url;
   }
 
   return (
@@ -180,13 +185,31 @@ export default function AppIntegrationsPage() {
               </div>
             </div>
 
-            {data?.oauthConfigured ? null : !isConnected && !isPrepared && (
+            {/* Campo de e-mail: aparece quando OAuth está configurado (para escolher a conta) OU quando não está (conexão rápida) */}
+            {!isConnected && !isPrepared && (
               <div className="max-w-sm space-y-1.5">
                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  E-mail para a agenda (opcional)
+                  {data?.oauthConfigured
+                    ? "E-mail do Google (deixe vazio para escolher ao conectar)"
+                    : "E-mail para a agenda (opcional)"}
                 </p>
                 <Input
                   placeholder="ex: seu-email@gmail.com"
+                  value={customEmail}
+                  onChange={(e) => setCustomEmail(e.target.value)}
+                  className="rounded-xl border-slate-200 dark:border-white/10"
+                />
+              </div>
+            )}
+
+            {/* Quando já está conectado, permite reconectar com outro e-mail */}
+            {isConnected && (
+              <div className="max-w-sm space-y-1.5">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Reconectar com outro e-mail (opcional)
+                </p>
+                <Input
+                  placeholder="ex: outro-email@gmail.com"
                   value={customEmail}
                   onChange={(e) => setCustomEmail(e.target.value)}
                   className="rounded-xl border-slate-200 dark:border-white/10"

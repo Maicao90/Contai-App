@@ -49,7 +49,10 @@ router.get("/google-calendar/:userId/connect", requireSession, async (req, res) 
     return;
   }
 
-  res.redirect(buildGoogleCalendarAuthUrl(userId));
+  // Aceita e-mail preferido via ?hint=email@gmail.com para pré-selecionar a conta no Google
+  const loginHint = typeof req.query.hint === "string" ? req.query.hint.trim() : undefined;
+
+  res.redirect(buildGoogleCalendarAuthUrl(userId, loginHint || undefined));
 });
 
 router.post("/google-calendar/:userId/quick-connect", requireSession, async (req, res, next) => {

@@ -57,7 +57,7 @@ function getGoogleRedirectUri() {
 }
 
 function getFrontendBaseUrl() {
-  return process.env.APP_BASE_URL?.trim() ?? "http://localhost:5175";
+  return process.env.APP_BASE_URL?.trim() ?? "https://contai.site";
 }
 
 export function isGoogleCalendarConfigured() {
@@ -79,17 +79,23 @@ export function parseGoogleState(state: string) {
   }
 }
 
-export function buildGoogleCalendarAuthUrl(userId: number) {
+export function buildGoogleCalendarAuthUrl(userId: number, loginHint?: string) {
   const params = new URLSearchParams({
     client_id: getGoogleClientId(),
     redirect_uri: getGoogleRedirectUri(),
     response_type: "code",
     access_type: "offline",
-    prompt: "consent",
+    // "select_account consent" força o seletor de contas sempre que o usuário clicar em conectar
+    prompt: loginHint ? "consent" : "select_account consent",
     include_granted_scopes: "true",
     scope: GOOGLE_AUTH_SCOPE,
     state: buildState(userId),
   });
+
+  // Se o usuário informou um e-mail preferido, pré-seleciona a conta no Google
+  if (loginHint) {
+    params.set("login_hint", loginHint);
+  }
 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }

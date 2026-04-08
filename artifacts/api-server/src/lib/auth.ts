@@ -89,7 +89,7 @@ function normalizePhone(value: string) {
 }
 
 export function getAppBaseUrl() {
-  return process.env.APP_BASE_URL?.trim() ?? "http://localhost:5173";
+  return process.env.APP_BASE_URL?.trim() ?? "https://contai.site";
 }
 
 export function hashPassword(password: string) {
