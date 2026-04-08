@@ -52,8 +52,9 @@ function getGoogleClientSecret() {
 function getGoogleRedirectUri() {
   if (process.env.GOOGLE_REDIRECT_URI?.trim()) {
     let uri = process.env.GOOGLE_REDIRECT_URI.trim();
-    if (uri.startsWith('ttps://')) uri = 'h' + uri;
-    return uri;
+    // Limpeza pesada anti-erros de digitação: "Https", "ttps", "http", etc
+    uri = uri.replace(/^(h?t+p?s?:\/\/)+/i, '');
+    return `https://${uri}`;
   }
   
   // Se rodando localmente no Mac/Windows sem variaveis
@@ -67,8 +68,8 @@ function getGoogleRedirectUri() {
 
 function getFrontendBaseUrl() {
   let url = process.env.APP_BASE_URL?.trim() ?? "https://contai.site";
-  if (url.startsWith('ttps://')) url = 'h' + url;
-  return url;
+  url = url.replace(/^(h?t+p?s?:\/\/)+/i, '');
+  return `https://${url}`;
 }
 
 export function isGoogleCalendarConfigured() {
