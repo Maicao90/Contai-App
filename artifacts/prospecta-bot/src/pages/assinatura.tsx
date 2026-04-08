@@ -223,6 +223,11 @@ export default function SubscriptionPage() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Diagnostic Footer */}
+      <div className="mt-4 rounded-2xl border border-emerald-500/10 bg-slate-50/50 px-4 py-3 text-[10px] uppercase tracking-widest text-slate-400 dark:border-white/5 dark:bg-white/5">
+        System Diagnostic: {session?.role || "no_role"} | Status: {session?.billingStatus || "none"}
+      </div>
     </AppLayout>
   );
 }

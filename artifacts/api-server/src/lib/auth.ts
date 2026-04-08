@@ -147,6 +147,10 @@ function buildSessionFromIdentity(identity: NonNullable<Awaited<ReturnType<typeo
 
   const role: SessionRole = isAdmin ? "admin" : identity.user.role === "owner" ? "owner" : "user";
 
+  const userStatus = (identity.user.billingStatus || "").trim().toLowerCase();
+  const householdStatus = (identity.household?.billingStatus || "").trim().toLowerCase();
+  const mergedStatus = userStatus === "active" || householdStatus === "active" ? "active" : (userStatus || householdStatus || "pending");
+
   const session: SessionData = {
     token,
     role,
@@ -155,7 +159,7 @@ function buildSessionFromIdentity(identity: NonNullable<Awaited<ReturnType<typeo
     memberId: identity.member?.id ?? null,
     name: identity.member?.displayName ?? identity.user.name,
     email: identity.user.email ?? null,
-    billingStatus: (identity.user.billingStatus ?? identity.household?.billingStatus ?? "pending") as string,
+    billingStatus: mergedStatus,
     expiresAt: buildSessionExpiry(role),
   };
 

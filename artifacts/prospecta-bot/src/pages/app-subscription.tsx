@@ -242,6 +242,11 @@ export default function AppSubscriptionPage() {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Diagnostic Footer */}
+        <div className="rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-3 text-[10px] uppercase tracking-widest text-slate-400 dark:border-white/5 dark:bg-white/5">
+          System Diagnostic: {session?.role || "no_role"} | Status: {session?.billingStatus || "none"}
+        </div>
       </div>
     </AppLayout>
   );
