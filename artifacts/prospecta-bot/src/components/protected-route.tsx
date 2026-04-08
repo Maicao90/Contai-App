@@ -22,11 +22,12 @@ export function ProtectedRoute({ allow, children }: ProtectedRouteProps) {
       return;
     }
 
+    const status = (session.billingStatus || "").toLowerCase();
+
     // Bloqueio de Assinatura (Paywall)
-    // Se não for admin e não estiver ativo, manda para a tela de assinatura
     if (
       session.role !== "admin" && 
-      session.billingStatus !== "active" && 
+      status !== "active" && 
       !window.location.pathname.includes("/assinatura")
     ) {
       navigate("/assinatura");

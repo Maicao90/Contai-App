@@ -56,8 +56,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout() {
-    await postJson("/auth/logout", {});
-    setSession(null);
+    try {
+      await postJson("/auth/logout", {});
+    } catch {
+      // Ignore network errors for logout
+    } finally {
+      setSession(null);
+    }
   }
 
   useEffect(() => {

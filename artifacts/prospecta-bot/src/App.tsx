@@ -69,9 +69,11 @@ function RedirectByRole() {
       navigate("/login");
       return;
     }
+    const status = (session.billingStatus || "").toLowerCase();
+    
     if (session.role === "admin") {
       navigate("/admin/dashboard");
-    } else if (session.billingStatus === "active") {
+    } else if (status === "active") {
       navigate("/app/dashboard");
     } else {
       // Evitar loop se já estivermos na assinatura
