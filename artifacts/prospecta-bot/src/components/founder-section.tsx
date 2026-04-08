@@ -22,11 +22,14 @@ export function FounderSection() {
             transition={{ duration: 0.6 }}
             className="flex-shrink-0 flex flex-col items-center"
           >
-            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden border border-white/10 bg-white/5 flex items-center justify-center mb-4">
-              {/* Onde vai entrar a sua foto */}
-              <User className="w-16 h-16 text-emerald-400/50" />
+            <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden border border-emerald-500/20 bg-emerald-500/5 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(16,185,129,0.1)] group hover:border-emerald-500/40 transition-all duration-500">
+              <img 
+                src="/maicon.jpg" 
+                alt="Maicon - Fundador do Contai" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
             </div>
-            <h3 className="text-xl font-semibold text-white">Maicon</h3>
+            <h3 className="text-xl font-semibold text-white tracking-tight">Maicon</h3>
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mt-1">
               Fundador & Desenvolvedor
             </p>
