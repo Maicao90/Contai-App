@@ -11,6 +11,8 @@ export type SessionData = {
   memberId: number | null;
   name: string;
   email: string | null;
+  billingStatus?: string;
+  expiresAt: number;
 };
 
 type AuthContextValue = {

@@ -16,6 +16,7 @@ export type SessionData = {
   memberId: number | null;
   name: string;
   email: string | null;
+  billingStatus?: string;
   expiresAt: number;
 };
 
@@ -154,6 +155,7 @@ function buildSessionFromIdentity(identity: NonNullable<Awaited<ReturnType<typeo
     memberId: identity.member?.id ?? null,
     name: identity.member?.displayName ?? identity.user.name,
     email: identity.user.email ?? null,
+    billingStatus: (identity.user.billingStatus ?? identity.household?.billingStatus ?? "pending") as string,
     expiresAt: buildSessionExpiry(role),
   };
 
