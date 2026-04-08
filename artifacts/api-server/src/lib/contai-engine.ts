@@ -1766,12 +1766,12 @@ export async function previewBotMessage(input: {
   return { scenario, blocked: false, parsed, reply };
 }
 
-export async function validateBotPreview(input: { userId: number; message: string; messageType?: MessageKind }) {
+export async function validateBotPreview(input: { userId: number; message: string; messageType?: MessageKind; scenarioOverride?: BotPreviewScenario }) {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, input.userId)).limit(1);
   if (!user) {
     return { scenario: "unregistered" as BotPreviewScenario, blocked: true, parsed: { intent: "ajuda" as ParsedIntent }, reply: buildUnregisteredReply() };
   }
-  const scenario: BotPreviewScenario = user.billingStatus === "active" ? "active" : "inactive_plan";
+  const scenario: BotPreviewScenario = input.scenarioOverride ?? (user.billingStatus === "active" ? "active" : "inactive_plan");
   const identity = await getIdentityByUserId(input.userId);
   if (!identity) return { scenario: "unregistered" as BotPreviewScenario, blocked: true, parsed: { intent: "ajuda" as ParsedIntent }, reply: buildUnregisteredReply() };
   

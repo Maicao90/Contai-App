@@ -41,7 +41,7 @@ import { queueNotificationEvent, verifyEmailTransport } from "../lib/notificatio
 import { markReferralPaidFromHousehold } from "../lib/referrals";
 import { getSystemSettings, updateSystemSettings } from "../lib/system-settings";
 import { getBotPromptPreview } from "../lib/openai-client";
-import { previewBotMessage, type BotPreviewScenario } from "../lib/contai-engine";
+import { validateBotPreview, type BotPreviewScenario } from "../lib/contai-engine";
 import { normalizeBrazilPhone } from "../lib/phone";
 
 const router = Router();
@@ -2093,10 +2093,10 @@ router.post("/admin/bot/test-message", async (req, res, next) => {
       return;
     }
 
-    const result = await previewBotMessage({
+    const result = await validateBotPreview({
       userId: session.userId,
       message,
-      scenario,
+      scenarioOverride: scenario,
       messageType: "text",
     });
 
