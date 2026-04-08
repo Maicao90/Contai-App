@@ -45,7 +45,7 @@ export function FounderSection() {
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-full" />
             <div className="pl-6 sm:pl-8 py-2">
               <p className="text-lg sm:text-xl leading-relaxed text-slate-300 italic">
-                "Eu sempre tive dificuldade de organizar a rotina financeira. Cansei de tentar usar planilhas complexas ou aplicativos que exigiam que eu mudasse meus hábitos. Quando precisei de um sistema simples e direto para as minhas finanças e da minha casa, procurei no mercado e não encontrei nada que fosse no fluxo do dia a dia. Como também sou desenvolvedor, construí. O Contai nasceu para resolver a minha vida e agora está disponível para a sua."
+                "Sempre senti que a organização financeira era um fardo. Tentei planilhas complexas e aplicativos que mais pareciam um segundo trabalho, exigindo uma disciplina que a vida real não permite. Quando busquei algo que se integrasse ao meu fluxo natural — o WhatsApp —, percebi que essa solução simplesmente não existia. Como desenvolvedor, decidi criar o que eu precisava. O Contai nasceu para devolver o meu tempo e a minha paz, e agora está pronto para fazer o mesmo por você."
               </p>
             </div>
           </motion.div>

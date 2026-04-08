@@ -90,8 +90,8 @@ export function TechnologyAuthoritySection() {
               className="mx-auto max-w-4xl text-center"
             >
               <h2 className="mx-auto max-w-[18rem] text-balance text-center text-[1.6rem] font-semibold leading-[1.05] tracking-[-0.04em] text-white min-[390px]:max-w-[22rem] min-[390px]:text-[1.82rem] sm:max-w-[18ch] sm:text-[2.85rem] sm:leading-[1.02] lg:max-w-[20ch] lg:text-[3.05rem]">
-                <span className="block">Construído com tecnologia</span>
-                <span className="mt-1 sm:mt-2 block">que funciona de verdade</span>
+                <span className="block">A inteligência oficial das</span>
+                <span className="mt-1 sm:mt-2 block text-emerald-400">maiores empresas do mundo</span>
               </h2>
             </motion.div>
 

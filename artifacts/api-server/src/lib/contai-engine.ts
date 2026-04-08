@@ -1552,9 +1552,13 @@ async function saveParsedAction(
           },
         });
       }
+      const syncStatusText = syncedToGoogle 
+        ? " Também adicionei no seu Google Agenda. ✅" 
+        : "\n\n⚠️ *Aviso:* Não consegui sincronizar este evento com o Google Agenda. Por favor, verifique sua conexão no Painel de Integrações.";
+
       return { reply: `📅 ${parsed.title?.trim() || "Compromisso"} salvo para ${formatShortDate(parsed.when!)}.${
         parsed.visibility === "shared" ? " Salvei como compromisso compartilhado." : " Salvei como compromisso pessoal."
-      }${syncedToGoogle ? " Também adicionei no seu Google Agenda." : ""}\n\n📊 *Sua Agenda no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}` };
+      }${syncStatusText}\n\n📊 *Sua Agenda no Painel:* ${appBaseUrl}/app/dashboard${previewOnly ? "\n(Este foi só um teste do painel)." : ""}` };
     }
 
     case "analise_financeira": {

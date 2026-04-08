@@ -331,14 +331,18 @@ async function dispatchNotificationEvent(eventId: number) {
 
     return sent;
   } catch (error) {
-    console.error(`[NOTIFICATIONS] Erro ao enviar e-mail para evento ${eventId}:`, error);
+    const errorMessage = error instanceof Error ? error.message : "Falha desconhecida";
+    const smtpStatus = config.configured ? "Configurado" : "NÃO Configurado";
+    
+    console.error(`[NOTIFICATIONS] ❌ Erro ao enviar e-mail para evento ${eventId} [SMTP: ${smtpStatus}]:`, error);
+    
     const [failed] = await db
       .update(notificationEventsTable)
       .set({
         status: "failed",
         payload: {
           ...payload,
-          deliveryError: error instanceof Error ? error.message : "Falha ao enviar e-mail.",
+          deliveryError: `Erro SMTP (${smtpStatus}): ${errorMessage}`,
         },
       })
       .where(eq(notificationEventsTable.id, event.id))

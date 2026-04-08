@@ -157,25 +157,24 @@ async function getConnection(userId: number) {
   return connection ?? null;
 }
 
+async function forceRefreshAccessToken(connectionId: number, refreshToken: string) {
+  const refreshed = await refreshAccessToken(refreshToken);
+  
+  const [updated] = await db
+    .update(googleCalendarConnectionsTable)
+    .set({
+      accessToken: refreshed.access_token,
+      status: "connected",
+    })
+    .where(eq(googleCalendarConnectionsTable.id, connectionId))
+    .returning();
+
+  return updated.accessToken;
+}
+
 async function withValidAccessToken(connection: CalendarConnection) {
-  if (!connection.refreshToken) {
-    return connection.accessToken;
-  }
-
-  try {
-    return connection.accessToken;
-  } catch {
-    const refreshed = await refreshAccessToken(connection.refreshToken);
-    await db
-      .update(googleCalendarConnectionsTable)
-      .set({
-        accessToken: refreshed.access_token,
-        status: "connected",
-      })
-      .where(eq(googleCalendarConnectionsTable.id, connection.id));
-
-    return refreshed.access_token;
-  }
+  // Se não tem refresh token, não tem como renovar. Retorna o que tem.
+  return connection.accessToken;
 }
 
 export async function connectGoogleCalendar(userId: number, code: string) {
@@ -319,7 +318,12 @@ function buildBillDraft(bill: Bill): CalendarDraft {
   };
 }
 
-async function createGoogleCalendarEvent(accessToken: string, draft: CalendarDraft, timezone: string) {
+async function createGoogleCalendarEvent(
+  accessToken: string,
+  draft: CalendarDraft,
+  timezone: string,
+  retryContext?: { userId: number; connectionId: number; refreshToken?: string | null }
+) {
   const response = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
     method: "POST",
     headers: {
@@ -339,6 +343,19 @@ async function createGoogleCalendarEvent(accessToken: string, draft: CalendarDra
       },
     }),
   });
+
+  if (response.status === 401 && retryContext?.refreshToken) {
+    console.log(`[GOOGLE-CALENDAR] Token expirado para usuário ${retryContext.userId}. Tentando renovar...`);
+    try {
+      const newToken = await forceRefreshAccessToken(retryContext.connectionId, retryContext.refreshToken);
+      if (newToken) {
+        // Tenta novamente com o novo token
+        return await createGoogleCalendarEvent(newToken, draft, timezone);
+      }
+    } catch (refreshErr) {
+      console.error(`[GOOGLE-CALENDAR] Falha catastrófica ao renovar token para ${retryContext.userId}:`, refreshErr);
+    }
+  }
 
   if (!response.ok) {
     const text = await response.text();
@@ -360,7 +377,16 @@ async function getCalendarAccessContext(userId: number) {
   }
 
   const accessToken = await withValidAccessToken(connection);
-  return { user, connection, accessToken: accessToken ?? connection.accessToken! };
+  return { 
+    user, 
+    connection, 
+    accessToken: accessToken ?? connection.accessToken!,
+    retryContext: {
+      userId: user.id,
+      connectionId: connection.id,
+      refreshToken: connection.refreshToken
+    }
+  };
 }
 
 export async function syncCommitmentForUser(userId: number, commitment: Commitment) {
@@ -373,6 +399,7 @@ export async function syncCommitmentForUser(userId: number, commitment: Commitme
     context.accessToken,
     buildCommitmentDraft(commitment),
     context.user.timezone,
+    context.retryContext
   );
 
   await db
@@ -395,6 +422,7 @@ export async function syncReminderForUser(userId: number, reminder: Reminder) {
     context.accessToken,
     buildReminderDraft(reminder),
     context.user.timezone,
+    context.retryContext
   );
 
   await db
@@ -417,6 +445,7 @@ export async function syncBillForUser(userId: number, bill: Bill) {
     context.accessToken,
     buildBillDraft(bill),
     context.user.timezone,
+    context.retryContext
   );
 
   await db

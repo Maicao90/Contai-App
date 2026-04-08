@@ -53,13 +53,13 @@ const chatMessages = [
   {
     from: "bot",
     text:
-      "Anotei os R$ 200,00 que você gastou com mercado hoje, Maicon. Tudo já está organizado para você.\n\n📋 Resumo da transação:\n🧾 Descrição: Mercado\n💸 Valor: R$ 200,00\n📂 Categoria: Mercado\n📅 Data: 30/03/2026\n✅ Status: Pago\n👤 Tipo: Pessoal\n💳 Pagamento: Pix\n\n💰 Saldo anterior: R$ 3.000,00\n💸 Valor descontado: R$ 200,00\n✅ Seu saldo pessoal atual: R$ 2.800,00",
+      "Anotei os R$ 200,00 que você gastou com mercado hoje, Maicon. Tudo já está organizado para você.\n\n📋 Resumo da transação:\n🧾 Descrição: Mercado\n💸 Valor: R$ 200,00\n📂 Categoria: Alimentação\n📅 Data: 08/04/2026\n✅ Status: Pago\n👤 Tipo: Pessoal\n💳 Pagamento: Pix\n\n💰 Saldo anterior: R$ 3.000,00\n💸 Valor descontado: R$ 200,00\n✅ Seu saldo pessoal atual: R$ 2.800,00",
   },
-  { from: "user", text: "Registra 500 entrada da casa" },
+  { from: "user", text: "Registra R$ 500 de entrada da casa" },
   {
     from: "bot",
     text:
-      "Anotei os R$ 500,00 que você recebeu de Entrada hoje, Maicon. Tudo já está organizado para você.\n\n📋 Resumo da transação:\n🧾 Descrição: Entrada\n💰 Valor: R$ 500,00\n📂 Categoria: Freela\n📅 Data: 30/03/2026\n✅ Status: Recebido\n🏠 Tipo: Gasto da casa\n💳 Pagamento: Pix\n\n💰 Seu saldo na casa antes: R$ 1.000,00\n💰 Seu ganho na casa: R$ 500,00\n✅ Seu saldo na casa agora: R$ 1.500,00\n\n👥 Saldo total da casa agora: R$ 2.500,00",
+      "Recebido! Registrei a entrada de R$ 500,00 para a casa, Maicon. Acompanhe a atualização:\n\n📋 Resumo da transação:\n🧾 Descrição: Entrada\n💰 Valor: R$ 500,00\n📂 Categoria: Receita Familiar\n📅 Data: 08/04/2026\n✅ Status: Recebido\n🏠 Tipo: Gasto da casa\n💳 Pagamento: Pix\n\n💰 Saldo anterior da casa: R$ 1.000,00\n💰 Ganho registrado: R$ 500,00\n✅ Saldo atual da casa: R$ 1.500,00\n\n👥 Saldo total consolidado: R$ 2.500,00",
   },
 ];
 const steps = [
@@ -99,7 +99,7 @@ const features = [
   { icon: Link2, title: "Contas a receber", description: "Acompanhe o que ainda precisa entrar." },
   { icon: CalendarDays, title: "Compromissos", description: "Salve consultas, reuniões e eventos." },
   { icon: AlarmClock, title: "Lembretes", description: "Receba ajuda para não deixar nada passar." },
-  { icon: Wallet, title: "Saldos Multi-Nível", description: "Veja seu saldo pessoal, seu saldo na casa e o total da casa separadamente." },
+  { icon: Wallet, title: "Saldos multinível", description: "Veja seu saldo pessoal, seu saldo na casa e o total da casa separadamente." },
   { icon: Target, title: "Metas e Alertas", description: "Receba avisos instantâneos quando atingir 80% do uso do saldo da casa." },
   { icon: Shield, title: "Privacidade Real", description: "Seus gastos pessoais são 100% invisíveis para os outros membros da casa." },
   { icon: Clock3, title: "Agenda", description: "Veja o dia e a semana com clareza." },
@@ -120,7 +120,7 @@ const faqs = [
   { question: "Posso compartilhar com outra pessoa?", answer: "Sim. O Plano Contai permite até 2 membros por conta, ideal para casal ou parceria." },
   { question: "O Contai substitui planilhas?", answer: "Essa é justamente a proposta. Você organiza a vida por conversa, com muito menos atrito." },
   { question: "O Google Agenda integra?", answer: "Sim. A integração pode ser conectada para sincronizar compromissos e manter sua agenda alinhada." },
-  { question: "Quanto custa?", answer: "O Plano Contai pode ser pago em duas formas: R$14,90 por mês ou R$99,90 por ano, com os mesmos recursos." },
+  { question: "Quanto custa?", answer: "O Plano Contai pode ser assinado em duas modalidades: R$ 14,90 por mês ou R$ 99,90 por ano, com acesso total a todos os recursos." },
 ];
 
 function scrollToSection(sectionId: string) {
@@ -298,13 +298,13 @@ export default function LandingPage() {
                 <h1 className="mx-auto max-w-[22rem] text-balance text-[2.02rem] font-semibold leading-[0.98] tracking-[-0.05em] text-white min-[390px]:max-w-[24rem] min-[390px]:text-[2.18rem] sm:max-w-none sm:text-[3.55rem] lg:text-[4.45rem]">
                   <AnimatedWords
                     as="span"
-                    text="Cansado de perder dinheiro"
+                    text="Cansado de ver seu dinheiro sumir"
                     baseDelay={120}
                     className="block"
                   />
                   <AnimatedWords
                     as="span"
-                    text="sem saber pra onde ele foi?"
+                    text="sem saber para onde ele foi?"
                     baseDelay={520}
                     className="block text-emerald-400"
                   />
@@ -313,7 +313,7 @@ export default function LandingPage() {
                   <span className="sm:hidden">
                     <AnimatedWords
                       as="span"
-                      text="Organize suas finanças em 3 segundos por dia apenas falando no WhatsApp."
+                      text="Organize suas finanças em 3 segundos, apenas conversando pelo WhatsApp."
                       baseDelay={940}
                       className="block font-semibold leading-[1.55] text-white"
                     />
@@ -321,13 +321,13 @@ export default function LandingPage() {
                   <span className="hidden sm:inline">
                     <AnimatedWords
                       as="span"
-                      text="Organize suas finanças em 3 segundos por dia apenas falando no WhatsApp."
+                      text="Organize suas finanças em 3 segundos, apenas conversando pelo WhatsApp."
                       baseDelay={940}
                       className="font-semibold text-white"
                     />{" "}
                     <AnimatedWords
                       as="span"
-                      text="Sem planilhas chatas. Sem apps complicados. Apenas você e a IA mais inteligente do Brasil cuidando do seu bolso."
+                      text="Sem planilhas complexas. Sem apps cansativos. Apenas você e a tecnologia que entende o seu bolso."
                       baseDelay={1360}
                     />
                   </span>
@@ -441,7 +441,7 @@ export default function LandingPage() {
               <SectionHeader
                 eyebrow="Como funciona"
                 title="Do WhatsApp para a sua vida organizada"
-                description="O WhatsApp é o ponto de partida. O Contai organiza no fundo e o painel entra só como apoio quando você quiser mais detalhe."
+                description="O WhatsApp é o ponto de partida. O Contai organiza tudo nos bastidores e o painel entra como apoio apenas quando você desejar mais detalhes."
               />
             </Reveal>
             <Reveal delay={0.05} className="mt-7 md:mt-10">
@@ -571,8 +571,8 @@ export default function LandingPage() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/80">Privacidade Garantida</p>
                   <h2 className="text-3xl font-semibold text-white sm:text-4xl">Suas finanças pessoais são sagradas.</h2>
                   <p className="text-slate-300 text-lg leading-relaxed">
-                    O Contai foi desenhado com um muro digital entre o que é seu e o que é da casa. 
-                    Registre seus gastos pessoais com Pix ou Crédito e tenha certeza: <b>ninguém na casa terá acesso a esses dados.</b>
+                    O Contai foi desenhado com uma barreira tecnológica de privacidade entre o que é seu e o que é da casa. 
+                    Registre seus gastos pessoais com Pix ou cartão e tenha certeza: <b>ninguém na sua casa terá acesso a esses dados.</b>
                   </p>
                   <ul className="space-y-4">
                     {[
@@ -605,7 +605,7 @@ export default function LandingPage() {
               {[
                 { 
                   title: "Alerta de 80%", 
-                  desc: "Mantenha a saúde financeira. O Contai avisa assim que a conta da casa atingir 80% do uso previsto.",
+                  desc: "Mantenha a saúde financeira. O Contai avisa assim que a conta da casa atingir 80% do limite previsto.",
                   icon: Zap,
                   color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-200"
                 },
@@ -652,11 +652,11 @@ export default function LandingPage() {
                   </h3>
                   <ul className="space-y-6">
                     {[
-                      "Gastos esquecidos todo santo mês",
-                      "2 horas de tortura categorizando no Excel",
-                      "Surpresas amargas no fechamento do cartão",
-                      "Brigas por falta de transparência na casa",
-                      "Sensação de que o dinheiro 'sumiu'"
+                      "Esquecimento de gastos básicos todo mês.",
+                      "Cansaço mental tentando usar planilhas manuais.",
+                      "Surpresas amargas ao fechar a fatura do cartão.",
+                      "Desgastes familiares por falta de clareza financeira.",
+                      "Sensação constante de que o dinheiro 'sumiu'."
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-4 text-slate-400">
                         <span className="text-red-500/70 mt-1">✕</span>
@@ -665,7 +665,7 @@ export default function LandingPage() {
                     ))}
                   </ul>
                   <div className="mt-12 rounded-2xl bg-red-500/5 border border-red-500/10 p-6 text-center">
-                    <p className="text-sm text-red-400 font-medium">Resultado: Prejuízo médio de R$ 340/mês em gastos desnecessários.</p>
+                    <p className="text-sm text-red-400 font-medium">O custo da desorganização: R$ 340,00/mês em gastos invisíveis.</p>
                   </div>
                 </div>
               </Reveal>
@@ -680,11 +680,11 @@ export default function LandingPage() {
                   </h3>
                   <ul className="space-y-6">
                     {[
-                      "Todo gasto registrado no ato, sem esforço",
-                      "Apenas 3 segundos para anotar (via voz)",
-                      "Alertas antes de você estourar o limite",
-                      "Transparência total e paz com a família",
-                      "Metas visuais que realmente motivam"
+                      "Todo gasto registrado no ato, sem esforço algum.",
+                      "Apenas 3 segundos para anotar tudo via voz.",
+                      "Alertas preventivos antes de atingir seus limites.",
+                      "Transparência total e harmonia com a sua família.",
+                      "Domínio real sobre o seu futuro financeiro."
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-4 text-emerald-50/90">
                         <CheckCircle2 className="h-5 w-5 text-emerald-400 mt-1 shrink-0" />
@@ -693,7 +693,7 @@ export default function LandingPage() {
                     ))}
                   </ul>
                   <div className="mt-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-6 text-center">
-                    <p className="text-sm text-emerald-300 font-bold italic">Resultado: Economia média de R$ 340/mês. ROI de 2.283%.</p>
+                    <p className="text-sm text-emerald-300 font-bold italic">Economia média comprovada: R$ 340,00/mês. ROI de 2.283%.</p>
                   </div>
                 </div>
               </Reveal>
@@ -715,20 +715,20 @@ export default function LandingPage() {
               {[
                 {
                   name: "Maria Oliveira",
-                  role: "Freelancer, 34 anos",
-                  text: "Antes eu esquecia de anotar metade dos gastos. Agora só falo no WhatsApp enquanto saio da loja. Economizei R$ 430 no primeiro mês!",
+                  role: "Freelancer Profissional",
+                  text: "Antes eu esquecia de anotar quase todos os pequenos gastos. Agora só mando um áudio no WhatsApp enquanto saio da loja. Economizei R$ 430 no primeiro mês e tive clareza total.",
                   avatar: "12"
                 },
                 {
                   name: "João Silva",
-                  role: "Gerente de Projetos",
-                  text: "Minha esposa e eu brigávamos por causa de dinheiro. Agora ambos registramos tudo pelo WhatsApp. Salvou nosso casamento!",
+                  role: "Pai de Família",
+                  text: "As finanças eram um ponto de tensão no meu relacionamento. Com o Contai, ambos registramos tudo sem estresse. Trouxe uma transparência que nunca tivemos antes.",
                   avatar: "15"
                 },
                 {
                   name: "Carlos Mendes",
-                  role: "Empreendedor",
-                  text: "Testei Mobills, Organizze, Guiabolso... todos falharam. O Contai é o único que eu uso há mais de 3 meses. É fácil demais!",
+                  role: "Empreendedor Digital",
+                  text: "Já tentei todos os apps famosos, mas a disciplina de abrir o app e digitar me vencia. O Contai é nativo no meu dia a dia. É a primeira vez que me sinto no comando real.",
                   avatar: "20"
                 }
               ].map((t, i) => (
@@ -913,7 +913,7 @@ export default function LandingPage() {
             <Reveal delay={0.4}>
               <div className="mt-12 p-6 rounded-3xl border border-white/5 bg-white/[0.01] text-center max-w-3xl mx-auto">
                 <p className="text-xs text-slate-500 italic">
-                  "O Contai utiliza a API Oficial do WhatsApp Business (Meta) e motores de Inteligência Artificial da OpenAI (modelos 4o/o1). Seus dados são processados em frações de segundo e nunca vendidos para terceiros."
+                  "O Contai utiliza a API Oficial do WhatsApp Business (Meta) e os motores de inteligência artificial mais avançados do mercado (OpenAI). Seus dados são processados em tempo real e nunca compartilhados com terceiros."
                 </p>
               </div>
             </Reveal>
@@ -927,7 +927,7 @@ export default function LandingPage() {
               <SectionHeader
                 eyebrow="FAQ"
                 title="Perguntas frequentes"
-                description="Tudo o que uma pessoa precisa entender antes de entrar no Contai, sem enrolação."
+                description="Tudo o que você precisa entender antes de entrar no Contai, de forma direta e sem enrolação."
               />
             </Reveal>
             <Reveal delay={0.06} className="mt-8 sm:mt-10">
@@ -998,7 +998,7 @@ export default function LandingPage() {
                 <p className="text-[10px] font-semibold tracking-[0.12em] text-emerald-300/85 sm:text-[11px]">
                   Volte ao controle da sua vida financeira
                 </p>
-                <h2 className="mt-4 text-2xl font-semibold text-white sm:text-5xl">Pare de tentar se organizar na força.</h2>
+                <h2 className="mt-4 text-2xl font-semibold text-white sm:text-5xl">Pare de tentar se organizar apenas no esforço manual.</h2>
                 <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-300">
                   Deixe o Contai cuidar das contas, lembretes e compromissos no WhatsApp.
                 </p>
