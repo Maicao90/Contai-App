@@ -69,7 +69,13 @@ function RedirectByRole() {
       navigate("/login");
       return;
     }
-    navigate(session.role === "admin" ? "/admin/dashboard" : "/app/dashboard");
+    if (session.role === "admin") {
+      navigate("/admin/dashboard");
+    } else if ((session as any).billingStatus === "active") {
+      navigate("/app/dashboard");
+    } else {
+      navigate("/app/assinatura");
+    }
   }, [loading, navigate, session]);
 
   return null;

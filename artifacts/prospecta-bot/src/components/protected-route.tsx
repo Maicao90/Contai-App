@@ -19,6 +19,17 @@ export function ProtectedRoute({ allow, children }: ProtectedRouteProps) {
     }
     if (!allow.includes(session.role)) {
       navigate(session.role === "admin" ? "/admin/dashboard" : "/app/dashboard");
+      return;
+    }
+
+    // Bloqueio de Assinatura (Paywall)
+    // Se não for admin e não estiver ativo, manda para a tela de assinatura
+    if (
+      session.role !== "admin" && 
+      session.billingStatus !== "active" && 
+      !window.location.pathname.includes("/assinatura")
+    ) {
+      navigate("/assinatura");
     }
   }, [allow, loading, navigate, session]);
 

@@ -30,7 +30,13 @@ app.use(
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || origin.includes("contai.site") || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      if (
+        !origin || 
+        origin.includes("contai.site") || 
+        origin.includes("contai.com.br") || 
+        origin.includes("localhost") || 
+        origin.includes("127.0.0.1")
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));

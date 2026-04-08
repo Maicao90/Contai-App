@@ -146,7 +146,7 @@ type PendingPayload = {
 type Identity = NonNullable<Awaited<ReturnType<typeof getIdentityByPhone>>>;
 type BotAccessResult =
   | { ok: true; identity: Identity }
-  | { ok: false; reply: string; intent: ParsedIntent };
+  | { ok: false; reply: string; intent: ParsedIntent; identity?: Identity };
 type SaveParsedActionOptions = {
   previewOnly?: boolean;
   forceGoogleAgendaBlocked?: boolean;
@@ -768,14 +768,14 @@ function buildInactivePlanReply() {
   const loginUrl = `${appBaseUrl}/login?next=${encodeURIComponent("/app/assinatura")}`;
   const baseMessage = resolveBotTemplateMessage(
     systemSettings.botInactivePlanMessage?.trim() ||
-      "Identifiquei seu cadastro no Contai, mas o seu plano atual não inclui o acesso ao robô do WhatsApp.",
+      "Identifiquei seu cadastro no Contai, mas você ainda não possui um plano ativo para liberar o acesso ao robô.",
     appBaseUrl,
   );
 
   return [
     baseMessage,
     "",
-    "💡 Para liberar as anotações automáticas e lembretes por aqui, você precisa de um plano ativo.",
+    "💡 Para liberar as anotações automáticas e lembretes por aqui, você precisa ativar seu plano.",
     "",
     `💳 *Ative seu plano no Painel:* ${loginUrl}`,
     "",
@@ -783,25 +783,46 @@ function buildInactivePlanReply() {
   ].join("\n");
 }
 
-function isSubscriptionActive(identity: Identity) {
+function buildExpiredPlanReply() {
+  const appBaseUrl = getAppBaseUrl();
+  const loginUrl = `${appBaseUrl}/login?next=${encodeURIComponent("/app/assinatura")}`;
+
+  return [
+    "⚠️ *Seu plano Contai venceu!*",
+    "",
+    "Notei que sua assinatura expirou e, por isso, as funções do robô foram pausadas.",
+    "",
+    "Para continuar organizando suas finanças e não perder nenhum lembrete, regularize seu acesso abaixo:",
+    "",
+    `🔗 *Renovar Assinatura:* ${loginUrl}`,
+    "",
+    "Te espero de volta para continuarmos!",
+  ].join("\n");
+}
+
+function getSubscriptionStatus(identity: Identity): "active" | "expired" | "inactive" {
   if (
     identity.user.billingStatus === "active" ||
     (identity.household && identity.household.billingStatus === "active")
   ) {
-    return true;
+    return "active";
   }
 
   const subscription = identity.subscription;
   if (!subscription) {
-    return false;
+    return "inactive";
   }
 
   const status = String(subscription.status ?? "").trim().toLowerCase();
   if (status !== "active") {
-    return false;
+    return "inactive";
   }
 
-  return subscription.endsAt >= new Date();
+  if (subscription.endsAt < new Date()) {
+    return "expired";
+  }
+
+  return "active";
 }
 
 async function validateBotAccess(phone: string): Promise<BotAccessResult> {
@@ -815,11 +836,23 @@ async function validateBotAccess(phone: string): Promise<BotAccessResult> {
     };
   }
 
-  if (!isSubscriptionActive(identity)) {
+  const status = getSubscriptionStatus(identity);
+
+  if (status === "expired") {
+    return {
+      ok: false,
+      intent: "ajuda",
+      reply: buildExpiredPlanReply(),
+      identity,
+    };
+  }
+
+  if (status === "inactive") {
     return {
       ok: false,
       intent: "ajuda",
       reply: buildInactivePlanReply(),
+      identity,
     };
   }
 
@@ -1729,8 +1762,7 @@ export async function previewBotMessage(input: {
      reply += alert;
   }
 
-  const { reply: finalReply } = await applyReplyPrompt(reply, identity);
-  reply = finalReply || reply;
+  reply = await applyReplyPrompt(reply, identity);
   return { scenario, blocked: false, parsed, reply };
 }
 
@@ -1768,7 +1800,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       },
     });
 
-    const { reply: accessReply } = await applyReplyPrompt(access.reply, access.identity!);
+    const accessReply = await applyReplyPrompt(access.reply, access.identity!);
 
     await logConversation({
       householdId: null,
@@ -1804,7 +1836,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   if (pendingDecision && pendingDecision.question) {
     if (checkEscapeCommand(input.content)) {
       await clearPendingDecision(pendingDecision.id);
-      const { reply: rep } = await applyReplyPrompt("✅ Operação cancelada! Tudo bem, esqueci o último registro. O que quer fazer?", identity);
+      const rep = await applyReplyPrompt("✅ Operação cancelada! Tudo bem, esqueci o último registro. O que quer fazer?", identity);
       return { user: identity.user, member: identity.member, household: identity.household, subscription: identity.subscription, parsed: { intent: "indefinido" }, reply: rep || "Operação cancelada." };
     }
 
@@ -1865,7 +1897,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
           isMissingInfo = true;
           parsed = p;
           const kind = p.intent as any; // Cast to bypass strict PendingKind if needed, or use p.intent
-          const { reply: qReply } = await applyReplyPrompt(replyForPendingQuestion(kind), identity);
+          const qReply = await applyReplyPrompt(replyForPendingQuestion(kind), identity);
           reply = qReply || replyForPendingQuestion(kind);
         } else {
           finalReplies.push(`⚠️ Ignorei um lançamento porque faltaram dados que não consigo tratar agora.`);
@@ -1959,7 +1991,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
 
   const isFirstTime = !existingLog || isOnboardingMessage;
 
-  reply = await applyReplyPrompt(reply);
+  reply = await applyReplyPrompt(reply, identity);
 
   // Regra do Maicon: Alerta em QUALQUER mensagem se a conta da casa estiver em risco
   const houseAlert = await checkHouseholdAlerts(identity);
