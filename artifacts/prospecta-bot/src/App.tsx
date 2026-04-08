@@ -71,10 +71,13 @@ function RedirectByRole() {
     }
     if (session.role === "admin") {
       navigate("/admin/dashboard");
-    } else if ((session as any).billingStatus === "active") {
+    } else if (session.billingStatus === "active") {
       navigate("/app/dashboard");
     } else {
-      navigate("/app/assinatura");
+      // Evitar loop se já estivermos na assinatura
+      if (!window.location.pathname.includes("/assinatura")) {
+        navigate("/app/assinatura");
+      }
     }
   }, [loading, navigate, session]);
 
