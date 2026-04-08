@@ -125,4 +125,35 @@ Quando codificando/criando sub-funcionalidades para este Monorepo, você está p
 5. **ARQUITETO ZERO TRUST:** Sempre valide retornos HTTP com schema `zod`. Sempre aplique tokens e proteção Bearer no lado Node `getSession`. Front ends em React são cascas vazias e vulneráveis; a segurança ocorre atrás do Nginx (Express Router). 
 
 ---
-*(Fim da Documentação V5 - Absolute Limit).*
+ 
++## 9. BRANDING E IDENTIDADE VISUAL
++O **Contai** não é apenas uma ferramenta, é uma "Fintech Premium" com uma identidade visual austera, porém moderna e confiável.
++
++### 9.1. Paleta de Cores (The Contai Palette)
++*   **Primária (Contai Green):** `#10B981` (Emerald 500) | `hsl(153 70% 34%)`. Representa crescimento, segurança e liquidez.
++*   **Fundo (Light Mode):** `hsl(144 33% 97%)` (Off-white esverdeado).
++*   **Fundo (Dark Mode):** `hsl(160 24% 10%)` (Deep Slate Green).
++*   **Acento (Teal/Cyan):** `#14B8A6` / `#06B6D4`. Usado para destaque de sucessos e metas batidas.
++
++### 9.2. Tipografia Master
++*   **Headings (Títulos):** `Sora`, sans-serif. Fonte geométrica com curvas distintas para um visual tech-premium.
++*   **Body (Corpo):** `Manrope`, sans-serif. Alta legibilidade em dispositivos móveis e dashboards densos.
++
++### 9.3. Pilares Visuais (UI/UX)
++*   **Glassmorphism:** Uso intensivo de desfoque de fundo (`backdrop-filter: blur(14px)`) e bordas translúcidas para profundidade.
++*   **Curvas Suaves:** Border-radius global de `1rem` (16px), evocando amabilidade e modernidade.
++*   **Premium Shadows:** Sombras difusas e profundas (`0 24px 60px rgba(0,0,0,0.1)`) para destacar cards flutuantes.
++
++### 9.4. Personalidade e Tom de Voz (AI Persona)
++*   **Arquétipo:** O "Guardião" (The Guardian). Seguro, protetor, porém acessível.
++*   **Tom de Voz:** Curto, claro, humano e confiante. Português do Brasil natural (sem "robotez").
++*   **Slogan/Role:** *"Seu Guardião de Segurança e Arquiteto de Dados Financeiros."*
++*   **Diretriz de Resposta:** Sempre confirmar o dado exato registrado. Nunca inventar valores. Ser caloroso no feedback, mas preciso no log.
++
++### 9.5. Ativos de Marca (Assets)
++*   **Logos:** Localizados em `/artifacts/prospecta-bot/public/contai-logo.svg` (e variações `.png` light/dark).
++*   **Marketing Assets:** Localizados na raíz do projeto (Carrosséis e Stories de alta resolução para campanhas de segurança e lançamento).
++
++---
++
+ *(Fim da Documentação V5 - Absolute Limit).*
