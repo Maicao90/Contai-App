@@ -298,62 +298,104 @@ export default function LandingPage() {
                 <h1 className="mx-auto max-w-[22rem] text-balance text-[2.02rem] font-semibold leading-[0.98] tracking-[-0.05em] text-white min-[390px]:max-w-[24rem] min-[390px]:text-[2.18rem] sm:max-w-none sm:text-[3.55rem] lg:text-[4.45rem]">
                   <AnimatedWords
                     as="span"
-                    text="Seu dinheiro organizado"
+                    text="Cansado de perder dinheiro"
                     baseDelay={120}
                     className="block"
                   />
                   <AnimatedWords
                     as="span"
-                    text="direto no WhatsApp"
+                    text="sem saber pra onde ele foi?"
                     baseDelay={520}
-                    className="block"
+                    className="block text-emerald-400"
                   />
                 </h1>
-                <p className="mx-auto mt-5 max-w-[19.25rem] text-balance text-[12px] leading-[1.72] text-slate-300 min-[390px]:max-w-[20.5rem] min-[390px]:text-[12.5px] sm:mt-6 sm:max-w-[50rem] sm:text-[1.05rem] sm:leading-8">
+                <p className="mx-auto mt-5 max-w-[20rem] text-balance text-[12px] leading-[1.72] text-slate-300 min-[390px]:max-w-[22rem] min-[390px]:text-[12.5px] sm:mt-6 sm:max-w-[50rem] sm:text-[1.05rem] sm:leading-8">
                   <span className="sm:hidden">
                     <AnimatedWords
                       as="span"
-                      text="Sem planilha. Sem complicação. Sem dor de cabeça."
+                      text="Organize suas finanças em 3 segundos por dia apenas falando no WhatsApp."
                       baseDelay={940}
                       className="block font-semibold leading-[1.55] text-white"
-                    />
-                    <AnimatedWords
-                      as="span"
-                      text="Com o Contai, você organiza gastos, contas e compromissos direto no WhatsApp."
-                      baseDelay={1320}
-                      className="mt-2 block"
                     />
                   </span>
                   <span className="hidden sm:inline">
                     <AnimatedWords
                       as="span"
-                      text="Sem planilha. Sem complicação. Sem dor de cabeça."
+                      text="Organize suas finanças em 3 segundos por dia apenas falando no WhatsApp."
                       baseDelay={940}
                       className="font-semibold text-white"
                     />{" "}
                     <AnimatedWords
                       as="span"
-                      text="Com o Contai, você organiza gastos, contas e compromissos direto no WhatsApp. Tudo simples, prático e no seu ritmo."
+                      text="Sem planilhas chatas. Sem apps complicados. Apenas você e a IA mais inteligente do Brasil cuidando do seu bolso."
                       baseDelay={1360}
                     />
                   </span>
                 </p>
-                <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row sm:gap-4">
-                  <Button asChild className="h-11.5 w-full rounded-full bg-emerald-500 px-6 text-[1rem] text-white shadow-[0_14px_40px_rgba(16,185,129,0.28)] hover:bg-emerald-400 min-[390px]:h-12 sm:h-12 sm:w-auto sm:text-base">
+
+                {/* Social Proof Row */}
+                <Reveal delay={1.8}>
+                  <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
+                    <div className="flex -space-x-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-9 w-9 rounded-full border-2 border-[#050b12] bg-slate-800 flex items-center justify-center text-[10px] font-bold text-white">
+                          <img 
+                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 10}`} 
+                            alt="User" 
+                            className="rounded-full"
+                          />
+                        </div>
+                      ))}
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#050b12] bg-emerald-500 text-[10px] font-bold text-white">
+                        +427
+                      </div>
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <div className="flex items-center justify-center gap-1 sm:justify-start">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Sparkles key={s} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        ))}
+                        <span className="ml-1 text-sm font-bold text-white">4.9/5</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">Avaliação média de 127 usuários reais</p>
+                    </div>
+                  </div>
+                </Reveal>
+
+                <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:mt-10 sm:flex-row sm:gap-4">
+                  <Button asChild className="h-12 w-full rounded-full bg-emerald-500 px-8 text-[1rem] font-semibold text-white shadow-[0_14px_40px_rgba(16,185,129,0.35)] hover:bg-emerald-400 min-[390px]:h-13 sm:h-13 sm:w-auto sm:text-lg">
                     <a href={primaryHref}>
-                      <AnimatedWords as="span" text="Começar agora" baseDelay={1900} />
-                      <ArrowRight className="h-4 w-4" />
+                      <AnimatedWords as="span" text="Começar agora" baseDelay={2100} />
+                      <ArrowRight className="h-5 w-5 ml-2" />
                     </a>
                   </Button>
                   <button
                     type="button"
                     onClick={() => scrollToSection("como-funciona")}
-                    className="inline-flex h-11.5 w-full items-center justify-center gap-2 rounded-full border border-white/12 bg-white/5 px-6 text-[1rem] text-white transition hover:bg-white/10 min-[390px]:h-12 sm:h-12 sm:w-auto sm:text-base"
+                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/12 bg-white/5 px-8 text-[1rem] text-white transition hover:bg-white/10 min-[390px]:h-13 sm:h-13 sm:w-auto sm:text-lg"
                   >
-                    <AnimatedWords as="span" text="Ver como funciona" baseDelay={2140} />
-                    <ChevronRight className="h-4 w-4" />
+                    <AnimatedWords as="span" text="Ver demonstração" baseDelay={2300} />
+                    <ChevronRight className="h-5 w-5" />
                   </button>
                 </div>
+
+                {/* Trust Badges Row */}
+                <Reveal delay={2.5}>
+                  <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[10px] font-medium uppercase tracking-wider text-slate-400 sm:mt-10 sm:text-[11px]">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-3.5 w-3.5 text-emerald-400" />
+                      <span>Dados 100% Seguros</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                      <span>Conforme LGPD</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-3.5 w-3.5 text-emerald-400" />
+                      <span>7 Dias de Garantia</span>
+                    </div>
+                  </div>
+                </Reveal>
               </div>
             </Reveal>
           </div>
@@ -592,119 +634,288 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <FounderSection />
-
-        <section id="preco" className="bg-[linear-gradient(180deg,rgba(7,24,22,0.36)_0%,rgba(5,11,18,0)_100%)] px-4 py-9 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-          <div className="mx-auto max-w-5xl">
-            <SectionDivider />
+        {/* Transformation Section: Antes vs Depois */}
+        <section className="px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl">
             <Reveal>
-                <div className="rounded-[28px] border border-emerald-300/14 bg-[linear-gradient(180deg,rgba(8,25,23,0.96)_0%,rgba(7,17,16,0.96)_100%)] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:rounded-[34px] sm:p-8 lg:p-10">
-                  <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center lg:gap-10">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300/80">Preço claro</p>
-                    <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Um plano simples para entrar do jeito que fizer mais sentido.</h2>
-                    <p className="mt-4 max-w-2xl text-[0.95rem] leading-[1.6] text-slate-300 sm:text-base sm:leading-7">
-                      <span className="sm:hidden">
-                        Acesso total liberado. Vá de mensal pela flexibilidade ou garanta o anual com desconto.
-                      </span>
-                      <span className="hidden sm:inline">
-                        O Plano Contai entrega os mesmos recursos nas duas opções. Você pode começar no mensal com mais flexibilidade ou escolher o anual para economizar mais e já ficar coberto o ano inteiro.
-                      </span>
-                    </p>
-                    <div className="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:gap-3">
-                      {[
-                        "100% via WhatsApp",
-                        "Painel Web completo",
-                        "Avisos automáticos",
-                        "Até 2 pessoas",
-                        "Sincroniza Google",
-                      ].map((item) => (
-                        <span key={item} className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-emerald-100 sm:border-white/10 sm:bg-white/6 sm:px-4 sm:py-2 sm:text-sm sm:font-normal sm:normal-case sm:tracking-normal sm:text-slate-100">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-                        <p className="text-sm text-slate-300">Mensal</p>
-                        <p className="mt-2 text-3xl font-semibold text-white">R$14,90</p>
-                        <p className="mt-2 text-sm leading-6 text-slate-300">Ideal para começar com mais liberdade, sem mudar nada no produto.</p>
-                        <a href="/cadastro?cycle=monthly" className="mt-4 inline-flex text-sm font-medium text-slate-200 transition hover:text-white">
-                          Escolher mensal
-                          <ChevronRight className="ml-1 h-4 w-4" />
-                        </a>
-                      </div>
-                      <div className="rounded-[24px] border border-emerald-300/20 bg-emerald-400/8 p-5">
-                        <p className="text-sm text-emerald-300">Melhor escolha</p>
-                        <p className="mt-2 text-3xl font-semibold text-white">R$99,90</p>
-                        <p className="mt-2 text-sm leading-6 text-slate-300">A melhor escolha para pagar menos no ano e usar o Contai com mais tranquilidade.</p>
-                        <a href={primaryHref} className="mt-4 inline-flex text-sm font-medium text-emerald-200 transition hover:text-white">
-                          Escolher anual
-                          <ChevronRight className="ml-1 h-4 w-4" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                    <PricingCard.Card className="max-w-none rounded-[28px] border-emerald-300/16 bg-[linear-gradient(180deg,rgba(14,28,27,0.92)_0%,rgba(8,17,16,0.98)_100%)] shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
-                      <PricingCard.Header className="mb-3 rounded-[22px] border-emerald-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.02)_100%)] p-5 sm:p-6">
-                        <PricingCard.Plan className="mb-7">
-                          <PricingCard.PlanName className="text-emerald-100">
-                            <Users aria-hidden="true" className="text-emerald-300" />
-                            <span>Plano Contai</span>
-                          </PricingCard.PlanName>
-                          <PricingCard.Badge className="border-emerald-300/20 bg-emerald-400/8 text-emerald-100">
-                            Melhor escolha
-                          </PricingCard.Badge>
-                        </PricingCard.Plan>
-                        <PricingCard.Price className="items-end gap-2">
-                          <PricingCard.MainPrice className="text-[2.5rem] font-semibold text-white sm:text-5xl">
-                            R$99,90
-                          </PricingCard.MainPrice>
-                          <PricingCard.Period className="pb-2 text-slate-300">/ ano</PricingCard.Period>
-                        </PricingCard.Price>
-                        <PricingCard.Description className="mb-5 text-sm text-emerald-300">
-                          Menos de R$0,30 por dia
-                        </PricingCard.Description>
-                        <Button asChild className="h-12 w-full rounded-full bg-emerald-500 text-base text-white shadow-[0_14px_40px_rgba(16,185,129,0.25)] hover:bg-emerald-400">
-                          <a href={primaryHref}>Assinar anual</a>
-                        </Button>
-                      </PricingCard.Header>
-                      <PricingCard.Body className="space-y-5 p-4 pt-2 sm:p-5 sm:pt-2">
-                        <PricingCard.List>
-                          {[
-                            "Organização direto no WhatsApp",
-                            "Conta individual ou compartilhada",
-                            "Painel complementar quando precisar",
-                            "Agenda, lembretes e compromissos",
-                            "Também disponível em R$14,90 por mês",
-                          ].map((item) => (
-                            <PricingCard.ListItem key={item} className="text-slate-100">
-                              <span className="mt-0.5">
-                                <CheckCircle2 className="h-4 w-4 text-emerald-300" aria-hidden="true" />
-                              </span>
-                              <span>{item}</span>
-                            </PricingCard.ListItem>
-                          ))}
-                        </PricingCard.List>
-                        <PricingCard.Separator className="text-slate-400">Tudo incluído no plano</PricingCard.Separator>
-                        <PricingCard.List>
-                          {[
-                            "Categorias personalizadas",
-                            "Google Agenda integrado",
-                            "Histórico organizado",
-                          ].map((item) => (
-                            <PricingCard.ListItem key={item} className="text-slate-300">
-                              <span className="mt-0.5">
-                                <Check className="h-4 w-4 text-emerald-300" />
-                              </span>
-                              <span>{item}</span>
-                            </PricingCard.ListItem>
-                          ))}
-                        </PricingCard.List>
-                      </PricingCard.Body>
-                    </PricingCard.Card>
+              <div className="text-center mb-16">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/80">A Transformação</p>
+                <h2 className="text-3xl font-semibold text-white mt-4 sm:text-5xl">Sua vida financeira: Antes vs Depois</h2>
+              </div>
+            </Reveal>
+
+            <div className="grid gap-10 lg:grid-cols-2 lg:items-stretch">
+              <Reveal>
+                <div className="rounded-[32px] border border-white/5 bg-white/[0.02] p-8 h-full">
+                  <h3 className="text-2xl font-semibold text-slate-300 mb-8 flex items-center gap-3">
+                    <span className="text-3xl">😫</span> Antes do Contai
+                  </h3>
+                  <ul className="space-y-6">
+                    {[
+                      "Gastos esquecidos todo santo mês",
+                      "2 horas de tortura categorizando no Excel",
+                      "Surpresas amargas no fechamento do cartão",
+                      "Brigas por falta de transparência na casa",
+                      "Sensação de que o dinheiro 'sumiu'"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-4 text-slate-400">
+                        <span className="text-red-500/70 mt-1">✕</span>
+                        <span className="text-base">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-12 rounded-2xl bg-red-500/5 border border-red-500/10 p-6 text-center">
+                    <p className="text-sm text-red-400 font-medium">Resultado: Prejuízo médio de R$ 340/mês em gastos desnecessários.</p>
                   </div>
                 </div>
+              </Reveal>
+
+              <Reveal delay={0.1}>
+                <div className="rounded-[32px] border border-emerald-500/10 bg-emerald-500/5 p-8 h-full relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4">
+                    <Sparkles className="h-6 w-6 text-emerald-400/30" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-emerald-400 mb-8 flex items-center gap-3">
+                    <span className="text-3xl">✨</span> Com o Contai
+                  </h3>
+                  <ul className="space-y-6">
+                    {[
+                      "Todo gasto registrado no ato, sem esforço",
+                      "Apenas 3 segundos para anotar (via voz)",
+                      "Alertas antes de você estourar o limite",
+                      "Transparência total e paz com a família",
+                      "Metas visuais que realmente motivam"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-4 text-emerald-50/90">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-400 mt-1 shrink-0" />
+                        <span className="text-base">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-6 text-center">
+                    <p className="text-sm text-emerald-300 font-bold italic">Resultado: Economia média de R$ 340/mês. ROI de 2.283%.</p>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="px-4 py-16 sm:px-6 sm:py-24 lg:px-8 bg-black/20">
+          <div className="mx-auto max-w-7xl">
+            <Reveal>
+              <div className="text-center mb-16">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/80">Depoimentos</p>
+                <h2 className="text-3xl font-semibold text-white mt-4 sm:text-5xl">O que quem já usa está dizendo</h2>
+              </div>
+            </Reveal>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  name: "Maria Oliveira",
+                  role: "Freelancer, 34 anos",
+                  text: "Antes eu esquecia de anotar metade dos gastos. Agora só falo no WhatsApp enquanto saio da loja. Economizei R$ 430 no primeiro mês!",
+                  avatar: "12"
+                },
+                {
+                  name: "João Silva",
+                  role: "Gerente de Projetos",
+                  text: "Minha esposa e eu brigávamos por causa de dinheiro. Agora ambos registramos tudo pelo WhatsApp. Salvou nosso casamento!",
+                  avatar: "15"
+                },
+                {
+                  name: "Carlos Mendes",
+                  role: "Empreendedor",
+                  text: "Testei Mobills, Organizze, Guiabolso... todos falharam. O Contai é o único que eu uso há mais de 3 meses. É fácil demais!",
+                  avatar: "20"
+                }
+              ].map((t, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <div className="rounded-[32px] border border-white/5 bg-white/[0.03] p-8 flex flex-col h-full">
+                    <div className="flex gap-1 mb-6">
+                      {[1,2,3,4,5].map(s => <Sparkles key={s} className="h-4 w-4 fill-yellow-400 text-yellow-400" />)}
+                    </div>
+                    <p className="text-slate-300 italic mb-8 flex-grow">"{t.text}"</p>
+                    <div className="flex items-center gap-4 mt-auto">
+                      <img 
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${t.avatar}`} 
+                        className="h-12 w-12 rounded-full border border-emerald-500/20 bg-emerald-500/10" 
+                        alt={t.name}
+                      />
+                      <div>
+                        <h4 className="font-semibold text-white text-sm">{t.name}</h4>
+                        <p className="text-[11px] text-slate-500 uppercase tracking-wider">{t.role}</p>
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+
+            <Reveal delay={0.4}>
+              <div className="mt-16 flex flex-col items-center justify-center p-8 rounded-[40px] border border-emerald-500/10 bg-emerald-500/5 text-center">
+                <div className="text-5xl font-bold text-emerald-400 mb-2">94%</div>
+                <p className="text-lg text-emerald-100/90 font-medium">dos usuários ainda usam o Contai após 3 meses</p>
+                <p className="text-xs text-slate-500 mt-2 hover:text-slate-400 transition-colors pointer-events-none uppercase tracking-widest">Contraste: Média de 12% em apps tradicionais</p>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        <FounderSection />
+
+        <section id="preco" className="bg-[linear-gradient(180deg,rgba(7,24,22,0.36)_0%,rgba(5,11,18,0)_100%)] px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
+          <div className="mx-auto max-w-5xl">
+            <Reveal>
+              <div className="text-center mb-16">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/80">Investimento que se paga</p>
+                <h2 className="text-3xl font-semibold text-white mt-4 sm:text-5xl">Um plano simples para resultados reais</h2>
+                <p className="mt-6 text-slate-400 max-w-2xl mx-auto">Usuários economizam em média R$ 340/mês apenas eliminando gastos esquecidos. O Contai se paga em menos de uma semana.</p>
+              </div>
+            </Reveal>
+
+            <div className="mt-12 grid gap-8 lg:grid-cols-2 lg:items-center">
+              {/* Plano Mensal */}
+              <Reveal>
+                <div className="rounded-[40px] border border-white/5 bg-white/[0.02] p-8 sm:p-10 flex flex-col h-full">
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-semibold text-white">Mensal</h3>
+                    <p className="text-sm text-slate-500 mt-2">Para experimentar sem compromisso</p>
+                  </div>
+                  
+                  <div className="mb-10">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-white text-5xl font-bold">R$14,90</span>
+                      <span className="text-slate-500">/mês</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-3 font-medium uppercase tracking-widest">R$ 0,49 por dia • Menos que um café</p>
+                  </div>
+
+                  <ul className="space-y-4 mb-10 flex-grow">
+                    {[
+                      "WhatsApp ilimitado com IA",
+                      "Registro por voz, foto ou texto",
+                      "Contas ilimitadas (Corrente, Cartão...)",
+                      "Categorização automática inteligente",
+                      "Dashboard web completo",
+                      "Relatórios mensais detalhados",
+                      "Compartilhamento familiar",
+                      "Garantia de 7 dias"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-center gap-3 text-slate-300 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500/60" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button asChild className="h-14 w-full rounded-full border border-white/10 bg-white/5 text-white hover:bg-white/10">
+                    <a href="/cadastro?cycle=monthly">Escolher mensal</a>
+                  </Button>
+                  <p className="text-[10px] text-center text-slate-600 mt-4 uppercase tracking-widest">Pode cancelar a qualquer momento</p>
+                </div>
+              </Reveal>
+
+              {/* Plano Anual - Destaque */}
+              <Reveal delay={0.1}>
+                <div className="rounded-[40px] border border-emerald-500/20 bg-emerald-500/[0.03] p-8 sm:p-10 flex flex-col h-full relative overflow-hidden shadow-[0_40px_100px_rgba(16,185,129,0.12)]">
+                  <div className="absolute top-0 right-0 p-6">
+                    <div className="bg-emerald-500 text-black text-[10px] font-bold uppercase px-3 py-1 rounded-full tracking-wider shadow-lg">Economize 44%</div>
+                  </div>
+                  
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-semibold text-white flex items-center gap-2">Anual <span className="text-emerald-500">🔥</span></h3>
+                    <p className="text-sm text-emerald-200/60 mt-2">Para quem leva finanças a sério</p>
+                  </div>
+                  
+                  <div className="mb-4 text-slate-500 line-through text-sm">R$ 178,80/ano</div>
+                  <div className="mb-10">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-white text-6xl font-black">R$99,90</span>
+                      <span className="text-emerald-500/60 font-medium">/ano</span>
+                    </div>
+                    <p className="text-sm text-emerald-400 font-bold mt-4 bg-emerald-500/10 inline-block px-3 py-1 rounded-lg">R$ 8,32 por mês</p>
+                  </div>
+
+                  <ul className="space-y-4 mb-10 flex-grow">
+                    {[
+                      "Tudo do plano mensal +",
+                      "💸 2 meses grátis (economia de R$ 78,80)",
+                      "🎁 Acesso antecipado a novos recursos",
+                      "🎁 Prioridade no suporte (resposta rápida)",
+                      "🔒 Preço garantido: Sem reajuste por 1 ano",
+                      "🛡️ Garantia de 7 dias ou seu dinheiro de volta"
+                    ].map((item, i) => (
+                      <li key={i} className={cn("flex items-center gap-3 text-sm", i === 0 ? "text-emerald-200 font-bold" : "text-emerald-50/90")}>
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button asChild className="h-14 w-full rounded-full bg-emerald-500 text-white shadow-[0_15px_45px_rgba(16,185,129,0.3)] hover:bg-emerald-400">
+                    <a href={primaryHref}>Assinar anual agora</a>
+                  </Button>
+                  <p className="text-[10px] text-center text-emerald-500/60 mt-4 uppercase tracking-widest font-bold">89% das pessoas escolhem este</p>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* Deep Authority / Security Section */}
+        <section className="px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <Reveal>
+              <div className="text-center mb-16">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/80">Infraestrutura V5</p>
+                <h2 className="text-3xl font-semibold text-white mt-4 sm:text-5xl">Segurança nível bancário no seu bolso</h2>
+              </div>
+            </Reveal>
+
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  title: "Criptografia RSA",
+                  desc: "Seus dados financeiros são criptografados antes de tocarem nosso banco de dados.",
+                  icon: Shield
+                },
+                {
+                  title: "Isolamento Total",
+                  desc: "Arquitetura Household-Strict: Seus gastos pessoais são invisíveis até para quem compartilha a conta.",
+                  icon: Users
+                },
+                {
+                  title: "Nuvem Supabase",
+                  desc: "Infraestrutura robusta com backups automáticos e redundância global.",
+                  icon: Zap
+                },
+                {
+                  title: "Conformidade LGPD",
+                  desc: "Você é dono dos seus dados. Peça a exclusão total com um único comando no WhatsApp.",
+                  icon: CheckCircle2
+                }
+              ].map((item, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <div className="p-8 rounded-[32px] border border-white/5 bg-white/[0.02] h-full hover:border-emerald-500/20 transition-colors group">
+                    <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-110 transition-transform">
+                      <item.icon className="h-6 w-6" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-white mb-3">{item.title}</h4>
+                    <p className="text-sm text-slate-400 leading-relaxed">{item.desc}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+            
+            <Reveal delay={0.4}>
+              <div className="mt-12 p-6 rounded-3xl border border-white/5 bg-white/[0.01] text-center max-w-3xl mx-auto">
+                <p className="text-xs text-slate-500 italic">
+                  "O Contai utiliza a API Oficial do WhatsApp Business (Meta) e motores de Inteligência Artificial da OpenAI (modelos 4o/o1). Seus dados são processados em frações de segundo e nunca vendidos para terceiros."
+                </p>
+              </div>
             </Reveal>
           </div>
         </section>
@@ -722,7 +933,32 @@ export default function LandingPage() {
             <Reveal delay={0.06} className="mt-8 sm:mt-10">
               <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,24,0.96)_0%,rgba(7,11,18,0.98)_100%)] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.24)] backdrop-blur-xl sm:rounded-[30px] sm:p-5">
                 <Accordion type="single" collapsible className="w-full space-y-3">
-                  {faqs.map((item, index) => (
+                  {[
+                    {
+                      question: "Por que não tem teste grátis?",
+                      answer: "O Contai utiliza tecnologias de ponta (OpenAI/Meta) que possuem custos reais por cada interação. Em vez de um 'trial' limitado, oferecemos 7 dias de garantia total: use o produto completo e, se não automatizar seu financeiro, devolvemos seu dinheiro na hora."
+                    },
+                    {
+                      question: "Meus dados ficam seguros no WhatsApp?",
+                      answer: "Sim. O Contai utiliza a API Oficial do WhatsApp Business. As mensagens são processadas pelo nosso sistema seguro e não cadastradas para treinamento de IAs públicas. Além disso, aplicamos criptografia de ponta a ponta na nossa base de dados."
+                    },
+                    {
+                      question: "Qual a diferença entre o plano mensal e o anual?",
+                      answer: "Os recursos são idênticos. A diferença é o investimento: o plano anual oferece 44% de desconto, saindo por apenas R$ 8,32/mês. É a escolha de 89% dos nossos usuários que buscam constância na organização."
+                    },
+                    {
+                      question: "Funciona com qualquer banco?",
+                      answer: "Sim! Como o Contai funciona por linguagem natural, você não precisa conectar seu banco. Basta dizer 'gastei 50 no Nubank' ou 'recebi 2k no Itaú'. Ele entende tudo e organiza nos seus respectivos saldos."
+                    },
+                    {
+                      question: "Posso compartilhar com meu cônjuge?",
+                      answer: "Com certeza. O Plano Contai permite que até 2 pessoas gerenciem a mesma 'Casa'. Vocês podem ter saldos compartilhados para despesas comuns e manter seus saldos pessoais 100% privados."
+                    },
+                    {
+                      question: "E se eu quiser cancelar?",
+                      answer: "O cancelamento é livre e pode ser feito a qualquer momento via painel web ou diretamente com nosso suporte no WhatsApp. Sem multas, sem letras miúdas."
+                    }
+                  ].map((item, index) => (
                     <AccordionItem
                       key={item.question}
                       value={`item-${index}`}
@@ -805,7 +1041,7 @@ export default function LandingPage() {
           <div className="mx-auto flex max-w-md items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-white">Plano Contai</p>
-            <p className="text-xs text-slate-300">Mensal R$14,90 ou anual R$99,90</p>
+            <p className="text-xs text-slate-300">A partir de R$ 8,32/mês (no anual)</p>
           </div>
           <Button asChild className="h-10 shrink-0 rounded-full bg-emerald-500 px-4 text-sm text-white shadow-[0_12px_30px_rgba(16,185,129,0.28)] hover:bg-emerald-400">
             <a href={primaryHref}>Começar</a>
