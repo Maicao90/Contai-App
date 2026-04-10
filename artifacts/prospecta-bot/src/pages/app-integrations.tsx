@@ -190,7 +190,7 @@ export default function AppIntegrationsPage() {
               <div className="max-w-sm space-y-1.5">
                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   {data?.oauthConfigured
-                    ? "E-mail do Google (deixe vazio para escolher ao conectar)"
+                    ? "E-mail do Google (opcional: deixe em branco para escolher na hora)"
                     : "E-mail para a agenda (opcional)"}
                 </p>
                 <Input

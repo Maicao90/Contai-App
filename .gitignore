@@ -61,3 +61,6 @@ artifacts/api-server/src/lib/integration-secrets.json
 .env
 .env.*
 !.env.example
+
+# Agent framework
+/.tmp/

@@ -944,7 +944,11 @@ async function runIntegrationTest(key: IntegrationKey): Promise<IntegrationTestR
       });
 
       const raw = sanitizeSensitiveText(await response.text()) ?? "";
-      if (!response.ok && !raw.includes("Accessing the schema via the Data API")) {
+      if (
+        !response.ok &&
+        !raw.includes("Accessing the schema via the Data API") &&
+        !raw.includes("Only the `service_role` API key can be used")
+      ) {
         throw new Error(raw || "O Supabase recursou a conexão REST com as chaves informadas.");
       }
 

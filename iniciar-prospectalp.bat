@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-cd /d C:\Users\MaiconBatn\Downloads\BOTLP\Asset-Attachment-Manager
+cd /d C:\Users\MaiconBatn\Music\Contai\Contai-App
 
 set API_PORT=3000
 set PORT=5173
