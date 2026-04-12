@@ -24,6 +24,7 @@ type Transaction = {
   visibility: string;
   createdBy: string | null;
   transactionDate: string;
+  fiscalContext: "personal" | "business";
 };
 
 type Category = {
@@ -41,6 +42,7 @@ export default function AppTransactionsPage() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterContext, setFilterContext] = useState<string>("all");
   
   // Modais
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -58,6 +60,7 @@ export default function AppTransactionsPage() {
       const params = new URLSearchParams();
       if (filterType !== "all") params.set("type", filterType);
       if (filterCategory !== "all") params.set("category", filterCategory);
+      if (filterContext !== "all") params.set("fiscalContext", filterContext);
       if (search) params.set("search", search);
       return getJson<Transaction[]>(`/transactions?${params.toString()}`);
     },
@@ -167,6 +170,20 @@ export default function AppTransactionsPage() {
                   </SelectContent>
                 </Select>
               </div>
+              
+              <div className="w-full space-y-2 md:w-48">
+                <Label>Contexto</Label>
+                <Select value={filterContext} onValueChange={setFilterContext}>
+                  <SelectTrigger className="h-11 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="personal">👤 Pessoal</SelectItem>
+                    <SelectItem value="business">💼 Empresarial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
               <Button 
                 variant="outline" 
@@ -175,6 +192,7 @@ export default function AppTransactionsPage() {
                   setSearch("");
                   setFilterType("all");
                   setFilterCategory("all");
+                  setFilterContext("all");
                 }}
               >
                 Limpar
@@ -229,6 +247,9 @@ export default function AppTransactionsPage() {
                     </p>
                     <Badge variant="outline" className="mt-1 text-[10px] font-medium leading-none tracking-tight uppercase border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
                       {item.visibility === 'shared' ? 'Compartilhado' : 'Pessoal'}
+                    </Badge>
+                    <Badge variant="outline" className={`ml-2 mt-1 text-[10px] font-medium leading-none tracking-tight uppercase ${item.fiscalContext === 'business' ? 'border-amber-200 text-amber-600 bg-amber-50' : 'border-slate-200 text-slate-500'}`}>
+                      {item.fiscalContext === 'business' ? 'Empresarial' : 'Pessoal'}
                     </Badge>
                   </div>
                   
@@ -316,6 +337,7 @@ function TransactionForm({
     description: initialData?.description ?? "",
     transactionDate: initialData?.transactionDate ? initialData.transactionDate.split('T')[0] : new Date().toISOString().split('T')[0],
     visibility: initialData?.visibility ?? "shared",
+    fiscalContext: initialData?.fiscalContext ?? "personal",
   });
 
   return (
@@ -398,6 +420,19 @@ function TransactionForm({
             <SelectContent>
               <SelectItem value="shared">Compartilhado com a conta</SelectItem>
               <SelectItem value="personal">Apenas meu registro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Contexto Fiscal</Label>
+          <Select value={formData.fiscalContext} onValueChange={(val) => setFormData({...formData, fiscalContext: val as any})}>
+            <SelectTrigger className="rounded-2xl border-slate-200">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="personal">👤 Pessoal (CPF)</SelectItem>
+              <SelectItem value="business">💼 Empresarial (PJ)</SelectItem>
             </SelectContent>
           </Select>
         </div>

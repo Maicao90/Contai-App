@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Share2, UserRound } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
@@ -25,6 +25,7 @@ type Category = {
   type: string;
   visibility: "shared" | "personal";
   isDefault: boolean;
+  fiscalContext: "personal" | "business";
 };
 
 type CreateCategoryPayload = {
@@ -33,6 +34,7 @@ type CreateCategoryPayload = {
   name: string;
   type: string;
   visibility: "shared" | "personal";
+  fiscalContext: "personal" | "business";
 };
 
 function categoryTypeLabel(type: string) {
@@ -60,6 +62,7 @@ export default function AppCategoriesPage() {
   const [name, setName] = useState("");
   const [type, setType] = useState("expense");
   const [visibility, setVisibility] = useState<"shared" | "personal">("personal");
+  const [fiscalContext, setFiscalContext] = useState<"personal" | "business">("personal");
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -73,6 +76,7 @@ export default function AppCategoriesPage() {
       setName("");
       setType("expense");
       setVisibility("personal");
+      setFiscalContext("personal");
       setFeedback("Categoria criada com sucesso.");
       await queryClient.invalidateQueries({ queryKey: ["categories", householdId, userId] });
     },
@@ -132,6 +136,7 @@ export default function AppCategoriesPage() {
       name: name.trim(),
       type,
       visibility,
+      fiscalContext,
     });
   }
 
@@ -187,6 +192,22 @@ export default function AppCategoriesPage() {
                     <SelectContent>
                       <SelectItem value="personal">So eu vejo</SelectItem>
                       <SelectItem value="shared">Todos da conta veem</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Contexto Fiscal</Label>
+                  <Select
+                    value={fiscalContext}
+                    onValueChange={(value) => setFiscalContext(value as "personal" | "business")}
+                  >
+                    <SelectTrigger className="h-11 rounded-2xl">
+                      <SelectValue placeholder="Tipo de uso" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="personal">👤 Pessoal (CPF)</SelectItem>
+                      <SelectItem value="business">💼 Empresarial (PJ)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -247,6 +268,12 @@ export default function AppCategoriesPage() {
                         className="rounded-full border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100"
                       >
                         {categoryVisibilityLabel(item)}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={`rounded-full border-slate-200 ${item.fiscalContext === 'business' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-slate-600'}`}
+                      >
+                        {item.fiscalContext === 'business' ? '💼 Empresarial' : '👤 Pessoal'}
                       </Badge>
                       {item.userId === userId && !item.isDefault ? (
                         <Badge

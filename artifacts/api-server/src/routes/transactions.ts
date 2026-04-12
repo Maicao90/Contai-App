@@ -20,6 +20,7 @@ router.get("/transactions", requireSession, async (req, res, next) => {
     const search = req.query.search ? String(req.query.search) : null;
     const startDate = req.query.startDate ? String(req.query.startDate) : null;
     const endDate = req.query.endDate ? String(req.query.endDate) : null;
+    const fiscalContext = req.query.fiscalContext ? String(req.query.fiscalContext) : null;
     const limit = Math.min(100, Number(req.query.limit ?? 50));
     const offset = Number(req.query.offset ?? 0);
 
@@ -30,6 +31,7 @@ router.get("/transactions", requireSession, async (req, res, next) => {
     if (search) conditions.push(ilike(transactionsTable.description, `%${search}%`));
     if (startDate) conditions.push(gte(transactionsTable.transactionDate, new Date(startDate)));
     if (endDate) conditions.push(lte(transactionsTable.transactionDate, new Date(endDate)));
+    if (fiscalContext) conditions.push(eq(transactionsTable.fiscalContext, fiscalContext as any));
 
     const rows = await db
       .select()
@@ -53,7 +55,7 @@ router.post("/transactions", requireSession, async (req, res, next) => {
       return;
     }
 
-    const { type, amount, category, description, transactionDate, visibility } = req.body;
+    const { type, amount, category, description, transactionDate, visibility, fiscalContext } = req.body;
     
     if (!type || !amount || !category || !description) {
       res.status(400).json({ message: "Preencha todos os campos obrigatórios." });
@@ -68,6 +70,7 @@ router.post("/transactions", requireSession, async (req, res, next) => {
       description,
       transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
       visibility: visibility || "shared",
+      fiscalContext: fiscalContext || "personal",
       source: "web",
       createdBy: session.name,
     }).returning();
@@ -87,7 +90,7 @@ router.patch("/transactions/:id", requireSession, async (req, res, next) => {
     }
 
     const id = Number(req.params.id);
-    const { type, amount, category, description, transactionDate, visibility } = req.body;
+    const { type, amount, category, description, transactionDate, visibility, fiscalContext } = req.body;
 
     const [existing] = await db.select().from(transactionsTable).where(and(eq(transactionsTable.id, id), eq(transactionsTable.householdId, session.householdId))).limit(1);
     
@@ -104,6 +107,7 @@ router.patch("/transactions/:id", requireSession, async (req, res, next) => {
         description: description ?? existing.description,
         transactionDate: transactionDate ? new Date(transactionDate) : existing.transactionDate,
         visibility: visibility ?? existing.visibility,
+        fiscalContext: fiscalContext ?? existing.fiscalContext,
       })
       .where(eq(transactionsTable.id, id))
       .returning();

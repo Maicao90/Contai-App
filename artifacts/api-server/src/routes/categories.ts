@@ -32,6 +32,7 @@ router.post("/categories", async (req, res, next) => {
     const name = String(req.body.name ?? "").trim();
     const type = String(req.body.type ?? "expense").trim();
     const visibility = req.body.visibility === "personal" ? "personal" : "shared";
+    const fiscalContext = req.body.fiscalContext === "business" ? "business" : "personal";
 
     if (!householdId || !userId || !name) {
       res.status(400).json({ message: "Dados obrigatórios não enviados." });
@@ -69,6 +70,7 @@ router.post("/categories", async (req, res, next) => {
         name,
         type,
         visibility,
+        fiscalContext,
         monthlyLimit: req.body.monthlyLimit ? String(req.body.monthlyLimit) : null,
         isDefault: false,
       })
@@ -142,6 +144,7 @@ router.patch("/categories/:id", async (req, res, next) => {
       .set({
         userId: visibility === "personal" ? userId : null,
         visibility,
+        fiscalContext: req.body.fiscalContext ?? category.fiscalContext,
         monthlyLimit: req.body.monthlyLimit !== undefined ? (req.body.monthlyLimit ? String(req.body.monthlyLimit) : null) : category.monthlyLimit,
       })
       .where(eq(categoriesTable.id, categoryId))
