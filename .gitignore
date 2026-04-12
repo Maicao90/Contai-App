@@ -64,3 +64,9 @@ artifacts/api-server/src/lib/integration-secrets.json
 
 # Agent framework
 /.tmp/
+
+# Build artifacts and generated code
+**/.next/
+**/.generated/
+**/dist/
+**/dist-*

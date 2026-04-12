@@ -31,6 +31,18 @@
       "regex": "^/_not\\-found(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/privacidade",
+      "regex": "^/privacidade(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacidade(?:/)?$"
+    },
+    {
+      "page": "/termos",
+      "regex": "^/termos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/termos(?:/)?$"
     }
   ],
   "dataRoutes": [],
