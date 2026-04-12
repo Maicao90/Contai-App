@@ -126,6 +126,7 @@ const quickProof = [
 const faqs = [
   { question: "Como funciona no WhatsApp?", answer: "Você manda mensagens simples, como já manda no dia a dia. O Contai interpreta, registra e responde de forma curta e clara." },
   { question: "Posso usar sozinho?", answer: "Sim. A conta pode ser individual ou compartilhada com mais uma pessoa." },
+  { question: "Consigo separar meus gastos de MEI/Freelancer dos gastos pessoais?", answer: "Sim! O Contai possui contextos fiscais separados. Você pode marcar transações como PF ou PJ no próprio WhatsApp e o sistema gera saldos e relatórios independentes." },
   { question: "Posso compartilhar com outra pessoa?", answer: "Sim. O Plano Contai permite até 2 membros por conta, ideal para casal ou parceria." },
   { question: "O Contai substitui planilhas?", answer: "Essa é justamente a proposta. Você organiza a vida por conversa, com muito menos atrito." },
   { question: "O Google Agenda integra?", answer: "Sim. A integração pode ser conectada para sincronizar compromissos e manter sua agenda alinhada." },
@@ -596,6 +597,74 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* NOVA SEÇÃO: Negócios & MEI */}
+        <section className="px-4 py-16 sm:px-6 sm:py-24 lg:px-8 bg-[#0a151f]">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              <Reveal delay={0.1}>
+                <div className="space-y-6 lg:order-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    <Sparkles className="h-3 w-3" />
+                    Especial para MEI & Freelancers
+                  </div>
+                  <h2 className="text-3xl font-semibold text-white sm:text-4xl leading-tight">Sua empresa organizada, sem misturar com o CPF.</h2>
+                  <p className="text-slate-300 text-lg leading-relaxed">
+                    Sabemos que o maior desafio de quem trabalha por conta própria é separar o dinheiro do negócio do dinheiro pessoal. O Contai faz isso de forma invisível para você.
+                  </p>
+                  <ul className="space-y-5">
+                    {[
+                      { title: "Detecção Automática de Contexto", desc: "A IA entende termos como 'PJ', 'Firma' ou 'Nota Fiscal' e separa o fluxo na hora." },
+                      { title: "Saldos Independentes", desc: "Tenha visão clara do seu lucro real vs o que você tem para gastar com você." },
+                      { title: "Fluxo de Confirmação", desc: "Na dúvida, o bot te pergunta: 'Isso é da empresa ou pessoal?'. Zero bagunça nos dados." },
+                      { title: "Relatórios PJ Prontos", desc: "Exporte apenas suas entradas e saídas empresariais quando precisar." }
+                    ].map((item, i) => (
+                      <li key={i} className="flex gap-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                          <Check className="h-5 w-5 text-emerald-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-white text-sm">{item.title}</h4>
+                          <p className="text-xs text-slate-400 mt-1">{item.desc}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+              <Reveal className="lg:order-1">
+                <div className="relative mx-auto max-w-md">
+                   <div className="absolute -inset-4 bg-emerald-500/20 rounded-[40px] blur-3xl opacity-50" />
+                   <div className="relative rounded-[40px] border border-white/10 bg-[#061110] p-4 shadow-2xl overflow-hidden aspect-[4/5] flex items-center justify-center">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.1),transparent_70%)]" />
+                      <div className="relative z-10 w-full p-6 space-y-6">
+                         <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                            <div className="flex justify-between items-center mb-1">
+                               <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Resumo PJ</span>
+                               <Briefcase className="h-4 w-4 text-emerald-400" />
+                            </div>
+                            <p className="text-2xl font-bold text-white mb-2">R$ 8.940,00</p>
+                            <div className="w-full bg-slate-700 h-1 rounded-full overflow-hidden">
+                               <div className="bg-emerald-500 h-full w-[65%]" />
+                            </div>
+                            <p className="text-[10px] text-emerald-400 mt-2 font-medium">▲ 12% em relação ao mês anterior</p>
+                         </div>
+                         <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                               <MessageCircleMore className="h-5 w-5 text-emerald-400" />
+                            </div>
+                            <div>
+                               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Bot Contai</p>
+                               <p className="text-xs text-white">"Show! Registrei essa entrada na sua empresa, Maicon."</p>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
                 </div>
               </Reveal>
             </div>
