@@ -47,9 +47,9 @@ const defaultSystemSettings: SystemSettings = {
   botImageInterpretationPrompt:
     "Priorize comprovantes, recibos, notas fiscais, pix e prints financeiros com foco em valor, categoria e descricao.",
   botHelpText:
-    "Posso anotar gastos, receitas, contas e compromissos. Ex.: 'gastei 50 no mercado' ou 'consulta amanha as 14h'.",
+    "Oi! 👋 Sou o Contai, seu assistente financeiro pessoal por WhatsApp! Eu entendo o seu jeito de falar, seja por texto, áudio ou até mandando uma foto de um recibo! 🎙️📸\n\n💰 *Registro Automático:* Transformo suas mensagens em lançamentos organizados.\n💼 *Separo PF e PJ:* Mantenho seus gastos Pessoais e da Empresa separados.\n👩‍❤️‍👨 *Plano Casal:* Igual à conta PJ, mas separado para a família.\n📊 *Saldo em tempo real:* Pergunte 'quanto tenho disponível' e eu te mostro.\n\nMe conta seu saldo de hoje ou mande seu primeiro gasto!",
   botUnregisteredAccessMessage:
-    "Oi! Para usar o Contai no WhatsApp, esse numero precisa estar cadastrado no sistema. Crie sua conta, use esse mesmo numero no cadastro e depois finalize seu plano para liberar o bot.",
+    "Oi! 👋 Notei que esse número ainda não está no Contai. Para eu começar a organizar seu dinheiro por aqui (leio texto, ouço áudio e vejo foto!), crie sua conta no painel e ative seu plano primeiro: {{ appBaseUrl }}/cadastro",
   botInactivePlanMessage:
     "Seu numero foi encontrado no Contai, mas o acesso do bot ainda nao esta liberado. Entre no painel, conclua um plano ativo e depois volte aqui no WhatsApp.",
   botGoogleCalendarRequiredForScheduling: true,

@@ -32,6 +32,7 @@ import {
   Target,
   Repeat,
   Calendar,
+  Briefcase,
 } from "lucide-react";
 import { DottedSurface } from "@/components/ui/dotted-surface";
 import { HeroFuturistic } from "@/components/ui/hero-futuristic";
@@ -60,6 +61,12 @@ const chatMessages = [
     from: "bot",
     text:
       "Recebido! Registrei a entrada de R$ 500,00 para a casa, Maicon. Acompanhe a atualização:\n\n📋 Resumo da transação:\n🧾 Descrição: Entrada\n💰 Valor: R$ 500,00\n📂 Categoria: Receita Familiar\n📅 Data: 08/04/2026\n✅ Status: Recebido\n🏠 Tipo: Gasto da casa\n💳 Pagamento: Pix\n\n💰 Saldo anterior da casa: R$ 1.000,00\n💰 Ganho registrado: R$ 500,00\n✅ Saldo atual da casa: R$ 1.500,00\n\n👥 Saldo total consolidado: R$ 2.500,00",
+  },
+  { from: "user", text: "PJ: Recebi 2.500 do projeto do cliente" },
+  {
+    from: "bot",
+    text:
+      "Show! Registrei essa entrada na sua empresa, Maicon. Confira o resumo:\n\n📋 Resumo da transação:\n🧾 Descrição: Projeto Cliente\n💰 Valor: R$ 2.500,00\n📂 Categoria: Receita PJ\n📅 Data: 08/04/2026\n✅ Status: Recebido\n💼 Contexto: Empresarial (PJ)\n💳 Pagamento: Pix\n\n💰 Saldo anterior PJ: R$ 5.000,00\n💰 Valor recebido: R$ 2.500,00\n✅ Seu saldo PJ atual: R$ 7.500,00\n\n🎯 Ótimo trabalho! Sua empresa está crescendo.",
   },
 ];
 const steps = [
@@ -90,6 +97,7 @@ const benefits = [
   { icon: CircleDollarSign, title: "Constância sem esforço", description: "Fica mais fácil manter a organização quando tudo começa no WhatsApp, em vez de exigir disciplina extra." },
   { icon: MessageCircleMore, title: "Do seu jeito", description: "Você usa linguagem natural, como já usa no WhatsApp, sem termos técnicos nem telas complicadas." },
   { icon: Smartphone, title: "Pensado para a vida real", description: "Funciona no celular, no ritmo do dia e sem pedir que você pare tudo para se organizar." },
+  { icon: Briefcase, title: "Contas PF e PJ separadas", description: "Ideal para MEIs e freelancers que precisam separar o dinheiro da empresa dos gastos pessoais." },
 ];
 
 const features = [
@@ -99,7 +107,8 @@ const features = [
   { icon: Link2, title: "Contas a receber", description: "Acompanhe o que ainda precisa entrar." },
   { icon: CalendarDays, title: "Compromissos", description: "Salve consultas, reuniões e eventos." },
   { icon: AlarmClock, title: "Lembretes", description: "Receba ajuda para não deixar nada passar." },
-  { icon: Wallet, title: "Saldos multinível", description: "Veja seu saldo pessoal, seu saldo na casa e o total da casa separadamente." },
+  { icon: Wallet, title: "Saldos multinível", description: "Veja seu saldo pessoal, da sua casa e da sua empresa separadamente." },
+  { icon: Briefcase, title: "Empresa/PJ", description: "Organize as finanças do seu negócio sem misturar com o seu CPF." },
   { icon: Target, title: "Metas e Alertas", description: "Receba avisos instantâneos quando atingir 80% do uso do saldo da casa." },
   { icon: Shield, title: "Privacidade Real", description: "Seus gastos pessoais são 100% invisíveis para os outros membros da casa." },
   { icon: Clock3, title: "Agenda", description: "Veja o dia e a semana com clareza." },

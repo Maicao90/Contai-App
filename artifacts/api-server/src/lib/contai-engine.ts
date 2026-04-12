@@ -134,6 +134,7 @@ type ParsedMessage = {
   contaDestino?: string;
   paymentMethod?: "debito" | "credito" | "pix" | "dinheiro" | "boleto";
   installments?: number;
+  fiscalContext?: "personal" | "business";
 };
 
 type PendingKind = "registrar_gasto" | "registrar_conta" | "registrar_compromisso" | "missing_info";
@@ -616,6 +617,7 @@ function mapAIResultToParsed(ai: AIParsedMessage, tz = "America/Sao_Paulo"): Par
     installments: ai.parcelas ?? undefined,
     conta: ai.conta ?? undefined,
     contaDestino: ai.conta_destino ?? undefined,
+    fiscalContext: ai.contexto_fiscal ?? "personal",
   };
 }
 
@@ -642,6 +644,7 @@ async function interpretMessage(content: string, identity: Identity, tz = "Ameri
     if (parsedByAI.intent !== "indefinido") {
       parsedByAI.paymentMethod = parsedByAI.paymentMethod || parsedByRules.paymentMethod || detectPaymentMethod(content);
       parsedByAI.accountType = parsedByAI.accountType || parsedByRules.accountType || detectAccountType(content);
+      parsedByAI.fiscalContext = parsedByAI.fiscalContext || (content.toLowerCase().includes("pj") || content.toLowerCase().includes("empresa") ? "business" : "personal");
       return parsedByAI;
     }
     return parsedByRules;
@@ -1208,6 +1211,7 @@ async function saveParsedAction(
         category = await predictCategory(identity.household.id, description, parsed.intent);
       }
       const visibility = accountType === "house" ? "shared" : "personal";
+      const fiscalContext = parsed.fiscalContext || "personal";
 
       const oldPersonalBalance = toAmountNumber(identity.user.personalBalance);
       const oldUserHouseBalance = toAmountNumber(identity.member?.householdBalance);
@@ -1288,6 +1292,7 @@ async function saveParsedAction(
           sourceType: input.messageType ?? "text",
           source: input.source ?? DEFAULT_SOURCE,
           transactionDate: replyDate,
+          fiscalContext,
           createdBy: identity.member?.displayName || identity.user.name,
         });
 
@@ -1310,6 +1315,7 @@ async function saveParsedAction(
               visibility,
               type: parsed.intent === "registrar_gasto" ? "payable" : "receivable",
               sourceType: input.messageType ?? "text",
+              fiscalContext,
             });
           }
           await db.insert(billsTable).values(installmentBills);
@@ -1332,6 +1338,7 @@ async function saveParsedAction(
       const typeLabel = accountType === "house" 
         ? `🏠 Tipo: ${isExpense ? "Gasto da casa" : "Receita da casa"}` 
         : `👤 Tipo: Pessoal`;
+      const fiscalLabel = fiscalContext === "business" ? "💼 Contexto: Empresarial (PJ)" : "👤 Contexto: Pessoal (PF)";
       const response = [
         `Anotei os ${formatCurrency(amount)} que você ${actionText} ${description} hoje, ${firstName}. Tudo já está organizado para você.`,
         "",
@@ -1342,6 +1349,7 @@ async function saveParsedAction(
         `📅 *Data:* ${formatFullDate(replyDate)}`,
         `✅ *Status:* ${statusText}`,
         typeLabel,
+        fiscalLabel,
         `💳 *Pagamento:* ${capitalizeLabel(paymentMethod)}`,
         accountType === "house" ? `👤 *Lançado por:* ${firstName}` : "",
         "",

@@ -22,6 +22,7 @@ export const householdsTable = pgTable("households", {
   totalHouseBalance: numeric("total_house_balance", { precision: 12, scale: 2 }).notNull().default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  fiscalContext: text("fiscal_context").notNull().default("personal"), // 'personal' ou 'business'
 });
 
 export const processedWebhooksTable = pgTable("processed_webhooks", {
@@ -46,6 +47,7 @@ export const usersTable = pgTable("users", {
   personalBalance: numeric("personal_balance", { precision: 12, scale: 2 }).notNull().default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  activeFiscalContext: text("active_fiscal_context").notNull().default("personal"),
 });
 
 export const householdMembersTable = pgTable("household_members", {
@@ -74,6 +76,7 @@ export const accountsTable = pgTable("accounts", {
   type: text("type").notNull().default("checking"),
   isActive: boolean("is_active").notNull().default(true),
   balance: numeric("balance", { precision: 12, scale: 2 }).notNull().default("0"),
+  fiscalContext: text("fiscal_context").notNull().default("personal"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -90,6 +93,7 @@ export const categoriesTable = pgTable("categories", {
   visibility: text("visibility").notNull().default("shared"),
   isDefault: boolean("is_default").notNull().default(false),
   monthlyLimit: numeric("monthly_limit", { precision: 12, scale: 2 }),
+  fiscalContext: text("fiscal_context").notNull().default("personal"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -125,6 +129,7 @@ export const transactionsTable = pgTable("transactions", {
   reversalReason: text("reversal_reason"),
   canceledAt: timestamp("canceled_at"),
   transactionDate: timestamp("transaction_date").notNull().defaultNow(),
+  fiscalContext: text("fiscal_context").notNull().default("personal"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
