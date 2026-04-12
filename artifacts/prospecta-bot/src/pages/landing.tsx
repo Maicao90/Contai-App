@@ -1011,32 +1011,7 @@ export default function LandingPage() {
             <Reveal delay={0.06} className="mt-8 sm:mt-10">
               <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,24,0.96)_0%,rgba(7,11,18,0.98)_100%)] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.24)] backdrop-blur-xl sm:rounded-[30px] sm:p-5">
                 <Accordion type="single" collapsible className="w-full space-y-3">
-                  {[
-                    {
-                      question: "Por que não tem teste grátis?",
-                      answer: "O Contai utiliza tecnologias de ponta (OpenAI/Meta) que possuem custos reais por cada interação. Em vez de um 'trial' limitado, oferecemos 7 dias de garantia total: use o produto completo e, se não automatizar seu financeiro, devolvemos seu dinheiro na hora."
-                    },
-                    {
-                      question: "Meus dados ficam seguros no WhatsApp?",
-                      answer: "Sim. O Contai utiliza a API Oficial do WhatsApp Business. As mensagens são processadas pelo nosso sistema seguro e não cadastradas para treinamento de IAs públicas. Além disso, aplicamos criptografia de ponta a ponta na nossa base de dados."
-                    },
-                    {
-                      question: "Qual a diferença entre o plano mensal e o anual?",
-                      answer: "Os recursos são idênticos. A diferença é o investimento: o plano anual oferece 44% de desconto, saindo por apenas R$ 8,32/mês. É a escolha de 89% dos nossos usuários que buscam constância na organização."
-                    },
-                    {
-                      question: "Funciona com qualquer banco?",
-                      answer: "Sim! Como o Contai funciona por linguagem natural, você não precisa conectar seu banco. Basta dizer 'gastei 50 no Nubank' ou 'recebi 2k no Itaú'. Ele entende tudo e organiza nos seus respectivos saldos."
-                    },
-                    {
-                      question: "Posso compartilhar com meu cônjuge?",
-                      answer: "Com certeza. O Plano Contai permite que até 2 pessoas gerenciem a mesma 'Casa'. Vocês podem ter saldos compartilhados para despesas comuns e manter seus saldos pessoais 100% privados."
-                    },
-                    {
-                      question: "E se eu quiser cancelar?",
-                      answer: "O cancelamento é livre e pode ser feito a qualquer momento via painel web ou diretamente com nosso suporte no WhatsApp. Sem multas, sem letras miúdas."
-                    }
-                  ].map((item, index) => (
+                  {faqs.map((item, index) => (
                     <AccordionItem
                       key={item.question}
                       value={`item-${index}`}

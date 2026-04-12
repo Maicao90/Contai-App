@@ -65,24 +65,44 @@ function buildMonthlyEmailSummary(input: {
   income: number;
   expenses: number;
   balance: number;
+  incomePJ?: number;
+  expensesPJ?: number;
+  incomeHouse?: number;
+  expensesHouse?: number;
+  incomePersonal?: number;
+  expensesPersonal?: number;
   topCategory: string | null;
   billsCount: number;
   remindersCount: number;
   commitmentsCount: number;
 }) {
   const parts = [
-    `Período: ${input.monthLabel}.`,
-    `Entradas: ${formatCurrencyBr(input.income)}.`,
-    `Saídas: ${formatCurrencyBr(input.expenses)}.`,
-    `Saldo: ${formatCurrencyBr(input.balance)}.`,
+    `📅 Período: ${input.monthLabel}.`,
+    `💰 Resumo Geral: Entradas ${formatCurrencyBr(input.income)}, Saídas ${formatCurrencyBr(input.expenses)} (Saldo: ${formatCurrencyBr(input.balance)}).`,
   ];
 
+  const hasPJ = (input.incomePJ || 0) > 0 || (input.expensesPJ || 0) > 0;
+  const hasHouse = (input.incomeHouse || 0) > 0 || (input.expensesHouse || 0) > 0;
+  const hasPersonal = (input.incomePersonal || 0) > 0 || (input.expensesPersonal || 0) > 0;
+
+  if (hasPJ) {
+    parts.push(`💼 Empresa: +${formatCurrencyBr(input.incomePJ || 0)} / -${formatCurrencyBr(input.expensesPJ || 0)}.`);
+  }
+
+  if (hasHouse) {
+    parts.push(`🏠 Casa: +${formatCurrencyBr(input.incomeHouse || 0)} / -${formatCurrencyBr(input.expensesHouse || 0)}.`);
+  }
+
+  if (hasPersonal) {
+    parts.push(`👤 Pessoal: +${formatCurrencyBr(input.incomePersonal || 0)} / -${formatCurrencyBr(input.expensesPersonal || 0)}.`);
+  }
+
   if (input.topCategory) {
-    parts.push(`Categoria com mais gastos: ${input.topCategory}.`);
+    parts.push(`📍 Maior gasto em: ${input.topCategory}.`);
   }
 
   parts.push(
-    `${input.billsCount} conta(s) com vencimento no período, ${input.remindersCount} lembrete(s) e ${input.commitmentsCount} compromisso(s).`,
+    `✅ Total de ${input.billsCount} conta(s), ${input.remindersCount} lembrete(s) e ${input.commitmentsCount} compromisso(s).`,
   );
 
   return parts.join(" ");
@@ -251,6 +271,24 @@ async function buildMonthlyReport(userId: number, monthValue?: string) {
       income,
       expenses,
       balance: income - expenses,
+      incomePJ: transactions
+        .filter((t) => t.fiscalContext === "business" && t.type === "income")
+        .reduce((sum, t) => sum + toAmountNumber(t.amount), 0),
+      expensesPJ: transactions
+        .filter((t) => t.fiscalContext === "business" && t.type === "expense")
+        .reduce((sum, t) => sum + toAmountNumber(t.amount), 0),
+      incomeHouse: transactions
+        .filter((t) => t.visibility === "shared" && t.fiscalContext !== "business" && t.type === "income")
+        .reduce((sum, t) => sum + toAmountNumber(t.amount), 0),
+      expensesHouse: transactions
+        .filter((t) => t.visibility === "shared" && t.fiscalContext !== "business" && t.type === "expense")
+        .reduce((sum, t) => sum + toAmountNumber(t.amount), 0),
+      incomePersonal: transactions
+        .filter((t) => t.visibility === "personal" && t.fiscalContext === "personal" && t.type === "income")
+        .reduce((sum, t) => sum + toAmountNumber(t.amount), 0),
+      expensesPersonal: transactions
+        .filter((t) => t.visibility === "personal" && t.fiscalContext === "personal" && t.type === "expense")
+        .reduce((sum, t) => sum + toAmountNumber(t.amount), 0),
       topCategory: categoryBreakdown[0]?.category ?? null,
       transactionsCount: transactions.length,
       billsCount: bills.length,
@@ -493,6 +531,12 @@ router.post("/reports/:userId/send-monthly-email", requireSession, async (req, r
           income: report.metrics.income,
           expenses: report.metrics.expenses,
           balance: report.metrics.balance,
+          incomePJ: report.metrics.incomePJ,
+          expensesPJ: report.metrics.expensesPJ,
+          incomeHouse: report.metrics.incomeHouse,
+          expensesHouse: report.metrics.expensesHouse,
+          incomePersonal: report.metrics.incomePersonal,
+          expensesPersonal: report.metrics.expensesPersonal,
           topCategory: report.metrics.topCategory,
           billsCount: report.metrics.billsCount,
           remindersCount: report.metrics.remindersCount,
@@ -541,6 +585,12 @@ router.post("/reports/monthly-email-batch", requireAdmin, async (req, res, next)
                 income: report.metrics.income,
                 expenses: report.metrics.expenses,
                 balance: report.metrics.balance,
+                incomePJ: report.metrics.incomePJ,
+                expensesPJ: report.metrics.expensesPJ,
+                incomeHouse: report.metrics.incomeHouse,
+                expensesHouse: report.metrics.expensesHouse,
+                incomePersonal: report.metrics.incomePersonal,
+                expensesPersonal: report.metrics.expensesPersonal,
                 topCategory: report.metrics.topCategory,
                 billsCount: report.metrics.billsCount,
                 remindersCount: report.metrics.remindersCount,
