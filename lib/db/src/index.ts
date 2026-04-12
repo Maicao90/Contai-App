@@ -56,6 +56,10 @@ async function ensureSchema() {
   `));
 
   await db.execute(sql.raw(`
+    ALTER TABLE households ADD COLUMN IF NOT EXISTS fiscal_context TEXT NOT NULL DEFAULT 'personal';
+  `));
+
+  await db.execute(sql.raw(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       household_id INTEGER REFERENCES households(id) ON DELETE SET NULL,
@@ -91,6 +95,11 @@ async function ensureSchema() {
   await db.execute(sql.raw(`
     ALTER TABLE users
     ADD COLUMN IF NOT EXISTS external_id TEXT UNIQUE;
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS active_fiscal_context TEXT NOT NULL DEFAULT 'personal';
   `));
 
   await db.execute(sql.raw(`
@@ -155,6 +164,11 @@ async function ensureSchema() {
   `));
 
   await db.execute(sql.raw(`
+    ALTER TABLE categories
+    ADD COLUMN IF NOT EXISTS fiscal_context TEXT NOT NULL DEFAULT 'personal';
+  `));
+
+  await db.execute(sql.raw(`
     CREATE TABLE IF NOT EXISTS accounts (
       id SERIAL PRIMARY KEY,
       household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
@@ -165,6 +179,11 @@ async function ensureSchema() {
       balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE accounts
+    ADD COLUMN IF NOT EXISTS fiscal_context TEXT NOT NULL DEFAULT 'personal';
   `));
 
   await db.execute(sql.raw(`
@@ -213,6 +232,10 @@ async function ensureSchema() {
 
   await db.execute(sql.raw(`
     ALTER TABLE transactions ADD COLUMN IF NOT EXISTS destination_account_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL;
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS fiscal_context TEXT NOT NULL DEFAULT 'personal';
   `));
 
   await db.execute(sql.raw(`

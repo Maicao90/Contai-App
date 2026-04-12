@@ -22,19 +22,19 @@
       "static/chunks/main-app-85fb09bc4c60b598.js",
       "static/chunks/app/page-edb31515d50e96ca.js"
     ],
-    "/termos/page": [
-      "static/chunks/webpack-cd5ee17eea82d252.js",
-      "static/chunks/f3acafee-0b2a7e371f2fd395.js",
-      "static/chunks/502-877ffa50959f9a52.js",
-      "static/chunks/main-app-85fb09bc4c60b598.js",
-      "static/chunks/app/termos/page-e683903b2530ebda.js"
-    ],
     "/privacidade/page": [
       "static/chunks/webpack-cd5ee17eea82d252.js",
       "static/chunks/f3acafee-0b2a7e371f2fd395.js",
       "static/chunks/502-877ffa50959f9a52.js",
       "static/chunks/main-app-85fb09bc4c60b598.js",
       "static/chunks/app/privacidade/page-e683903b2530ebda.js"
+    ],
+    "/termos/page": [
+      "static/chunks/webpack-cd5ee17eea82d252.js",
+      "static/chunks/f3acafee-0b2a7e371f2fd395.js",
+      "static/chunks/502-877ffa50959f9a52.js",
+      "static/chunks/main-app-85fb09bc4c60b598.js",
+      "static/chunks/app/termos/page-e683903b2530ebda.js"
     ]
   }
 }
