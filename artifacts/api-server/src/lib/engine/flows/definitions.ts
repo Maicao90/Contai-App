@@ -57,15 +57,29 @@ export const CONFIRM_HIGH_VALUE_FLOW: FlowDefinition = {
   ]
 };
 
+export const CLARIFY_CONTEXT_FLOW: FlowDefinition = {
+  id: 'clarify_context',
+  steps: [
+    {
+      key: 'fiscalContextResult',
+      question: 'Opa! Anotei seu registro, mas fiquei na dúvida: ele é **Pessoal**, da **Empresa (PJ)** ou da **Casa (Compartilhado)**?',
+      validator: 'fiscalContext',
+      required: true
+    }
+  ]
+};
+
 export const FLOWS: Record<string, FlowDefinition> = {
   register_expense: TRANSACTION_FLOW,
   register_income: TRANSACTION_FLOW,
-  confirm_high_value: CONFIRM_HIGH_VALUE_FLOW
+  confirm_high_value: CONFIRM_HIGH_VALUE_FLOW,
+  clarify_context: CLARIFY_CONTEXT_FLOW
 };
 
 export function getFlowDefinition(intent: string): FlowDefinition | null {
    if (intent === 'registrar_gasto') return FLOWS['register_expense'];
    if (intent === 'registrar_receita') return FLOWS['register_income'];
    if (intent === 'confirm_high_value') return FLOWS['confirm_high_value'];
+   if (intent === 'clarify_context') return FLOWS['clarify_context'];
    return null;
 }

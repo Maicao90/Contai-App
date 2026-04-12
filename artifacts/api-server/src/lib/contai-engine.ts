@@ -135,6 +135,7 @@ type ParsedMessage = {
   paymentMethod?: "debito" | "credito" | "pix" | "dinheiro" | "boleto";
   installments?: number;
   fiscalContext?: "personal" | "business";
+  contextUncertain?: boolean | null;
 };
 
 type PendingKind = "registrar_gasto" | "registrar_conta" | "registrar_compromisso" | "missing_info";
@@ -618,6 +619,7 @@ function mapAIResultToParsed(ai: AIParsedMessage, tz = "America/Sao_Paulo"): Par
     conta: ai.conta ?? undefined,
     contaDestino: ai.conta_destino ?? undefined,
     fiscalContext: ai.contexto_fiscal ?? "personal",
+    contextUncertain: ai.contexto_incerto ?? false,
   };
 }
 
@@ -1179,7 +1181,7 @@ async function saveParsedAction(
   parsed: ParsedMessage,
   input: ProcessIncomingMessageInput,
   options: SaveParsedActionOptions & { confirmedHighValue?: boolean } = {},
-): Promise<{ reply: string; isMissingInfo?: boolean; triggerHighValueConfirmation?: boolean }> {
+): Promise<{ reply: string; isMissingInfo?: boolean; triggerHighValueConfirmation?: boolean; triggerFiscalClarification?: boolean }> {
   const previewOnly = options.previewOnly === true;
   const replyDate = new Date();
   const appBaseUrl = getAppBaseUrl();
@@ -1189,6 +1191,15 @@ async function saveParsedAction(
     case "registrar_receita": {
       if (parsed.intent === "registrar_gasto" && !parsed.description) return { reply: "Foi gasto com o quê?", isMissingInfo: true };
       if (!parsed.amount) return { reply: parsed.intent === "registrar_gasto" ? "Qual foi o valor?" : "Qual foi o valor da entrada?", isMissingInfo: true };
+
+      // 0. Verificar Incerteza de Contexto (PF/PJ/Casa)
+      if (parsed.contextUncertain && !options.confirmedHighValue) {
+        return {
+          reply: `Opa! Anotei seu registro de *${formatCurrency(parsed.amount)}*, mas fiquei na dúvida: ele é **Pessoal**, da **Empresa (PJ)** ou da **Casa (Compartilhado)**?`,
+          isMissingInfo: true,
+          triggerFiscalClarification: true
+        };
+      }
 
       // 1. Verificar informações faltantes (Regra do Maicon)
       if (!parsed.accountType && identity.household.type !== "individual") {
@@ -1840,6 +1851,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   let isMissingInfo: boolean | undefined = false;
   let didBypassAI = false;
   let triggerHighValueConfirmation = false;
+  let triggerFiscalClarification = false;
 
   if (pendingDecision && pendingDecision.question) {
     if (checkEscapeCommand(input.content)) {
@@ -1853,7 +1865,6 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
        await clearPendingDecision(pendingDecision.id);
     } else {
        // Let's hook the explicit structure!
-       // But wait: pending.action is part of our requested structure. If it's missing, fallback to parsing.
        didBypassAI = true;
        const actionType = (pendingDecision.payload as any).action || "register_expense";
        const structPending = { ...pendingDecision, action: actionType };
@@ -1873,9 +1884,33 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
              reply = result.reply;
              isMissingInfo = result.isMissingInfo;
              triggerHighValueConfirmation = result.triggerHighValueConfirmation ?? false;
+             triggerFiscalClarification = result.triggerFiscalClarification ?? false;
           } else {
              return { user: identity.user, member: identity.member, household: identity.household, subscription: identity.subscription, parsed: { intent: "indefinido" }, reply: "Lançamento cancelado. Se quiser anotar outra coisa, me mande!" };
           }
+       } else if (actionType === "clarify_context") {
+          const resultValue = ctxResponse.parsedData.fiscalContextResult;
+          parsed = { ...(pendingDecision.payload as any).transactionParsed };
+          
+          if (resultValue === 'business') {
+             parsed.fiscalContext = 'business';
+             parsed.visibility = 'personal';
+             parsed.accountType = 'personal';
+          } else if (resultValue === 'shared') {
+             parsed.fiscalContext = 'personal';
+             parsed.visibility = 'shared';
+             parsed.accountType = 'house';
+          } else {
+             parsed.fiscalContext = 'personal';
+             parsed.visibility = 'personal';
+             parsed.accountType = 'personal';
+          }
+
+          const saveResult = await saveParsedAction(identity, parsed, input, { confirmedHighValue: true });
+          reply = saveResult.reply;
+          isMissingInfo = saveResult.isMissingInfo;
+          triggerHighValueConfirmation = saveResult.triggerHighValueConfirmation ?? false;
+          triggerFiscalClarification = saveResult.triggerFiscalClarification ?? false;
        } else {
           const intent = actionType === "register_expense" ? "registrar_gasto" : "registrar_receita";
           parsed = {
@@ -1886,6 +1921,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
           reply = result.reply;
           isMissingInfo = result.isMissingInfo;
           triggerHighValueConfirmation = result.triggerHighValueConfirmation ?? false;
+          triggerFiscalClarification = result.triggerFiscalClarification ?? false;
        }
     }
   }
@@ -1929,6 +1965,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
           anyMissingInfo = true;
           isMissingInfo = true;
           triggerHighValueConfirmation = result.triggerHighValueConfirmation ?? false;
+          triggerFiscalClarification = result.triggerFiscalClarification ?? false;
           parsed = p;
           reply = result.reply;
         } else {
@@ -1948,8 +1985,10 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   }
 
   if (isMissingInfo) {
-    const actionStr = triggerHighValueConfirmation ? "confirm_high_value" : (parsed.intent === "registrar_gasto" ? "register_expense" : "register_income");
-    const flow = triggerHighValueConfirmation ? { step: 0, accumulatedData: {} } : initializeFlowState(actionStr, parsed);
+    let actionStr = triggerHighValueConfirmation ? "confirm_high_value" : (parsed.intent === "registrar_gasto" ? "register_expense" : "register_income");
+    if (triggerFiscalClarification) actionStr = "clarify_context";
+
+    const flow = (triggerHighValueConfirmation || triggerFiscalClarification) ? { step: 0, accumulatedData: {} } : initializeFlowState(actionStr, parsed);
     const pendPayload: any = {
       parsed,
       originalContent: finalContentForPendency,
@@ -1957,7 +1996,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       messageType: input.messageType,
       action: actionStr
     };
-    if (triggerHighValueConfirmation) pendPayload.transactionParsed = parsed;
+    if (triggerHighValueConfirmation || triggerFiscalClarification) pendPayload.transactionParsed = parsed;
     
     await createPendingDecision(identity, "missing_info", reply, pendPayload, flow.step, flow.accumulatedData);
   }

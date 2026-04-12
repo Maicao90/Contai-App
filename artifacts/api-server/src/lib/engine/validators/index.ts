@@ -94,5 +94,13 @@ export const VALIDATORS = {
       return false;
     }
     return null;
+  },
+  
+  fiscalContext: (input: string): string | null => {
+    const normalized = input.toLowerCase().trim();
+    if (normalized.includes('pessoal') || normalized.includes('meu') || normalized.includes('minha')) return 'personal';
+    if (normalized.includes('empresa') || normalized.includes('pj') || normalized.includes('trabalho')) return 'business';
+    if (normalized.includes('casa') || normalized.includes('familia') || normalized.includes('família') || normalized.includes('compartilhado')) return 'shared';
+    return null;
   }
 };

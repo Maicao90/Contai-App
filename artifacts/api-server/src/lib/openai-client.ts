@@ -28,6 +28,7 @@ export type AIParsedMessage = {
   observacoes?: string | null;
   visibilidade?: "shared" | "personal" | null;
   contexto_fiscal?: "personal" | "business" | null;
+  contexto_incerto?: boolean | null;
   parcelas?: number | null;
   conta?: string | null;
   conta_destino?: string | null;
@@ -106,6 +107,7 @@ const TEXT_SYSTEM_PROMPT = [
   "- IDENTIFICAÇÃO PF/PJ: Determine se o lançamento é Pessoal (Individual/Família) ou Empresarial (Negócio/PJ/Freela).",
   "- contexto_fiscal deve ser 'business' se a mensagem citar: empresa, trabalho, PJ, CNPJ, cliente, serviço prestado, fornecedor, nota fiscal, escritorio ou freela.",
   "- contexto_fiscal deve ser 'personal' se for gasto comum do dia a dia ou se não houver menção empresarial.",
+  "- contexto_incerto deve ser 'true' se a mensagem for ambígua e puder ser tanto da CASA, quanto PESSOAL ou EMPRESA (ex: 'Gastei 50 no mercado' sem contexto). Se houver 100% de certeza pelo texto ou palavras-chave, retorne 'false'.",
 ].join(" ");
 
 const IMAGE_SYSTEM_PROMPT = [
@@ -245,6 +247,7 @@ export async function interpretTextWithOpenAI(
                     type: ["string", "null"],
                     enum: ["personal", "business", null],
                   },
+                  contexto_incerto: { type: ["boolean", "null"] },
                   parcelas: { type: ["number", "null"] },
                   conta: { type: ["string", "null"] },
                   conta_destino: { type: ["string", "null"] },
@@ -259,6 +262,7 @@ export async function interpretTextWithOpenAI(
                   "observacoes",
                   "visibilidade",
                   "contexto_fiscal",
+                  "contexto_incerto",
                   "parcelas",
                   "conta",
                   "conta_destino",

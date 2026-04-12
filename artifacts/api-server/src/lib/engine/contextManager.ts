@@ -35,6 +35,8 @@ export async function processContextualResponse(
     value = VALIDATORS.date(message, identity.user.timezone || "America/Sao_Paulo");
   } else if (currentStep.validator === "text") {
     value = VALIDATORS.text(message);
+  } else if (currentStep.validator === "fiscalContext") {
+    value = VALIDATORS.fiscalContext(message);
   }
   
   if (value === null && currentStep.required) {
