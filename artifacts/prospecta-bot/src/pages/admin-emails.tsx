@@ -73,7 +73,7 @@ function buildLocalEmailPreview(input: {
   context: Record<string, string>;
 }) {
   const appBaseUrl =
-    typeof window === "undefined" ? "http://localhost:5173" : window.location.origin;
+    typeof window === "undefined" ? "https://contai.site" : window.location.origin;
   const subject = renderTemplateValue(input.subject, input.context) || "Preview do Contai";
   const text = renderTemplateValue(input.text, input.context);
   const htmlContent =
@@ -277,10 +277,10 @@ export default function AdminEmailsPage() {
   const livePreviewContext = useMemo(
     () => ({
       userName: selectedRecipient?.name ?? "Cliente Contai",
-      appBaseUrl: typeof window === "undefined" ? "http://localhost:5173" : window.location.origin,
+      appBaseUrl: typeof window === "undefined" ? "https://contai.site" : window.location.origin,
       resetUrl:
         String(samplePayload.resetUrl ?? "") ||
-        `${typeof window === "undefined" ? "http://localhost:5173" : window.location.origin}/redefinir-senha?token=preview`,
+        `${typeof window === "undefined" ? "https://contai.site" : window.location.origin}/redefinir-senha?token=preview`,
       amountLabel: String(samplePayload.amountLabel ?? samplePayload.amount ?? "R$99,90"),
       cycleLabel: String(samplePayload.cycleLabel ?? samplePayload.cycle ?? "anual"),
       previousCycleLabel: String(samplePayload.previousCycleLabel ?? samplePayload.previousCycle ?? "mensal"),
