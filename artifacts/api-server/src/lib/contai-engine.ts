@@ -10,6 +10,7 @@ import {
   householdMembersTable,
   householdsTable,
   pendingDecisionsTable,
+  projectsTable,
   remindersTable,
   subscriptionsTable,
   toAmountNumber,
@@ -109,6 +110,7 @@ type ParsedIntent =
   | "registrar_meta"
   | "analise_financeira"
   | "registrar_pagamento_fatura"
+  | "analise_financeira_proativa"
   | "indefinido";
 
 type ProcessIncomingMessageInput = {
@@ -117,6 +119,10 @@ type ProcessIncomingMessageInput = {
   source?: string;
   messageType?: MessageKind;
   userName?: string;
+  extractions?: Array<{
+    normalizedText: string;
+    extracted: any;
+  }>;
 };
 
 type ParsedMessage = {
@@ -134,8 +140,9 @@ type ParsedMessage = {
   contaDestino?: string;
   paymentMethod?: "debito" | "credito" | "pix" | "dinheiro" | "boleto";
   installments?: number;
-  fiscalContext?: "personal" | "business";
   contextUncertain?: boolean | null;
+  projeto?: string | null;
+  projectId?: number | null;
 };
 
 type PendingKind = "registrar_gasto" | "registrar_conta" | "registrar_compromisso" | "missing_info";
@@ -620,6 +627,7 @@ function mapAIResultToParsed(ai: AIParsedMessage, tz = "America/Sao_Paulo"): Par
     contaDestino: ai.conta_destino ?? undefined,
     fiscalContext: ai.contexto_fiscal ?? "personal",
     contextUncertain: ai.contexto_incerto ?? false,
+    projeto: ai.projeto ?? undefined,
   };
 }
 
@@ -1181,7 +1189,7 @@ async function saveParsedAction(
   parsed: ParsedMessage,
   input: ProcessIncomingMessageInput,
   options: SaveParsedActionOptions & { confirmedHighValue?: boolean } = {},
-): Promise<{ reply: string; isMissingInfo?: boolean; triggerHighValueConfirmation?: boolean; triggerFiscalClarification?: boolean }> {
+): Promise<{ reply: string; isMissingInfo?: boolean; triggerHighValueConfirmation?: boolean; triggerFiscalClarification?: boolean; triggerAccountTypeClarification?: boolean }> {
   const previewOnly = options.previewOnly === true;
   const replyDate = new Date();
   const appBaseUrl = getAppBaseUrl();
@@ -1203,7 +1211,14 @@ async function saveParsedAction(
 
       // 1. Verificar informações faltantes (Regra do Maicon)
       if (!parsed.accountType && identity.household.type !== "individual") {
-        return { reply: "Me fala só mais uma coisa pra organizar certo: esse registro é da sua *conta pessoal* ou da *conta da casa*?", isMissingInfo: true };
+        // Tentar inferir de forma automática antes de perguntar
+        const inferredFromContext = inferSharedByContext(parsed, input.content);
+        if (inferredFromContext === "shared") {
+          parsed.accountType = "house";
+          parsed.visibility = "shared";
+        } else {
+          return { reply: "Me fala só mais uma coisa pra organizar certo: esse registro é da sua *conta pessoal* ou da *conta da casa*?", isMissingInfo: true, triggerAccountTypeClarification: true };
+        }
       }
       if (!parsed.paymentMethod) {
         if (parsed.intent === "registrar_receita") {
@@ -1287,7 +1302,12 @@ async function saveParsedAction(
         ? await checkBudgetAlerts(identity, category, currentAmount)
         : [];
 
-      // 3. Persistir no Banco
+      // # PROJETOS (Fase 2)
+      if (parsed.projeto) {
+        const project = await findOrCreateProject(identity.household.id, parsed.projeto);
+        parsed.projectId = project.id;
+      }
+
       if (!previewOnly) {
         await db.insert(transactionsTable).values({
           householdId: identity.household.id,
@@ -1304,6 +1324,7 @@ async function saveParsedAction(
           source: input.source ?? DEFAULT_SOURCE,
           transactionDate: replyDate,
           fiscalContext,
+          projectId: parsed.projectId ?? null,
           createdBy: identity.member?.displayName || identity.user.name,
         });
 
@@ -1350,6 +1371,8 @@ async function saveParsedAction(
         ? `🏠 Tipo: ${isExpense ? "Gasto da casa" : "Receita da casa"}` 
         : `👤 Tipo: Pessoal`;
       const fiscalLabel = fiscalContext === "business" ? "💼 Contexto: Empresarial (PJ)" : "👤 Contexto: Pessoal (PF)";
+      const projectLabel = parsed.projeto ? `🏗️ Projeto: ${parsed.projeto}` : "";
+      
       const response = [
         `Anotei os ${formatCurrency(amount)} que você ${actionText} ${description} hoje, ${firstName}. Tudo já está organizado para você.`,
         "",
@@ -1361,6 +1384,7 @@ async function saveParsedAction(
         `✅ *Status:* ${statusText}`,
         typeLabel,
         fiscalLabel,
+        projectLabel,
         `💳 *Pagamento:* ${capitalizeLabel(paymentMethod)}`,
         accountType === "house" ? `👤 *Lançado por:* ${firstName}` : "",
         "",
@@ -1656,7 +1680,37 @@ async function saveParsedAction(
 
     case "saudacao": {
       const firstName = getFirstName(identity.user.name);
-      return { reply: `Fala, ${firstName}! 👋\nBora organizar sua vida financeira sem complicação?\nVocê pode me mandar um gasto, uma entrada ou até pedir o seu resumo agora mesmo!` };
+      const appBaseUrl = getAppBaseUrl();
+      const reply = [
+        `Fala, *${firstName}*! Seja bem-vindo ao *Contai*! ✨`,
+        "",
+        "",
+        "Estou aqui para ser seu braço direito financeiro. Comigo, você esquece as planilhas e organiza tudo pelo WhatsApp:",
+        "",
+        "",
+        "🔹 *Voz e Texto*: Mande áudios ou mensagens como 'Gastei 50 no almoço'. Eu entendo o seu jeito de falar! ",
+        "",
+        "🔹 *Visão Pro*: Mande fotos de cupons e recibos. Eu leio os valores e anoto tudo para você. ",
+        "",
+        "🔹 *Conta da Casa*: Gerencie os gastos em casal ou família de forma separada do seu saldo pessoal. 👩‍❤️‍👨 ",
+        "",
+        "🔹 *Gestão de Projetos*: 'Lança 100 na Obra' ou 'Viagem'. Acompanhe seus grandes sonhos por categoria. ",
+        "",
+        "🔹 *PF e PJ*: Eu separo automaticamente seus gastos pessoais dos gastos da sua Empresa (PJ). 💼",
+        "",
+        "🔹 *Tira-Dúvidas*: Eu consigo responder suas dúvidas por áudio ou mensagem. Se precisar de suporte humano, visite nosso Instagram *@contai.ia* e veja o destaque 'Suporte'. 💡",
+        "",
+        "",
+        `📈 *Painel*: Acompanhe seus gráficos e relatórios em tempo real: ${appBaseUrl}/app/dashboard`,
+        "",
+        "",
+        "🛡️ _Seus dados são protegidos com criptografia e total privacidade._",
+        "",
+        "",
+        "*Vamos registrar algo agora?* Me mande um áudio, texto ou a foto de um recibo para começar!",
+      ].join("\n");
+
+      return { reply };
     }
 
     case "ajuda":
@@ -1852,6 +1906,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   let didBypassAI = false;
   let triggerHighValueConfirmation = false;
   let triggerFiscalClarification = false;
+  let triggerAccountTypeClarification = false;
 
   if (pendingDecision && pendingDecision.question) {
     if (checkEscapeCommand(input.content)) {
@@ -1911,6 +1966,24 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
           isMissingInfo = saveResult.isMissingInfo;
           triggerHighValueConfirmation = saveResult.triggerHighValueConfirmation ?? false;
           triggerFiscalClarification = saveResult.triggerFiscalClarification ?? false;
+       } else if (actionType === "clarify_account_type") {
+          const accountTypeResult = ctxResponse.parsedData.accountTypeResult;
+          parsed = { ...(pendingDecision.payload as any).transactionParsed };
+          
+          if (accountTypeResult === 'house') {
+             parsed.accountType = 'house';
+             parsed.visibility = 'shared';
+          } else {
+             parsed.accountType = 'personal';
+             parsed.visibility = 'personal';
+          }
+
+          const saveResult = await saveParsedAction(identity, parsed, input, { confirmedHighValue: true });
+          reply = saveResult.reply;
+          isMissingInfo = saveResult.isMissingInfo;
+          triggerHighValueConfirmation = saveResult.triggerHighValueConfirmation ?? false;
+          triggerFiscalClarification = saveResult.triggerFiscalClarification ?? false;
+          triggerAccountTypeClarification = saveResult.triggerAccountTypeClarification ?? false;
        } else {
           const intent = actionType === "register_expense" ? "registrar_gasto" : "registrar_receita";
           parsed = {
@@ -1927,14 +2000,26 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   }
 
   if (!didBypassAI) {
-    const parsedBatch = await interpretMessage(input.content, identity);
+    let internalParsedBatch: ParsedMessage[] = [];
+    
+    if (input.extractions && input.extractions.length > 0) {
+      // # VISION PRO - Loop de Batch (Inovações Fase 2)
+      for (const extr of input.extractions) {
+        const p = mapAIResultToParsed(extr.extracted, identity.user.timezone);
+        p.paymentMethod = detectPaymentMethod(extr.normalizedText);
+        internalParsedBatch.push(p);
+      }
+    } else {
+      internalParsedBatch = await interpretMessage(input.content, identity);
+    }
+
     let finalReplies: string[] = [];
     let anyMissingInfo = false;
 
     // Manter referência de parsed para o log de conversas posterior
-    parsed = parsedBatch[0] || { intent: "indefinido" };
+    parsed = internalParsedBatch[0] || { intent: "indefinido" };
 
-    for (const p of parsedBatch) {
+    for (const p of internalParsedBatch) {
       if (needsVisibilityDecision(identity, p, input.content)) {
         if (!anyMissingInfo) {
           anyMissingInfo = true;
@@ -1966,6 +2051,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
           isMissingInfo = true;
           triggerHighValueConfirmation = result.triggerHighValueConfirmation ?? false;
           triggerFiscalClarification = result.triggerFiscalClarification ?? false;
+          triggerAccountTypeClarification = result.triggerAccountTypeClarification ?? false;
           parsed = p;
           reply = result.reply;
         } else {
@@ -1987,8 +2073,9 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
   if (isMissingInfo) {
     let actionStr = triggerHighValueConfirmation ? "confirm_high_value" : (parsed.intent === "registrar_gasto" ? "register_expense" : "register_income");
     if (triggerFiscalClarification) actionStr = "clarify_context";
+    if (triggerAccountTypeClarification) actionStr = "clarify_account_type";
 
-    const flow = (triggerHighValueConfirmation || triggerFiscalClarification) ? { step: 0, accumulatedData: {} } : initializeFlowState(actionStr, parsed);
+    const flow = (triggerHighValueConfirmation || triggerFiscalClarification || triggerAccountTypeClarification) ? { step: 0, accumulatedData: {} } : initializeFlowState(actionStr, parsed);
     const pendPayload: any = {
       parsed,
       originalContent: finalContentForPendency,
@@ -1996,7 +2083,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       messageType: input.messageType,
       action: actionStr
     };
-    if (triggerHighValueConfirmation || triggerFiscalClarification) pendPayload.transactionParsed = parsed;
+    if (triggerHighValueConfirmation || triggerFiscalClarification || triggerAccountTypeClarification) pendPayload.transactionParsed = parsed;
     
     await createPendingDecision(identity, "missing_info", reply, pendPayload, flow.step, flow.accumulatedData);
   }

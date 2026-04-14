@@ -69,11 +69,24 @@ export const CLARIFY_CONTEXT_FLOW: FlowDefinition = {
   ]
 };
 
+export const CLARIFY_ACCOUNT_TYPE_FLOW: FlowDefinition = {
+  id: 'clarify_account_type',
+  steps: [
+    {
+      key: 'accountTypeResult',
+      question: 'Me fala só mais uma coisa pra organizar certo: esse registro é da sua *conta pessoal* ou da *conta da casa*?',
+      validator: 'accountType',
+      required: true
+    }
+  ]
+};
+
 export const FLOWS: Record<string, FlowDefinition> = {
   register_expense: TRANSACTION_FLOW,
   register_income: TRANSACTION_FLOW,
   confirm_high_value: CONFIRM_HIGH_VALUE_FLOW,
-  clarify_context: CLARIFY_CONTEXT_FLOW
+  clarify_context: CLARIFY_CONTEXT_FLOW,
+  clarify_account_type: CLARIFY_ACCOUNT_TYPE_FLOW
 };
 
 export function getFlowDefinition(intent: string): FlowDefinition | null {
@@ -81,5 +94,6 @@ export function getFlowDefinition(intent: string): FlowDefinition | null {
    if (intent === 'registrar_receita') return FLOWS['register_income'];
    if (intent === 'confirm_high_value') return FLOWS['confirm_high_value'];
    if (intent === 'clarify_context') return FLOWS['clarify_context'];
+   if (intent === 'clarify_account_type') return FLOWS['clarify_account_type'];
    return null;
 }

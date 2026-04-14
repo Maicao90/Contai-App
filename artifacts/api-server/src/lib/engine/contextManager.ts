@@ -37,6 +37,8 @@ export async function processContextualResponse(
     value = VALIDATORS.text(message);
   } else if (currentStep.validator === "fiscalContext") {
     value = VALIDATORS.fiscalContext(message);
+  } else if (currentStep.validator === "accountType") {
+    value = VALIDATORS.accountType(message);
   }
   
   if (value === null && currentStep.required) {

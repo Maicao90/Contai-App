@@ -102,5 +102,27 @@ export const VALIDATORS = {
     if (normalized.includes('empresa') || normalized.includes('pj') || normalized.includes('trabalho')) return 'business';
     if (normalized.includes('casa') || normalized.includes('familia') || normalized.includes('família') || normalized.includes('compartilhado')) return 'shared';
     return null;
+  },
+
+  accountType: (input: string): 'house' | 'personal' | null => {
+    const normalized = input.toLowerCase().trim();
+    if (
+      normalized.includes('casa') ||
+      normalized.includes('compartilhado') ||
+      normalized.includes('compartilhada') ||
+      normalized.includes('nosso') ||
+      normalized.includes('nossa') ||
+      normalized.includes('família') ||
+      normalized.includes('familia')
+    ) return 'house';
+    if (
+      normalized.includes('pessoal') ||
+      normalized.includes('minha') ||
+      normalized.includes('meu') ||
+      normalized.includes('só minha') ||
+      normalized.includes('so minha') ||
+      normalized.includes('individual')
+    ) return 'personal';
+    return null;
   }
 };
