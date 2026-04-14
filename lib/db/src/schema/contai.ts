@@ -397,7 +397,7 @@ export const insertUserSchema = createInsertSchema(usersTable).omit({
   createdAt: true,
   updatedAt: true,
 });
-export type insertProjectSchema = createInsertSchema(projectsTable).omit({
+export const insertProjectSchema = createInsertSchema(projectsTable).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
