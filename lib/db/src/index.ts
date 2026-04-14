@@ -842,11 +842,68 @@ export async function ensureDefaultReferralCampaign() {
   });
 }
 
+
+/**
+ * PROTEÇÃO DE DADOS — recalibra saldos a partir das transações reais.
+ * Garante que um restart/deploy NUNCA zere os saldos dos clientes.
+ */
+async function recalibrateSaldos() {
+  try {
+    // Recalcula personalBalance de cada usuário com base nas suas transações pessoais pagas
+    await db.execute(sql.raw(`
+      UPDATE users u
+      SET personal_balance = COALESCE((
+        SELECT
+          SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END)
+        FROM transactions t
+        JOIN household_members hm ON hm.id = t.member_id
+        WHERE hm.user_id = u.id
+          AND t.account_type = 'personal'
+          AND t.status = 'paid'
+      ), 0)
+      WHERE u.id IS NOT NULL;
+    `));
+
+    // Recalcula household_balance de cada membro (gastos/receitas da casa desse membro)
+    await db.execute(sql.raw(`
+      UPDATE household_members hm
+      SET household_balance = COALESCE((
+        SELECT
+          SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END)
+        FROM transactions t
+        WHERE t.member_id = hm.id
+          AND t.account_type = 'house'
+          AND t.status = 'paid'
+      ), 0)
+      WHERE hm.id IS NOT NULL;
+    `));
+
+    // Recalcula totalHouseBalance de cada household (soma de todos os gastos/receitas da casa)
+    await db.execute(sql.raw(`
+      UPDATE households h
+      SET total_house_balance = COALESCE((
+        SELECT
+          SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END)
+        FROM transactions t
+        WHERE t.household_id = h.id
+          AND t.account_type = 'house'
+          AND t.status = 'paid'
+      ), 0)
+      WHERE h.id IS NOT NULL;
+    `));
+  } catch (err) {
+    // Não interrompe o boot se falhar — log só para diagnóstico
+    console.error("[recalibrateSaldos] Falha ao recalibrar saldos:", err);
+  }
+}
+
 export const dbReady = (async () => {
   await ensureSchema();
   await ensurePermanentAdminUser();
   await ensureDefaultReferralCampaign();
+  await recalibrateSaldos(); // ← protege dados dos clientes a cada restart
 })();
 
 export * from "./schema";
 export * from "./schema/contai";
+
