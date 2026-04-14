@@ -569,9 +569,9 @@ Passo a passo:
 ## Como apagar/excluir um lançamento errado?
 - Acesse o painel em *contai.site/app/dashboard*.
 - Vá em "Transações" ou "Histórico".
-- Encontre o lançamento errado e clique no botão de excluir (lixeira ou ócone de deletar).
+- Encontre o lançamento errado e clique no botão de excluir (lixeira).
 - A exclusão é definitiva e o saldo é ajustado automaticamente.
-- Pelo WhatsApp ainda não é possível apagar diretamente, mas em breve terá esse comando.
+- *Também pelo WhatsApp:* mande "Cancelar último" e eu apago o último lançamento para você!
 
 ## Como corrigir um valor errado?
 - Exclua a transação errada pelo painel (contai.site/app/dashboard) e registre novamente com o valor correto.
@@ -583,11 +583,14 @@ Passo a passo:
 ---
 
 # COMANDOS ÚTEIS
-- "Resumo do mês"
-- "Histórico"
-- "Quanto gastei com [categoria]?"
-- "Meu saldo"
-- "Cancelar" (cancela a última operação pendente)
+- "Resumo do mês" — ver resumo mensal
+- "Histórico" — ver últimas movimentações
+- "Quanto gastei com [categoria]?" — resumo por categoria
+- "Meu saldo" — ver saldo atual
+- "*Cancelar último*" — cancela e apaga o último lançamento registrado
+- "Desfazer último" — mesmo que cancelar último
+- "Apagar último" — mesmo que cancelar último
+- "Ajuda"
 - "Ajuda"
 
 ---

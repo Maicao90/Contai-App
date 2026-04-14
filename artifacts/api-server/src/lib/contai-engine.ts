@@ -111,6 +111,7 @@ type ParsedIntent =
   | "analise_financeira"
   | "registrar_pagamento_fatura"
   | "analise_financeira_proativa"
+  | "cancelar_lancamento"
   | "indefinido";
 
 type ProcessIncomingMessageInput = {
@@ -579,6 +580,27 @@ function parseMessageByRules(content: string, tz = "America/Sao_Paulo"): ParsedM
     normalized.includes("começar do zero")
   ) {
     return { intent: "reset_dados" };
+  }
+
+  if (
+    normalized === "cancelar" ||
+    normalized.includes("cancelar último") ||
+    normalized.includes("cancelar ultimo") ||
+    normalized.includes("apagar último") ||
+    normalized.includes("apagar ultimo") ||
+    normalized.includes("desfazer último") ||
+    normalized.includes("desfazer ultimo") ||
+    normalized.includes("excluir último") ||
+    normalized.includes("excluir ultimo") ||
+    normalized.includes("delete o último") ||
+    normalized.includes("apaga o último") ||
+    normalized.includes("cancela o último") ||
+    normalized.includes("cancela último") ||
+    normalized.includes("erro, cancela") ||
+    normalized.includes("errei, cancela") ||
+    normalized.includes("lançamento errado")
+  ) {
+    return { intent: "cancelar_lancamento" };
   }
 
   if (
@@ -1661,6 +1683,42 @@ async function saveParsedAction(
       await db.delete(remindersTable).where(eq(remindersTable.householdId, householdId));
       await db.delete(conversationLogsTable).where(eq(conversationLogsTable.householdId, householdId));
       return { reply: ["Pronto! Zerei suas contas e compromissos com sucesso.", "Agora você pode começar do zero. O que quer anotar primeiro?"].join("\n") };
+    }
+
+    case "cancelar_lancamento": {
+      if (previewOnly) return { reply: "🧪 Em produção, isso cancelaria o último lançamento." };
+
+      // Busca a última transação do membro ou do household do usuário
+      const memberFilter = identity.member?.id
+        ? eq(transactionsTable.memberId, identity.member.id)
+        : eq(transactionsTable.householdId, identity.household.id);
+
+      const [lastTx] = await db
+        .select()
+        .from(transactionsTable)
+        .where(and(memberFilter, eq(transactionsTable.status, "paid")))
+        .orderBy(desc(transactionsTable.createdAt))
+        .limit(1);
+
+      if (!lastTx) {
+        return { reply: "Não encontrei nenhum lançamento recente para cancelar. Se precisar de ajuda, me chama! 😊" };
+      }
+
+      await db.delete(transactionsTable).where(eq(transactionsTable.id, lastTx.id));
+
+      const txType = lastTx.type === "income" ? "receita" : "gasto";
+      const txValue = formatCurrency(toAmountNumber(lastTx.amount));
+      const txDesc = lastTx.description || lastTx.category || "sem descrição";
+
+      return {
+        reply: [
+          `✅ *Último lançamento cancelado!*`,
+          ``,
+          `❌ ${txType.charAt(0).toUpperCase() + txType.slice(1)}: *${txValue}* (${txDesc})`,
+          ``,
+          `Seu saldo foi ajustado automaticamente. Algum outro lançamento para eu anotar? 😊`
+        ].join("\n")
+      };
     }
 
     case "registrar_meta": {
