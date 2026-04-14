@@ -97,6 +97,7 @@ router.post("/whatsapp/webhook", async (req, res, next) => {
       source: "whatsapp",
       messageType: normalized.kind,
       userName: incoming.userName,
+      extractions: normalized.extractions,
     });
 
     const sendResult = await sendWhatsAppText({
@@ -152,6 +153,7 @@ router.post("/whatsapp/messages/simulate", async (req, res, next) => {
       source: req.body.source ?? "simulator",
       messageType: normalized.kind,
       userName: req.body.userName,
+      extractions: normalized.extractions,
     });
 
     res.json({

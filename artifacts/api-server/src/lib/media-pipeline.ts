@@ -19,6 +19,10 @@ export type NormalizedInboundContent = {
   normalizedText: string;
   rawText?: string;
   extracted?: ImageExtractionResult | null;
+  extractions?: Array<{
+    normalizedText: string;
+    extracted: any;
+  }>;
   needsUserInput?: boolean;
   userPrompt?: string | null;
 };
@@ -106,15 +110,22 @@ export async function normalizeInboundContent(
       ? await analyzeImageWithOpenAI(media.base64, media.mimeType)
       : { data: null };
 
-  if (extracted?.valor != null && extracted.confianca >= 0.6) {
-    const action = extracted.tipo === "receita" ? "recebi" : "gastei";
-    const description = extracted.descricao?.trim() || "comprovante";
+  if (extracted && extracted.transacoes.length > 0 && extracted.confianca >= 0.6) {
+    const extractions = extracted.transacoes.map((t) => {
+      const action = t.tipo === "receita" ? "recebi" : "gastei";
+      const description = t.descricao?.trim() || "comprovante";
+      return {
+        normalizedText: `${action} ${t.valor} com ${description}`,
+        extracted: t,
+      };
+    });
 
     return {
       kind: "image",
-      normalizedText: `${action} ${extracted.valor} com ${description}`,
+      normalizedText: extractions.map((e) => e.normalizedText).join(". "),
       rawText: payload.caption?.trim() ?? "",
       extracted,
+      extractions,
       needsUserInput: false,
       userPrompt: null,
     };
@@ -126,6 +137,6 @@ export async function normalizeInboundContent(
     rawText: payload.caption?.trim() ?? "",
     extracted: extracted,
     needsUserInput: true,
-    userPrompt: "Não consegui identificar o valor, quanto foi?",
+    userPrompt: "Não consegui identificar nenhum valor legível. Poderia me informar o que foi?",
   };
 }

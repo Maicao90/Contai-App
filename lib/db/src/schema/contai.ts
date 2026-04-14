@@ -130,6 +130,9 @@ export const transactionsTable = pgTable("transactions", {
   canceledAt: timestamp("canceled_at"),
   transactionDate: timestamp("transaction_date").notNull().defaultNow(),
   fiscalContext: text("fiscal_context").notNull().default("personal"),
+  projectId: integer("project_id").references(() => projectsTable.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -299,6 +302,18 @@ export const googleCalendarConnectionsTable = pgTable("google_calendar_connectio
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const projectsTable = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  householdId: integer("household_id").notNull().references(() => householdsTable.id, {
+    onDelete: "cascade",
+  }),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("active"), // 'active', 'archived'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const notificationEventsTable = pgTable("notification_events", {
   id: serial("id").primaryKey(),
   householdId: integer("household_id").references(() => householdsTable.id, {
@@ -382,6 +397,12 @@ export const insertUserSchema = createInsertSchema(usersTable).omit({
   createdAt: true,
   updatedAt: true,
 });
+export type insertProjectSchema = createInsertSchema(projectsTable).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertTransactionSchema = createInsertSchema(transactionsTable).omit({
   id: true,
   createdAt: true,
@@ -407,6 +428,7 @@ export type Household = typeof householdsTable.$inferSelect;
 export type User = typeof usersTable.$inferSelect;
 export type HouseholdMember = typeof householdMembersTable.$inferSelect;
 export type Transaction = typeof transactionsTable.$inferSelect;
+export type Project = typeof projectsTable.$inferSelect;
 export type Bill = typeof billsTable.$inferSelect;
 export type Commitment = typeof commitmentsTable.$inferSelect;
 export type Reminder = typeof remindersTable.$inferSelect;
