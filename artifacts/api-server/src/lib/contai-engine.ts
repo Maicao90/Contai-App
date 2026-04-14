@@ -683,7 +683,11 @@ async function interpretMessage(content: string, identity: Identity, tz = "Ameri
   });
 }
 
-async function applyReplyPrompt(reply: string, identity: Identity) {
+async function applyReplyPrompt(reply: string, identity: Identity | null | undefined) {
+  if (!identity?.user || !identity?.household) {
+    return reply; // sem identity, retorna o reply original sem tentar reescrever
+  }
+
   const prompt = systemSettings.botReplyPrompt?.trim();
   if (!prompt) {
     return reply;
