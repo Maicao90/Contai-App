@@ -521,8 +521,17 @@ Responda de forma simples e curta, como mensagem de WhatsApp. Nunca textos gigan
 
 ---
 
-# CANCELAMENTO / PAUSA
-- Para cancelar ou pausar, acesse contai.site/app/assinatura ou entre em contato pelo suporte: (61) 9 9945-2662.
+# CANCELAMENTO
+- Não há opção de cancelamento automático pelo painel ainda.
+- Para cancelar a assinatura, entre em contato pelo suporte: (61) 9 9945-2662 ou @contai.ia no Instagram.
+- O cancelamento é feito manualmente pela equipe Contai.
+
+---
+
+# PAUSA DA ASSINATURA
+- Não existe função de pausa automática no momento.
+- Para solicitar uma pausa ou esclarecimento, entre em contato: (61) 9 9945-2662 ou @contai.ia no Instagram.
+- A equipe avalia caso a caso.
 
 ---
 
@@ -536,21 +545,25 @@ Responda de forma simples e curta, como mensagem de WhatsApp. Nunca textos gigan
 # PROBLEMAS COMUNS E SOLUÇÕES
 
 ## Bot não respondeu / mensagem não foi processada
-- Verifique se o plano está ativo em contai.site/app/assinatura
-- Se o plano estiver ativo, aguarde alguns segundos e tente novamente
-- Se persistir, entre em contato: (61) 9 9945-2662
+- 1º: Verifique se o plano está ativo em contai.site/app/assinatura
+- 2º: Aguarde alguns segundos e tente enviar novamente
+- 3º: Se persistir, entre em contato pelo suporte: (61) 9 9945-2662 ou @contai.ia no Instagram
+- Quando há instabilidade no sistema, a equipe Contai comunica pelo Instagram @contai.ia. Siga para ficar atualizado.
 
 ## "Não consegui processar"
 - O bot não entendeu a mensagem. Tente ser mais claro: "Gastei 50 reais no mercado no débito".
 - Tente mandar em partes se for uma mensagem longa.
 
-## Como corrigir/editar um lançamento errado?
-- Pelo painel web em contai.site/app/dashboard você pode editar ou excluir qualquer transação.
-- Pelo WhatsApp não é possível editar, mas você pode registrar uma entrada para compensar um gasto errado.
+## Como apagar/excluir um lançamento errado?
+- Acesse o painel em *contai.site/app/dashboard*.
+- Vá em "Transações" ou "Histórico".
+- Encontre o lançamento errado e clique no botão de excluir (lixeira ou ócone de deletar).
+- A exclusão é definitiva e o saldo é ajustado automaticamente.
+- Pelo WhatsApp ainda não é possível apagar diretamente, mas em breve terá esse comando.
 
-## Como apagar tudo e começar do zero?
-- Mande: "Resetar meus dados" ou "Começar do zero"
-- Ou acesse o painel para excluir transações específicas.
+## Como corrigir um valor errado?
+- Exclua a transação errada pelo painel (contai.site/app/dashboard) e registre novamente com o valor correto.
+- Ou: registre a diferença para compensar. Ex.: registrou 100 mas era 80? Registre uma entrada de 20.
 
 ## O bot perguntou "casa ou pessoal" mas eu já informei
 - Tente responder de forma mais clara: "Da casa" ou "Pessoal".
