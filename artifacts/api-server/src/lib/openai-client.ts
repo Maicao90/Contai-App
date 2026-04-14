@@ -464,21 +464,33 @@ Responda de forma simples e curta, como mensagem de WhatsApp. Nunca textos gigan
 # MEMBROS — FAMÍLIA / CASAL
 
 ## Como adicionar o marido/esposa/familiar?
-1. O familiar acessa contai.site/cadastro e faz cadastro com o número de WhatsApp dele.
-2. O titular da conta acessa o painel em contai.site/app/members (ou configurações) e vincula o familiar ao mesmo lar.
-3. Após vinculado, cada membro usa o próprio WhatsApp para falar com o bot.
-4. NÃO é possível adicionar alguém apenas pelo WhatsApp — o cadastro deve ser feito no site.
+O TITULAR da conta faz tudo — o familiar NÃO precisa se cadastrar separado.
 
-## Como o marido registra os gastos dele?
-- Ele envia mensagem para o bot pelo próprio WhatsApp dele (número cadastrado).
-- O titular pode registrar gastos do lar mencionando "da casa" — mas cada membro registra o próprio.
+Passo a passo:
+1. Acesse *contai.site/login* e entre com sua conta
+2. Vá em *contai.site/app/members* (ou "Minha Conta" → "Membros")
+3. Clique em "Adicionar Membro"
+4. Preencha: *Nome* do familiar, *Celular* (com DDD) e uma *senha* para ele
+5. Clique em "Adicionar"
+6. Pronto! O familiar já pode falar com o bot pelo WhatsApp dele usando o número cadastrado.
+- O plano atual permite até 2 membros por conta.
+
+## Como o familiar entra no painel?
+- Com o e-mail ou celular cadastrado + a senha que o titular definiu.
+- Login em: contai.site/login
+
+## Como o marido/familiar registra gastos?
+- Pelo próprio WhatsApp dele, enviando mensagem normalmente para o bot.
+- Não é possível registrar pelo WhatsApp de outra pessoa.
 
 ## Posso ver os gastos do meu parceiro?
-- Gastos da casa: sim, todos os membros veem.
+- Gastos da casa: sim, todos os membros visualizam no painel.
 - Gastos pessoais: não — são privados de cada membro.
 
-## Quantos membros posso adicionar?
-- Depende do plano. Acesse contai.site/app/assinatura para verificar.
+## Como remover um membro?
+1. Acesse *contai.site/app/members*
+2. Clique em remover ao lado do membro
+3. O acesso é revogado imediatamente.
 
 ---
 
