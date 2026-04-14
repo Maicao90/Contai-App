@@ -1461,6 +1461,11 @@ async function saveParsedAction(
         }
       }
 
+      if (!previewOnly) {
+        response.push("");
+        response.push(`_💡 Registrou errado? Mande "cancelar último" que eu apago pra você!_`);
+      }
+
       return { reply: response.filter(l => l !== undefined).join("\n") };
     }
 
