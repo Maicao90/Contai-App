@@ -32,6 +32,7 @@ export type AIParsedMessage = {
   parcelas?: number | null;
   conta?: string | null;
   conta_destino?: string | null;
+  projeto?: string | null;
 };
 
 export type AIParsedBatch = {
@@ -39,10 +40,12 @@ export type AIParsedBatch = {
 };
 
 export type ImageExtractionResult = {
-  tipo: "gasto" | "receita";
-  valor: number | null;
-  categoria?: string | null;
-  descricao?: string | null;
+  transacoes: Array<{
+    tipo: "gasto" | "receita";
+    valor: number | null;
+    categoria?: string | null;
+    descricao?: string | null;
+  }>;
   confianca: number;
 };
 
@@ -103,24 +106,26 @@ const TEXT_SYSTEM_PROMPT = [
   "- se a mensagem mencionar pessoal, individual, so meu, so minha, sozinho ou sozinha, isso pode indicar personal.",
   "- nao invente valor, categoria, data ou visibilidade.",
   "- para saudacao ou ajuda simples, retorne os demais campos como null.",
-  "# [CONTEXTO FISCAL - NOVIDADE]",
-  "- IDENTIFICAÇÃO PF/PJ: Determine se o lançamento é Pessoal (Individual/Família) ou Empresarial (Negócio/PJ/Freela).",
-  "- contexto_fiscal deve ser 'business' se a mensagem citar: empresa, trabalho, PJ, CNPJ, cliente, serviço prestado, fornecedor, nota fiscal, escritorio ou freela.",
-  "- contexto_fiscal deve ser 'personal' se for gasto comum do dia a dia ou se não houver menção empresarial.",
   "- contexto_incerto deve ser 'true' se a mensagem for ambígua e puder ser tanto da CASA, quanto PESSOAL ou EMPRESA (ex: 'Gastei 50 no mercado' sem contexto). Se houver 100% de certeza pelo texto ou palavras-chave, retorne 'false'.",
+  "# [GESTÃO DE PROJETOS - NOVIDADE]",
+  "- IDENTIFICAÇÃO DE PROJETOS: Se o usuário mencionar que o gasto é de uma obra, viagem, evento ou freela específico, identifique o nome do projeto.",
+  "- projeto: nome resumido do projeto mencionado (ex: 'Reforma Cozinha', 'Viagem Natal', 'Evento XP'). Se não houver projeto claro, retorne null.",
 ].join(" ");
 
 const IMAGE_SYSTEM_PROMPT = [
   "Voce analisa imagens recebidas no WhatsApp para o Contai.",
   "Responda somente com JSON valido no schema informado.",
-  "Identifique se a imagem representa gasto ou receita.",
+  "Analise a imagem e extraia os valores totais das transações financeiras visíveis.",
+  "REGRAS DE OURO:",
+  "1. Se a imagem for UM ÚNICO cupom de mercado/loja, extraia apenas o VALOR TOTAL (Grand Total). NUNCA extraia os itens individuais linha por linha.",
+  "2. Se a imagem contiver MÚLTIPLOS comprovantes separados, extraia o valor total de CADA UM no array 'transacoes'.",
   "Considere recibo, nota fiscal, comprovante de pix, comprovante bancario ou print financeiro.",
-  "Extraia o valor principal quando estiver legivel.",
-  "DICA CRÍTICA: Valores na imagem podem usar virgula como separador de centavos (ex: 603,68). Converta imediatamente para ponto (603.68) e nao separe os centavos na descricao.",
+  "Extraia o valor principal de cada transação quando estiver legivel.",
+  "DICA CRÍTICA: Valores na imagem podem usar virgula como separador de centavos (ex: 603,68). Converta imediatamente para ponto (603.68).",
   "categoria deve ser curta e util.",
-  "descricao deve ser curta e objetiva, preferencialmente com o nome do estabelecimento ou o tipo do comprovante.",
-  "confianca deve ser numero entre 0 e 1.",
-  "Se nao conseguir ler o valor com seguranca, retorne valor null e confianca baixa.",
+  "descricao deve ser o nome do estabelecimento ou tipo do gasto.",
+  "confianca deve ser numero entre 0 e 1, baseada na legibilidade.",
+  "Se nao conseguir ler o valor com seguranca, retorne o array 'transacoes' vazio.",
 ].join(" ");
 
 export function getBotPromptPreview() {
@@ -251,6 +256,7 @@ export async function interpretTextWithOpenAI(
                   parcelas: { type: ["number", "null"] },
                   conta: { type: ["string", "null"] },
                   conta_destino: { type: ["string", "null"] },
+                  projeto: { type: ["string", "null"] },
                 },
                 required: [
                   "intent",
@@ -266,6 +272,7 @@ export async function interpretTextWithOpenAI(
                   "parcelas",
                   "conta",
                   "conta_destino",
+                  "projeto",
                 ],
               },
             },
@@ -378,15 +385,63 @@ export async function answerFAQWithOpenAI(
       {
         role: "system",
         content: [
-          `Você é o Contai, assistente financeiro inteligente pelo WhatsApp.`,
-          `Você está conversando com o usuário ${userName}. Tome um tom super amigável, acolhedor e direto.`,
-          `Responda apenas sobre finanças, sua funcionalidade no aplicativo, organização de gastos e orçamentos.`,
-          `Sua função é registrar gastos (pode mandar o valor e local direto), contas a pagar, lembretes de conta, separar gastos da casa e gastos individuais.`,
-          `O usuário não preenche planilhas, ele só manda WhatsApp dizendo o que gastou e você organiza.`,
-          `Se a pessoa desviar do assunto gravemente e puxar papo furado, responda rapidamente de forma amigável e direcione a conversa de volta a: "Algum gasto ou continha nova para eu registrar pra você?"`,
-          "Responda de forma simples, em textos curtos, como uma mensagem de whatsapp comum. Não crie textos enormes. Mantenha os emojis divertidos.",
+          `Você é o Contai, assistente financeiro inteligente pelo WhatsApp. Seu nome é Contai.`,
+          `Você está conversando com o usuário ${userName}. Use um tom super amigável, acolhedor e direto.`,
+          ``,
+          `# BASE DE CONHECIMENTO DO CONTAI`,
+          ``,
+          `## CONTATO E SUPORTE`,
+          `- Instagram oficial: @contai.ia (instagram.com/contai.ia)`,
+          `- WhatsApp de suporte: (61) 9 9945-2662`,
+          `- Site: contai.site`,
+          `- Se alguém pedir suporte, Instagram, contato ou ajuda humana, forneça sempre essas informações.`,
+          ``,
+          `## O QUE É O CONTAI`,
+          `- Contai é um assistente financeiro pelo WhatsApp. O usuário não preenche planilha — só manda mensagem dizendo o que gastou.`,
+          `- Funcionalidades principais: registrar gastos, receitas, contas a pagar, lembretes, compromissos, separar gastos da casa e individuais, ver resumo e saldo.`,
+          ``,
+          `## COMO REGISTRAR`,
+          `- Gasto: "Gastei 50 no mercado no débito" ou "Paguei 120 de conta de luz"`,
+          `- Receita: "Recebi 3000 de salário"`,
+          `- Conta a pagar: "Aluguel de 1200 vence dia 10"`,
+          `- Foto/print: pode mandar foto de cupom fiscal ou comprovante que o bot lê automaticamente`,
+          `- Áudio: pode mandar áudio falando o gasto`,
+          ``,
+          `## MEMBROS DA FAMÍLIA / CASAL (CONTA DA CASA)`,
+          `- O Contai tem o conceito de "Household" (lar). Um usuário pode ter uma conta familiar ou de casal.`,
+          `- Para ADICIONAR o marido, esposa ou outro familiar ao mesmo lar: o familiar deve fazer cadastro no site (contai.site/cadastro) usando o número de WhatsApp dele. Depois, o titular da conta pode vinculá-lo pelo painel em contai.site/app/configuracoes ou contai.site/app/members.`,
+          `- Não é possível adicionar outra pessoa apenas pelo WhatsApp. O cadastro deve ser feito pelo site.`,
+          `- Após o cadastro e vinculação, cada membro registra gastos pelo próprio WhatsApp e o Contai consolida os dados do lar.`,
+          `- Gastos da casa (compartilhados): são os gastos que pertencem ao lar, como mercado, aluguel, luz, água.`,
+          `- Gastos pessoais: são visíveis apenas para quem registrou. O marido não vê os gastos pessoais da esposa e vice-versa.`,
+          ``,
+          `## COMO O MARIDO/FAMILIAR REGISTRA GASTOS PELO BOT`,
+          `- Cada membro usa o próprio WhatsApp para falar com o bot. Não há como um membro registrar pelo WhatsApp do outro.`,
+          `- Para registrar um gasto do marido, ele mesmo deve enviar a mensagem a partir do número dele cadastrado.`,
+          `- O titular pode registrar um gasto do lar mencionando "da casa" (ex: "marido gastou 80 no mercado da casa no débito").`,
+          ``,
+          `## PLANOS E PREÇOS`,
+          `- O Contai tem plano mensal e anual. Para ver preços e assinar, acesse: contai.site/precos ou contai.site/cadastro`,
+          `- Para renovar ou verificar assinatura: contai.site/app/assinatura`,
+          ``,
+          `## PRIVACIDADE`,
+          `- Os dados pessoais de cada membro são privados. Gastos marcados como pessoais não são visíveis para outros membros do lar.`,
+          `- Gastos da casa são visíveis para todos os membros vinculados.`,
+          ``,
+          `## INTEGRAÇÕES`,
+          `- Google Agenda: o Contai pode criar eventos no Google Agenda automaticamente quando você registrar compromissos ou contas. Configure em contai.site/app/integracoes`,
+          ``,
+          `## PAINEL WEB`,
+          `- Para ver gráficos, histórico completo e configurações: contai.site/app/dashboard`,
+          ``,
+          `# REGRAS DE RESPOSTA`,
+          `- Responda de forma simples e direta, como mensagem de WhatsApp. Não crie textos enormes.`,
+          `- Use emojis de forma natural e amigável.`,
+          `- Se a pessoa perguntar algo que não seja sobre o Contai, responda rapidamente e direcione para: "Tem algum gasto ou continha nova que eu possa registrar para você? 🌿"`,
+          `- NUNCA invente funcionalidades que não existem.`,
+          `- Se não souber a resposta com certeza, ofereça o contato de suporte: (61) 9 9945-2662 ou Instagram @contai.ia`,
           `Tom geral configurado no painel: ${systemSettings.botTone}`
-        ].join(" "),
+        ].join("\n"),
       },
       {
         role: "user",
@@ -412,6 +467,7 @@ export async function answerFAQWithOpenAI(
     usage: json?.usage,
   };
 }
+
 
 export async function transcribeAudioWithOpenAI(
   base64: string,
@@ -467,13 +523,23 @@ export async function analyzeImageWithOpenAI(
           type: "object",
           additionalProperties: false,
           properties: {
-            tipo: { type: "string", enum: ["gasto", "receita"] },
-            valor: { type: ["number", "null"] },
-            categoria: { type: ["string", "null"] },
-            descricao: { type: ["string", "null"] },
+            transacoes: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  tipo: { type: "string", enum: ["gasto", "receita"] },
+                  valor: { type: ["number", "null"] },
+                  categoria: { type: ["string", "null"] },
+                  descricao: { type: ["string", "null"] },
+                },
+                required: ["tipo", "valor", "categoria", "descricao"],
+              },
+            },
             confianca: { type: "number" },
           },
-          required: ["tipo", "valor", "categoria", "descricao", "confianca"],
+          required: ["transacoes", "confianca"],
         },
       },
     },
