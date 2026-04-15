@@ -25,7 +25,8 @@ export const VALIDATORS = {
   paymentMethod: (input: string): string | null => {
     const normalized = input.toLowerCase().trim();
     
-    const map: Record<string, string> = {
+    // Verifica match exato primeiro
+    const exactMap: Record<string, string> = {
       'pix': 'pix',
       'debito': 'debito',
       'débito': 'debito',
@@ -36,8 +37,16 @@ export const VALIDATORS = {
       'dinheiro': 'dinheiro',
       'boleto': 'boleto'
     };
-    
-    return map[normalized] || null;
+    if (exactMap[normalized]) return exactMap[normalized];
+
+    // Verifica se a palavra está contida na frase (ex: "30 reais mercado crédito")
+    if (normalized.includes('pix')) return 'pix';
+    if (normalized.includes('crédito') || normalized.includes('credito') || normalized.includes('cartão') || normalized.includes('cartao')) return 'credito';
+    if (normalized.includes('débito') || normalized.includes('debito')) return 'debito';
+    if (normalized.includes('dinheiro')) return 'dinheiro';
+    if (normalized.includes('boleto')) return 'boleto';
+
+    return null;
   },
 
   text: (input: string): string | null => {

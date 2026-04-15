@@ -110,6 +110,7 @@ type ParsedIntent =
   | "registrar_meta"
   | "analise_financeira"
   | "registrar_pagamento_fatura"
+  | "consulta_fatura"
   | "analise_financeira_proativa"
   | "cancelar_lancamento"
   | "indefinido";
@@ -611,6 +612,20 @@ function parseMessageByRules(content: string, tz = "America/Sao_Paulo"): ParsedM
     normalized.includes("fatura do cartao paga")
   ) {
     return { intent: "registrar_pagamento_fatura" };
+  }
+
+  if (
+    normalized.includes("fatura") ||
+    normalized.includes("quanto tenho no cartao") ||
+    normalized.includes("quanto tenho no cartão") ||
+    normalized.includes("valor da fatura") ||
+    normalized.includes("minha fatura") ||
+    normalized.includes("total do cartao") ||
+    normalized.includes("total do cartão") ||
+    normalized.includes("saldo do cartao") ||
+    normalized.includes("saldo do cartão")
+  ) {
+    return { intent: "consulta_fatura" };
   }
 
   return { intent: "indefinido" };
@@ -1463,6 +1478,27 @@ async function saveParsedAction(
       return { reply: response.filter(l => l !== undefined).join("\n") };
     }
 
+    case "consulta_fatura": {
+      const faturaTotal = await getAccumulatedCreditSpend(identity);
+      if (faturaTotal <= 0) {
+        return { reply: "✅ Sua fatura está zerada! Nenhum gasto no crédito registrado este mês." };
+      }
+      const firstName = getFirstName(identity.user.name);
+      return {
+        reply: [
+          `💳 *Fatura do Cartão — ${new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(new Date())}*`,
+          "",
+          `Total acumulado no crédito: *${formatCurrency(faturaTotal)}*`,
+          "",
+          "💡 Esse valor ainda não saiu do seu saldo — só será descontado quando você pagar a fatura.",
+          "",
+          `📊 Veja o detalhamento completo no Painel: ${appBaseUrl}/app/dashboard`,
+          "",
+          `_Para pagar a fatura, mande: "paguei a fatura"_`,
+        ].join("\n")
+      };
+    }
+
     case "registrar_pagamento_fatura": {
       const accumulatedCredit = await getAccumulatedCreditSpend(identity);
       if (accumulatedCredit <= 0) {
@@ -2081,8 +2117,12 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
         if (!anyMissingInfo) {
           anyMissingInfo = true;
           isMissingInfo = true;
+          // ✅ FIX: Marca o flag para que createPendingDecision use action="clarify_account_type"
+          // Sem isso, a pendência era criada com action="register_expense", e o validator
+          // tentava interpretar "Casa" como valor monetário, retornando "Não consegui processar."
+          triggerAccountTypeClarification = true;
           parsed = p;
-          const kind = p.intent as any; // Cast to bypass strict PendingKind if needed, or use p.intent
+          const kind = p.intent as any;
           const qReply = await applyReplyPrompt(replyForPendingQuestion(kind), identity);
           reply = qReply || replyForPendingQuestion(kind);
         } else {
@@ -2092,7 +2132,7 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       }
 
       if (p.intent === "indefinido" || p.intent === "ajuda") {
-        if (parsedBatch.length === 1) {
+        if (internalParsedBatch.length === 1) {
           const { reply: faqReply } = await answerFAQWithOpenAI(input.content, identity.user.name);
           finalReplies.push(faqReply || getHelpText());
           parsed = p;
@@ -2140,6 +2180,8 @@ export async function processIncomingMessage(input: ProcessIncomingMessageInput)
       messageType: input.messageType,
       action: actionStr
     };
+    // Para clarificações (account type, fiscal, high value), sempre incluímos transactionParsed
+    // para que o handler possa recompor os dados da transação original após a resposta do usuário.
     if (triggerHighValueConfirmation || triggerFiscalClarification || triggerAccountTypeClarification) pendPayload.transactionParsed = parsed;
     
     await createPendingDecision(identity, "missing_info", reply, pendPayload, flow.step, flow.accumulatedData);

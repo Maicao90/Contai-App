@@ -71,9 +71,9 @@ function RedirectByRole() {
     }
     const status = (session.billingStatus || "").toLowerCase();
     
-    // Admin and Owners are never blocked from the dashboard
-    if (session.role === "admin" || session.role === "owner") {
-      navigate("/app/dashboard");
+    // Apenas admin é isento do paywall
+    if (session.role === "admin") {
+      navigate("/admin/dashboard");
     } else if (status === "active") {
       navigate("/app/dashboard");
     } else {

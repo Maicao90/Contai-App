@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
+import { Check, Copy, MessageCircle, Trash2 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,16 @@ export default function AppMembersPage() {
     password: "",
   });
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const BOT_WHATSAPP_LINK = "https://wa.me/556195010700";
+
+  function copyBotLink() {
+    navigator.clipboard.writeText(BOT_WHATSAPP_LINK).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
 
   const { data } = useQuery({
     queryKey: ["members", householdId],
@@ -273,6 +283,72 @@ export default function AppMembersPage() {
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
                     So o titular pode adicionar ou excluir membros e mexer na assinatura da conta.
                   </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Card: Conectar ao Robô */}
+            <Card className="border-emerald-400/40 bg-emerald-50/60 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                  <MessageCircle className="h-5 w-5" />
+                  Conectar o membro ao Robô
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  Após adicionar o membro, compartilhe o link abaixo com ele. Basta clicar em{" "}
+                  <strong>"Abrir no WhatsApp"</strong> ou copiar o link e enviar pelo celular.
+                </p>
+
+                {/* Link do bot */}
+                <div className="flex items-center gap-2 rounded-2xl border border-emerald-300/60 bg-white/80 px-4 py-3 dark:border-emerald-500/30 dark:bg-slate-900/60">
+                  <span className="flex-1 truncate text-sm font-mono text-slate-700 dark:text-slate-200">
+                    {BOT_WHATSAPP_LINK}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copyBotLink}
+                    className="ml-2 flex items-center gap-1 rounded-xl bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30"
+                  >
+                    {copied ? (
+                      <><Check className="h-3.5 w-3.5" /> Copiado!</>
+                    ) : (
+                      <><Copy className="h-3.5 w-3.5" /> Copiar</>
+                    )}
+                  </button>
+                </div>
+
+                <a
+                  href={`${BOT_WHATSAPP_LINK}?text=Oi`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1dbb58]"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Abrir no WhatsApp
+                </a>
+
+                {/* Tutorial */}
+                <div className="rounded-2xl border border-slate-200/70 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-slate-900/40">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Como o membro deve começar
+                  </p>
+                  <ol className="space-y-2">
+                    {[
+                      "Salve o número do Contai na agenda: +55 61 9501-0700",
+                      "Abra o link acima ou encontre o contato no WhatsApp",
+                      "Envie \"Oi\" para o robô",
+                      "Pronto — o sistema já reconhece o número automaticamente!",
+                    ].map((step, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                          {i + 1}
+                        </span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
                 </div>
               </CardContent>
             </Card>
