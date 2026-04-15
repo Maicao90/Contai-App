@@ -1,7 +1,8 @@
-import { db, householdsTable, subscriptionsTable, usersTable } from "@workspace/db";
-import { and, eq, lte } from "drizzle-orm";
+import { db, householdsTable, notificationEventsTable, subscriptionsTable, usersTable } from "@workspace/db";
+import { and, eq, lte, gt, ne, sql } from "drizzle-orm";
 import { queueNotificationEvent } from "./notifications";
 import { logger } from "./logger";
+import { sendWhatsAppText } from "./meta-whatsapp";
 
 /**
  * Worker para verificar assinaturas vencidas e enviar notificações de atraso.
@@ -78,6 +79,85 @@ export async function checkExpiredSubscriptions() {
 }
 
 /**
+ * Worker para verificar usuários inativos há mais de 2 horas e enviar recuperação de carrinho via WhatsApp.
+ */
+export async function checkAbandonedCarts() {
+  try {
+    const thresholdDate = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2 horas atrás
+    const cutoffDate = new Date(Date.now() - 48 * 60 * 60 * 1000); // Até 48h atrás (para não impactar registros antigos infinitamente)
+
+    // Buscar usuários que NÃO têm billingStatus ativo, foram criados nas últimas 48h mas há mais de 2h
+    const pendingUsers = await db
+      .select()
+      .from(usersTable)
+      .where(
+        and(
+          ne(usersTable.billingStatus, "active"),
+          lte(usersTable.createdAt, thresholdDate),
+          gt(usersTable.createdAt, cutoffDate)
+        )
+      );
+
+    if (pendingUsers.length === 0) {
+      return;
+    }
+
+    // Identificar quais já receberam o webhook
+    const alreadyNotifiedEvents = await db
+      .select({ userId: notificationEventsTable.userId })
+      .from(notificationEventsTable)
+      .where(
+        and(
+          eq(notificationEventsTable.type, "abandoned_cart_whatsapp"),
+          gt(notificationEventsTable.createdAt, cutoffDate)
+        )
+      );
+
+    const notifiedUserIds = new Set(alreadyNotifiedEvents.map((ev) => ev.userId));
+
+    let notificationsSent = 0;
+
+    for (const user of pendingUsers) {
+      if (notifiedUserIds.has(user.id)) {
+        continue;
+      }
+
+      // Envia notificação via WhatsApp
+      const nomeCortado = user.name.split(" ")[0] || "Plano";
+      const messageBody = `Opa ${nomeCortado}! Vi aqui no sistema que você criou sua conta no Contai mas acabou parando na tela de Assinatura.\n\nFicou alguma dúvida ou quer ajuda com algo? Se precisar de uma mão, é só mandar uma mensagem por aqui!`;
+
+      const result = await sendWhatsAppText({
+        to: user.phone,
+        body: messageBody,
+      });
+
+      // Registra que a notificação foi despachada
+      await db.insert(notificationEventsTable).values({
+        householdId: user.householdId ?? null,
+        userId: user.id,
+        type: "abandoned_cart_whatsapp",
+        channel: "whatsapp",
+        recipient: user.phone,
+        subject: "Recuperação de Carrinho (WhatsApp)",
+        payload: { success: result.sent, result },
+        status: result.sent ? "sent" : "failed",
+      });
+
+      if (result.sent) {
+        notificationsSent++;
+      }
+    }
+
+    if (notificationsSent > 0) {
+      logger.info(`[WORKER] Enviadas ${notificationsSent} mensagens de recuperação de carrinho no WhatsApp.`);
+    }
+
+  } catch (error) {
+    logger.error({ err: error }, "[WORKER] Erro ao verificar carrinhos abandonados.");
+  }
+}
+
+/**
  * Inicia o worker com um intervalo definido.
  * @param intervalMs Intervalo em milissegundos (padrão 12 horas)
  */
@@ -86,7 +166,15 @@ export function startSubscriptionWorker(intervalMs = 12 * 60 * 60 * 1000) {
   
   // Executa uma vez no início
   checkExpiredSubscriptions();
+  checkAbandonedCarts();
   
-  // Define o intervalo para as próximas execuções
-  setInterval(checkExpiredSubscriptions, intervalMs);
+  // Assinaturas vencidas (12 em 12h)
+  setInterval(() => {
+    checkExpiredSubscriptions();
+  }, intervalMs);
+
+  // Carrinho Abandonado (10 em 10 min)
+  setInterval(() => {
+    checkAbandonedCarts();
+  }, 10 * 60 * 1000);
 }
