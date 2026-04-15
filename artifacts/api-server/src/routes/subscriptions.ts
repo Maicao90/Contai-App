@@ -62,6 +62,7 @@ async function activateHouseholdBillingFromCheckout(input: {
   householdId: number;
   cycle: "monthly" | "annual";
   paymentMethod?: string | null;
+  coupon?: string | null;
 }) {
   const [household] = await db
     .select()
@@ -116,6 +117,7 @@ async function activateHouseholdBillingFromCheckout(input: {
         paymentMethod: input.paymentMethod ?? currentSubscription.paymentMethod,
         amount: String(amount.toFixed(2)),
         status: "active",
+        coupon: input.coupon ?? currentSubscription.coupon,
         startedAt: new Date(),
         endsAt,
       })
@@ -128,6 +130,7 @@ async function activateHouseholdBillingFromCheckout(input: {
       paymentMethod: input.paymentMethod ?? "cakto",
       amount: String(amount.toFixed(2)),
       status: "active",
+      coupon: input.coupon ?? null,
       startedAt: new Date(),
       endsAt,
     });
@@ -255,10 +258,20 @@ router.post("/billing/cakto/webhook", async (req, res, next) => {
       return;
     }
 
+    // Extracao de cupom de várias fontes comuns (webhook cakto)
+    const couponUsed = String(
+      payload?.coupon ?? 
+      payload?.data?.coupon ?? 
+      payload?.offer_code ?? 
+      payload?.utm_campaign ?? 
+      ""
+    ).trim() || null;
+
     const result = await activateHouseholdBillingFromCheckout({
       householdId: user.householdId,
       cycle,
       paymentMethod: "cakto",
+      coupon: couponUsed,
     });
 
     if (user.email) {

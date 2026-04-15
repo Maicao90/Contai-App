@@ -285,6 +285,7 @@ export const subscriptionsTable = pgTable("subscriptions", {
   paymentMethod: text("payment_method").notNull(),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull(),
+  coupon: text("coupon"),
   startedAt: timestamp("started_at").notNull().defaultNow(),
   endsAt: timestamp("ends_at").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

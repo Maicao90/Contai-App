@@ -626,6 +626,7 @@ function mapSubscriptions(data: Awaited<ReturnType<typeof loadData>>) {
       startedAt: subscription.startedAt,
       renewalDate: subscription.endsAt,
       paymentMethod: subscription.paymentMethod,
+      coupon: subscription.coupon ?? null,
       membersCount: members.length,
       planName: PLAN_NAME,
     };

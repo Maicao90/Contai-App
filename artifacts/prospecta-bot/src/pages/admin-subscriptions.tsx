@@ -23,6 +23,7 @@ type Subscription = {
   startedAt: string;
   renewalDate: string | null;
   paymentMethod: string;
+  coupon: string | null;
   membersCount: number;
   planName: string;
 };
@@ -275,6 +276,7 @@ export default function AdminSubscriptionsPage() {
                     <th scope="col" className="px-6 py-4">Plano</th>
                     <th scope="col" className="px-6 py-4">Produto</th>
                     <th scope="col" className="px-6 py-4">Membro (Titular)</th>
+                    <th scope="col" className="px-6 py-4">Cupom</th>
                     <th scope="col" className="px-6 py-4">Renova Em</th>
                     <th scope="col" className="px-6 py-4">Status</th>
                     <th scope="col" className="px-6 py-4 text-right">Ações</th>
@@ -304,6 +306,13 @@ export default function AdminSubscriptionsPage() {
                         </td>
                         <td className="px-6 py-4 font-medium text-emerald-400">
                           {subscription.ownerName}
+                        </td>
+                        <td className="px-6 py-4 text-slate-300 font-mono text-xs">
+                          {subscription.coupon ? (
+                            <span className="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">{subscription.coupon}</span>
+                          ) : (
+                            "-"
+                          )}
                         </td>
                         <td className="px-6 py-4 text-slate-300">
                           {subscription.renewalDate ? new Date(subscription.renewalDate).toLocaleDateString("pt-BR") : "-"}
