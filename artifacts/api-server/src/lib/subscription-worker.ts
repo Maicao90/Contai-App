@@ -1,6 +1,6 @@
 import { db, householdsTable, notificationEventsTable, subscriptionsTable, usersTable } from "@workspace/db";
-import { and, eq, lte, gt, ne, sql } from "drizzle-orm";
-import { queueNotificationEvent } from "./notifications";
+import { and, eq, lte, gt, ne } from "drizzle-orm";
+import { queueNotificationEvent, sendCustomEmail } from "./notifications";
 import { logger } from "./logger";
 import { sendWhatsAppText } from "./meta-whatsapp";
 
@@ -142,6 +142,31 @@ export async function checkAbandonedCarts() {
         payload: { success: result.sent, result },
         status: result.sent ? "sent" : "failed",
       });
+
+      if (user.email) {
+        try {
+          const emailHtml = `
+            <p>Olá <strong>${nomeCortado}</strong>!</p>
+            <p>Verificamos que você criou sua conta no <strong>Contai</strong>, mas ainda não ativou a sua assinatura.</p>
+            <p>Se você teve alguma dificuldade com o pagamento, precisa de ajuda ou ficou com alguma dúvida sobre como a plataforma funciona, basta responder a este e-mail ou nos chamar no WhatsApp.</p>
+            <br/>
+            <p>Atenciosamente,</p>
+            <p><strong>Equipe Contai</strong></p>
+          `;
+
+          await sendCustomEmail({
+            userId: user.id,
+            householdId: user.householdId,
+            recipient: user.email,
+            subject: "Precisa de ajuda com sua conta no Contai?",
+            text: `Olá ${nomeCortado}! Verificamos que você ainda não ativou sua assinatura. Se precisar de ajuda, responda este e-mail!`,
+            html: emailHtml,
+          });
+          logger.info(`[WORKER] E-mail de recuperação enviado para: ${user.email}`);
+        } catch (emailErr) {
+          logger.error({ err: emailErr }, `[WORKER] Falha ao enviar e-mail de recuperação para: ${user.email}`);
+        }
+      }
 
       if (result.sent) {
         notificationsSent++;
