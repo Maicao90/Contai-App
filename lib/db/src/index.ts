@@ -239,6 +239,22 @@ async function ensureSchema() {
   `));
 
   await db.execute(sql.raw(`
+    CREATE TABLE IF NOT EXISTS projects (
+      id SERIAL PRIMARY KEY,
+      household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `));
+
+  await db.execute(sql.raw(`
+    ALTER TABLE transactions ADD COLUMN IF NOT EXISTS project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL;
+  `));
+
+  await db.execute(sql.raw(`
     CREATE TABLE IF NOT EXISTS bills (
       id SERIAL PRIMARY KEY,
       household_id INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
