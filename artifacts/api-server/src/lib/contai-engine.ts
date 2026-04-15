@@ -1269,13 +1269,7 @@ async function saveParsedAction(
       const oldUserHouseBalance = toAmountNumber(identity.member?.householdBalance);
       const oldTotalHouseBalance = toAmountNumber(identity.household.totalHouseBalance);
 
-      if (amount && amount >= 1000 && !options.confirmedHighValue) {
-        return {
-           reply: `⚠️ *Transação Elevada Detectada!*\nVocê está querendo registrar *${formatCurrency(amount)}*.\nTem certeza que quer confirmar esse lançamento?\n\nResponda "Sim" para continuar ou "Não" para cancelar.`,
-           isMissingInfo: true,
-           triggerHighValueConfirmation: true
-        };
-      }
+
 
       let newPersonalBalance = oldPersonalBalance;
       let newUserHouseBalance = oldUserHouseBalance;
