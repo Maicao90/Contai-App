@@ -1236,15 +1236,11 @@ async function saveParsedAction(
       }
 
       // 1. Verificar informações faltantes (Regra do Maicon)
+      // Sempre pergunta quando o tipo não vier explícito na mensagem do usuário.
+      // Não fazemos mais inferência automática por categoria (ex: "Mercado" → casa),
+      // pois um mesmo gasto pode ser pessoal ou da casa dependendo do contexto.
       if (!parsed.accountType && identity.household.type !== "individual") {
-        // Tentar inferir de forma automática antes de perguntar
-        const inferredFromContext = inferSharedByContext(parsed, input.content);
-        if (inferredFromContext === "shared") {
-          parsed.accountType = "house";
-          parsed.visibility = "shared";
-        } else {
-          return { reply: "Me fala só mais uma coisa pra organizar certo: esse registro é da sua *conta pessoal* ou da *conta da casa*?", isMissingInfo: true, triggerAccountTypeClarification: true };
-        }
+        return { reply: "Me fala só mais uma coisa pra organizar certo: esse registro é da sua *conta pessoal* ou da *conta da casa*?", isMissingInfo: true, triggerAccountTypeClarification: true };
       }
       if (!parsed.paymentMethod) {
         if (parsed.intent === "registrar_receita") {
