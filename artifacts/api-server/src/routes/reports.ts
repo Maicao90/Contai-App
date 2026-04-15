@@ -77,8 +77,8 @@ function buildMonthlyEmailSummary(input: {
   commitmentsCount: number;
 }) {
   const parts = [
-    `📅 Período: ${input.monthLabel}.`,
-    `💰 Resumo Geral: Entradas ${formatCurrencyBr(input.income)}, Saídas ${formatCurrencyBr(input.expenses)} (Saldo: ${formatCurrencyBr(input.balance)}).`,
+    `📅 *Período:* ${input.monthLabel}`,
+    `💰 *Resumo Geral:* Entrada ${formatCurrencyBr(input.income)} | Saída ${formatCurrencyBr(input.expenses)}\n*Saldo:* ${formatCurrencyBr(input.balance)}`,
   ];
 
   const hasPJ = (input.incomePJ || 0) > 0 || (input.expensesPJ || 0) > 0;
@@ -86,26 +86,26 @@ function buildMonthlyEmailSummary(input: {
   const hasPersonal = (input.incomePersonal || 0) > 0 || (input.expensesPersonal || 0) > 0;
 
   if (hasPJ) {
-    parts.push(`💼 Empresa: +${formatCurrencyBr(input.incomePJ || 0)} / -${formatCurrencyBr(input.expensesPJ || 0)}.`);
+    parts.push(`💼 *Empresa:* +${formatCurrencyBr(input.incomePJ || 0)} / -${formatCurrencyBr(input.expensesPJ || 0)}`);
   }
 
   if (hasHouse) {
-    parts.push(`🏠 Casa: +${formatCurrencyBr(input.incomeHouse || 0)} / -${formatCurrencyBr(input.expensesHouse || 0)}.`);
+    parts.push(`🏠 *Casa:* +${formatCurrencyBr(input.incomeHouse || 0)} / -${formatCurrencyBr(input.expensesHouse || 0)}`);
   }
 
   if (hasPersonal) {
-    parts.push(`👤 Pessoal: +${formatCurrencyBr(input.incomePersonal || 0)} / -${formatCurrencyBr(input.expensesPersonal || 0)}.`);
+    parts.push(`👤 *Pessoal:* +${formatCurrencyBr(input.incomePersonal || 0)} / -${formatCurrencyBr(input.expensesPersonal || 0)}`);
   }
 
   if (input.topCategory) {
-    parts.push(`📍 Maior gasto em: ${input.topCategory}.`);
+    parts.push(`📍 *Maior gasto (categoria):* ${input.topCategory}`);
   }
 
   parts.push(
-    `✅ Total de ${input.billsCount} conta(s), ${input.remindersCount} lembrete(s) e ${input.commitmentsCount} compromisso(s).`,
+    `✅ *Atividade no mês:* ${input.billsCount} conta(s), ${input.remindersCount} lembrete(s), ${input.commitmentsCount} compromisso(s)`
   );
 
-  return parts.join(" ");
+  return parts.join("\n\n");
 }
 
 async function getReportUser(userId: number): Promise<ReportUserRow | null> {

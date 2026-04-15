@@ -172,10 +172,10 @@ export default function AppSubscriptionPage() {
                   </Badge>
                 )}
               </div>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
+              <p className="mt-2 text-sm text-slate-700 dark:text-slate-100">
                 Mesmo produto, mesmos recursos e melhor custo-benefício no ano.
               </p>
-              <div className="mt-4 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300">
+              <div className="mt-4 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-100">
                 <Sparkles className="h-4 w-4" />
                 Menor custo mensal equivalente no Contai.
               </div>
@@ -242,6 +242,23 @@ export default function AppSubscriptionPage() {
             </div>
           </CardContent>
         </Card>
+
+        {session?.role === "owner" ? (
+          <div className="pt-4">
+            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-rose-500">Zona de Risco</h3>
+            <div className="mt-3 flex flex-col gap-4 rounded-3xl border border-rose-200/60 bg-rose-50/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-rose-900/30 dark:bg-rose-950/20">
+              <div>
+                <p className="font-medium text-slate-900 dark:text-white">Cancelar assinatura</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Interrompa as cobranças mantendo o acesso até o fim do seu ciclo atual.
+                </p>
+              </div>
+              <Button onClick={() => window.alert("Para cancelar a cobrança, acesse a plataforma da Eduzz ou entre em contato com nosso suporte.")} variant="outline" className="shrink-0 rounded-2xl border-rose-200 text-rose-600 hover:bg-rose-100 hover:text-rose-700 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-900/50">
+                Cancelar plano
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </AppLayout>
   );

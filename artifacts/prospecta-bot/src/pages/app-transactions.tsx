@@ -223,8 +223,8 @@ export default function AppTransactionsPage() {
         </div>
 
         {/* ── Cards de Resumo ── */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-2xl border border-rose-100 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10 p-4">
+        <div className="flex overflow-x-auto gap-3 pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:overflow-visible sm:grid sm:grid-cols-3 snap-x hide-scrollbar">
+          <div className="min-w-[150px] sm:min-w-0 snap-start flex-1 rounded-2xl border border-rose-100 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10 p-4">
             <div className="flex items-center gap-2 text-rose-500">
               <TrendingDown className="h-4 w-4" />
               <span className="text-xs font-medium uppercase tracking-wide">Despesas</span>
@@ -232,7 +232,7 @@ export default function AppTransactionsPage() {
             <p className="mt-2 text-xl font-bold text-rose-600 dark:text-rose-400">{formatCurrency(totalExpenses)}</p>
             <p className="text-xs text-rose-400 mt-0.5">{filtered.filter(t => t.type === "expense").length} lançamentos</p>
           </div>
-          <div className="rounded-2xl border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 p-4">
+          <div className="min-w-[150px] sm:min-w-0 snap-start flex-1 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 p-4">
             <div className="flex items-center gap-2 text-emerald-600">
               <TrendingUp className="h-4 w-4" />
               <span className="text-xs font-medium uppercase tracking-wide">Receitas</span>
@@ -240,7 +240,7 @@ export default function AppTransactionsPage() {
             <p className="mt-2 text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(totalIncome)}</p>
             <p className="text-xs text-emerald-400 mt-0.5">{filtered.filter(t => t.type === "income").length} lançamentos</p>
           </div>
-          <div className={`rounded-2xl border p-4 ${balance >= 0 ? "border-blue-100 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/10" : "border-orange-100 dark:border-orange-500/20 bg-orange-50 dark:bg-orange-500/10"}`}>
+          <div className={`min-w-[150px] sm:min-w-0 snap-start flex-1 rounded-2xl border p-4 ${balance >= 0 ? "border-blue-100 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/10" : "border-orange-100 dark:border-orange-500/20 bg-orange-50 dark:bg-orange-500/10"}`}>
             <div className={`flex items-center gap-2 ${balance >= 0 ? "text-blue-600" : "text-orange-500"}`}>
               <Wallet className="h-4 w-4" />
               <span className="text-xs font-medium uppercase tracking-wide">Saldo</span>

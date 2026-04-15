@@ -156,7 +156,7 @@ export function ShellLayout({
       )}
 
       <main className="min-w-0 overflow-x-hidden">
-        <div className="w-full min-w-0 px-3 py-4 sm:px-4 md:px-6 md:py-6 xl:px-8 xl:py-8 2xl:px-10">
+        <div className="w-full min-w-0 px-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] pt-4 sm:px-4 md:px-6 md:pb-[calc(env(safe-area-inset-bottom)+2rem)] md:pt-6 xl:px-8 xl:pt-8 2xl:px-10">
           {children}
         </div>
       </main>
