@@ -387,6 +387,11 @@ async function ensureSchema() {
   `));
 
   await db.execute(sql.raw(`
+    ALTER TABLE subscriptions
+    ADD COLUMN IF NOT EXISTS coupon TEXT;
+  `));
+
+  await db.execute(sql.raw(`
     CREATE TABLE IF NOT EXISTS google_calendar_connections (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
