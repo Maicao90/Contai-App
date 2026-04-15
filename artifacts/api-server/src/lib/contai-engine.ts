@@ -78,6 +78,24 @@ async function ensureDefaultAccounts(householdId: number, userId?: number) {
 }
 
 /**
+ * Helper para encontrar ou criar projeto a partir do NLP
+ */
+async function findOrCreateProject(householdId: number, projectName: string) {
+  const existing = await db
+    .select()
+    .from(projectsTable)
+    .where(and(eq(projectsTable.householdId, householdId), ilike(projectsTable.name, projectName)))
+    .limit(1);
+  if (existing[0]) return existing[0];
+
+  const [newProject] = await db
+    .insert(projectsTable)
+    .values({ householdId, name: projectName })
+    .returning();
+  return newProject;
+}
+
+/**
  * V5: Localização Inteligente de Conta
  */
 async function findAccount(householdId: number, name?: string | null, typeHint: string = "checking") {
@@ -145,6 +163,7 @@ type ParsedMessage = {
   contextUncertain?: boolean | null;
   projeto?: string | null;
   projectId?: number | null;
+  fiscalContext?: "personal" | "business" | null;
 };
 
 type PendingKind = "registrar_gasto" | "registrar_conta" | "registrar_compromisso" | "missing_info";
